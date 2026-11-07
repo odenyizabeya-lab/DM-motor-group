@@ -47,10 +47,25 @@ async function sb(env, path, { method = 'GET', body = null, key = 'service', hea
   let data = null;
   try { data = text ? JSON.parse(text) : null; } catch { data = text; }
   if (res.status >= 400) {
-    const msg = (data && (data.message || data.error_description || data.error)) || `Supabase request failed (${res.status})`;
+    const msg = (data && (data.message || data.msg || data.error_description || data.error)) || `Supabase request failed (${res.status})`;
     throw err(res.status === 404 ? 404 : 400, typeof msg === 'string' ? msg : JSON.stringify(msg));
   }
   return data;
+}
+
+/* normalise WHERE-match values into PostgREST filter syntax:
+ * numbers/booleans → eq.N; bare strings → eq.<escaped>; strings that already
+ * carry an operator ("eq.x", "in.(...)", "gte.5") pass through untouched. */
+const OPS_RE = /^(eq|neq|gt|gte|lt|lte|like|ilike|is|in|cs|cd|ov|sl|sr|nxl|nxr|adj|not)\./i;
+function whereQS(match) {
+  const out = {};
+  for (const [k, v] of Object.entries(match || {})) {
+    if (v === null || v === undefined) { out[k] = 'is.null'; continue; }
+    if (typeof v === 'number' || typeof v === 'boolean') { out[k] = `eq.${v}`; continue; }
+    const s = String(v);
+    out[k] = OPS_RE.test(s) ? s : `eq.${encodeURIComponent(s)}`;
+  }
+  return new URLSearchParams(out).toString();
 }
 
 const rest = {
@@ -60,13 +75,12 @@ const rest = {
   },
   count: async (env, table, match = {}) => {
     const qs = new URLSearchParams({ ...match, limit: '0' }).toString();
-    // eslint-disable-next-line no-redeclare
     const res = await fetch(`${env.SUPABASE_URL}/rest/v1/${table}?${qs}`, {
       method: 'GET',
-      headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, Prefer: 'count=exact' },
+      headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, Prefer: 'count=exact', 'Range-Unit': 'items' },
     });
     if (!res.ok) return 0;
-    const range = res.headers.get('content-range') || '*/0';
+    const range = res.headers.get('content-range') || '';
     const n = parseInt((range.split('/')[1] || '0').trim(), 10);
     return Number.isFinite(n) ? n : 0;
   },
@@ -75,12 +89,10 @@ const rest = {
     return Array.isArray(data) ? data[0] : data;
   },
   async update(env, table, match, patch, minimal = false) {
-    const qs = new URLSearchParams(match).toString();
-    return sb(env, `/rest/v1/${table}?${qs}`, { method: 'PATCH', body: patch, prefer: minimal ? 'return=minimal' : 'return=representation' });
+    return sb(env, `/rest/v1/${table}?${whereQS(match)}`, { method: 'PATCH', body: patch, prefer: minimal ? 'return=minimal' : 'return=representation' });
   },
   async del(env, table, match) {
-    const qs = new URLSearchParams(match).toString();
-    return sb(env, `/rest/v1/${table}?${qs}`, { method: 'DELETE', prefer: 'return=minimal' });
+    return sb(env, `/rest/v1/${table}?${whereQS(match)}`, { method: 'DELETE', prefer: 'return=minimal' });
   },
   async rpc(env, fn, args) {
     return sb(env, `/rest/v1/rpc/${fn}`, { method: 'POST', body: args || {} });
@@ -127,13 +139,26 @@ async function authUser(env, request) {
   const hit = authCache.get(tok);
   if (hit && hit.expires > Date.now()) return hit.user;
 
-  let gu;
-  try {
-    gu = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
-      headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: `Bearer ${tok}` },
-    });
-  } catch { throw err(502, 'Authentication service unreachable'); }
-  if (!gu.ok) return null;
+  let gu = null;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      gu = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+        headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: `Bearer ${tok}` },
+      });
+      if (gu.ok) break;
+      /* GoTrue / JWKS hiccups can surface as transient failures — retry */
+      if (attempt < 3) { await new Promise((r) => setTimeout(r, [150, 350, 700][attempt])); continue; }
+      break;
+    } catch {
+      if (attempt < 3) { await new Promise((r) => setTimeout(r, [150, 350, 700][attempt])); continue; }
+      break;
+    }
+  }
+  if (!gu || !gu.ok) {
+    const st = gu && gu.status;
+    if (st === 429 || st >= 500) throw err(st, 'Authentication service is temporarily busy. Please retry.');
+    return null;
+  }
   const u = await gu.json();
 
   let profile = null;

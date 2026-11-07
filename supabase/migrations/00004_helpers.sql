@@ -73,3 +73,13 @@ language sql stable security definer set search_path = public as $$
   select json_build_object ('min', coalesce (min (price), 0), 'max', coalesce (max (price), 0))
   from vehicles where status = 'published';
 $$;
+
+-- homepage counters (public site hero strip)
+create or replace function public.home_stats () returns json
+language sql stable security definer set search_path = public as $$
+  select json_build_object(
+    'published', (select count(*) from vehicles where status in ('published','reserved')),
+    'brands',    (select count(distinct brand) from vehicles where status in ('published','reserved')),
+    'photos',    (select count(*) from media where type = 'image'),
+    'videos',    (select count(*) from media where type = 'video'));
+$$;

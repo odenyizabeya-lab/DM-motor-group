@@ -5,6 +5,8 @@
  * ========================================================================== */
 import L from '../../shared/api-lib.js';
 
+const readJson = L.readJson;
+
 /* --------------------------------------------------------------- dispatcher */
 const routes = [];
 const route = (method, pattern, fn) => routes.push({
@@ -15,7 +17,8 @@ const route = (method, pattern, fn) => routes.push({
 
 export async function onRequest({ request, env, params, ctx }) {
   const url = new URL(request.url);
-  const pathname = ('/' + (params.path || []).join('/')).replace(/\/+$/, '') || '/';
+  /* routes are registered with their full path (/api/...); re-attach the mount prefix */
+  const pathname = ('/api/' + (params.path || []).join('/')).replace(/\/+$/, '') || '/';
   const ip = (request.headers.get('cf-connecting-ip') || '').split(',')[0].trim() || 'anon';
   const q = (k) => url.searchParams.get(k);
 
@@ -33,9 +36,11 @@ export async function onRequest({ request, env, params, ctx }) {
 }
 
 /* ----------------------------------------------------------------- helpers */
-/* escape user strings for use inside PostgREST boolean operators */
+/* neutralise PostgREST boolean-operator syntax characters in user input
+ * (NO percent-encoding here: URLSearchParams already handles transport
+ * encoding, and pre-encoding would corrupt the filter expression) */
 function imp(s) {
-  return String(s).replace(/[%(),"]/g, (c) => ({ '%': '%25', '(': '%28', ')': '%29', ',': '%2C', '"': '%22' }[c]));
+  return String(s).replace(/[(,)"%\\]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 /* array-count via Content-Range (exact count, no aggregation pitfalls) */
@@ -123,7 +128,7 @@ route('GET', '/api/home', async ({ env }) => {
     L.rest.get(env, 'vehicles', { select: '*', status: 'eq.published', is_featured: 'eq.true', order: 'updated_at.desc', limit: '8' }),
     L.rest.get(env, 'vehicles', { select: '*', status: 'eq.published', order: 'created_at.desc', limit: '12' }),
     L.rest.get(env, 'media', {
-      select: 'id,type,url,thumb_url,caption,category,vehicle_id,vehicles!inner(slug,brand,model,year)',
+      select: 'id,type,url,thumb_url,caption,category,vehicle_id,vehicles!media_vehicle_id_fkey(slug,brand,model,year)',
       type: 'eq.video', 'vehicles.status': 'in.(published,reserved)', order: 'id.desc', limit: '8',
     }),
     L.rest.get(env, 'testimonials', { select: '*', status: 'eq.approved', order: 'id.desc', limit: '9' }),
@@ -169,7 +174,7 @@ route('GET', '/api/vehicles', async ({ env, request, q }) => {
   } else filters.status = 'in.(published,reserved)';
 
   if (q('q')) {
-    const w = `brand.ilike."*${imp(q('q'))}*",model.ilike."*${imp(q('q'))}*",description.ilike."*${imp(q('q'))}*",vin.ilike."*${imp(q('q'))}*",location.ilike."*${imp(q('q'))}*"`;
+    const w = `(brand.ilike."%${imp(q('q'))}%",model.ilike."%${imp(q('q'))}%",description.ilike."%${imp(q('q'))}%",vin.ilike."%${imp(q('q'))}%",location.ilike."%${imp(q('q'))}%")`;
     filters.or = w;
   }
   if (q('brand')) filters.brand = `eq.${imp(q('brand'))}`;
@@ -237,7 +242,7 @@ route('GET', '/api/videos', async ({ env, q }) => {
   const [total, rows] = await Promise.all([
     countOf(env, 'media', { type: 'eq.video', 'vehicles.status': 'in.(published,reserved)' }),
     L.rest.get(env, 'media', {
-      select: 'id,url,thumb_url,caption,vehicle_id,vehicles!inner(slug,brand,model,year,price,currency)',
+      select: 'id,url,thumb_url,caption,vehicle_id,vehicles!media_vehicle_id_fkey(slug,brand,model,year,price,currency)',
       type: 'eq.video', 'vehicles.status': 'in.(published,reserved)',
       order: 'id.desc', limit: String(per), offset: String((page - 1) * per),
     }),
@@ -334,7 +339,7 @@ route('POST', '/api/auth/register', async ({ env, request, ip, ctx }) => {
       body: { email, password: String(b.password), email_confirm: true, user_metadata: { name: String(b.name).trim() } },
     });
   } catch (e) {
-    if (/already/i.test(String(e.message))) throw L.err(409, 'An account with this email already exists. Please sign in.');
+    if (/already|exists/i.test(String(e.message))) throw L.err(409, 'An account with this email already exists. Please sign in.');
     throw e;
   }
   if (!created || !created.id) throw L.err(400, 'Registration failed. Please try again.');
@@ -533,7 +538,7 @@ route('GET', '/api/admin/vehicles', async ({ env, request, q }) => {
   await L.staff(env, request);
   const filters = {};
   if (q('status')) filters.status = `eq.${imp(q('status'))}`;
-  if (q('q')) filters.or = `(brand.ilike."*${imp(q('q'))}*",model.ilike."*${imp(q('q'))}*",vin.ilike."*${imp(q('q'))}*")`;
+  if (q('q')) filters.or = `(brand.ilike."%${imp(q('q'))}%",model.ilike."%${imp(q('q'))}%",vin.ilike."%${imp(q('q'))}%")`;
   const rows = await L.rest.get(env, 'vehicles', { ...filters, select: '*', order: 'updated_at.desc,id.desc', limit: '500' });
   return L.json(await withMedia(env, rows || []));
 });

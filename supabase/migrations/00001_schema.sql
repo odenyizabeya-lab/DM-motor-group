@@ -1,10 +1,11 @@
 -- ============================================================================
 -- DM Motor Group — Production schema (real data only; no demo content seeded)
+-- Idempotent: safe to re-run on a partially migrated database.
 -- ============================================================================
 create extension if not exists pgcrypto;
 
 -- ---------------------------------------------------------------- profiles
-create table public.profiles (
+create table if not exists public.profiles (
   id         uuid primary key references auth.users (id) on delete cascade,
   name       text not null default '',
   email      text not null,
@@ -16,7 +17,8 @@ create table public.profiles (
 );
 
 -- ---------------------------------------------------------------- vehicles
-create table public.vehicles (
+-- cover_media_id is added AFTER media exists (deferred FK below).
+create table if not exists public.vehicles (
   id                bigint generated always as identity primary key,
   slug              text not null unique,
   status            text not null default 'draft'
@@ -41,70 +43,88 @@ create table public.vehicles (
   features          jsonb not null default '[]',
   safety_features   jsonb not null default '[]',
   ownership_info    text,
-  inspection_status text   not null default 'none'
-                    check (inspection_status in ('none','inspected','certified')),
+  inspection_status text   not null default 'none',
   inspection_report text,
-  category          text not null default 'sedan'
-                    check (category in ('sedan','suv','sports','luxury','electric','commercial')),
+  category          text not null default 'sedan',
   is_featured       boolean not null default false,
   views             bigint  not null default 0,
   cover             text,
   cover_full        text,
-  cover_media_id    bigint references public.media (id) on delete set null,
   created_at        timestamptz not null default now(),
   updated_at        timestamptz not null default now()
 );
-create index vehicles_public_idx   on vehicles (status, is_featured desc, created_at desc);
-create index vehicles_category_idx on vehicles (category, status);
-create index vehicles_brand_idx    on vehicles (brand, model);
-create index vehicles_vin_idx      on vehicles (vin);
+create index if not exists vehicles_public_idx   on vehicles (status, is_featured desc, created_at desc);
+create index if not exists vehicles_category_idx on vehicles (category, status);
+create index if not exists vehicles_brand_idx    on vehicles (brand, model);
+create index if not exists vehicles_vin_idx      on vehicles (vin);
+
+-- keep flexible: values must match what the dashboard offers
+alter table public.vehicles drop constraint if exists vehicles_category_check;
+alter table public.vehicles add constraint vehicles_category_check
+  check (category in ('sedan','suv','sports','luxury','electric','truck','family','commercial'));
+
+alter table public.vehicles drop constraint if exists vehicles_inspection_status_check;
+alter table public.vehicles add constraint vehicles_inspection_status_check
+  check (inspection_status in ('none','dealership_inspected','third_party_inspected'));
 
 -- ------------------------------------------------------------------- media
-create table public.media (
+create table if not exists public.media (
   id             bigint generated always as identity primary key,
   vehicle_id     bigint not null references public.vehicles (id) on delete cascade,
   type           text not null check (type in ('image','video')),
   url            text not null,
   thumb_url      text not null default '',
   caption        text not null default '',
-  category       text not null default 'exterior'
-                 check (category in ('exterior','interior','engine','detail')),
+  category       text not null default 'exterior',
   position       int  not null default 0,
   is_video_cover boolean not null default false,
   created_at     timestamptz not null default now()
 );
-create index media_vehicle_idx on media (vehicle_id, position);
+create index if not exists media_vehicle_idx on media (vehicle_id, position);
+
+alter table public.media drop constraint if exists media_category_check;
+alter table public.media add constraint media_category_check
+  check (category in ('exterior','interior','engine','dashboard','boot','wheel','damage','detail','video'));
+
+-- now the deferred ring-closure: vehicles.cover_media_id → media.id
+alter table public.vehicles drop constraint if exists vehicles_cover_media_fkey;
+alter table public.vehicles
+  add column if not exists cover_media_id bigint
+  references public.media (id) on delete set null;
 
 -- --------------------------------------------------------------- enquiries
-create table public.enquiries (
+create table if not exists public.enquiries (
   id          bigint generated always as identity primary key,
   vehicle_id  bigint references public.vehicles (id) on delete set null,
   user_id     uuid references auth.users (id) on delete set null,
-  type        text not null default 'general',
+  type        text not null default 'question',
   name        text not null,
   email       text not null,
   phone       text not null default '',
   message     text not null default '',
-  status      text not null default 'new'
-              check (status in ('new','contacted','in_progress','responded','quoted','won','lost','closed')),
+  status      text not null default 'new',
   admin_notes text not null default '',
   ip          text not null default '',
   created_at  timestamptz not null default now()
 );
-create index enquiries_status_idx on enquiries (status, created_at desc);
-create index enquiries_email_idx  on enquiries (email, created_at desc);
+create index if not exists enquiries_status_idx on enquiries (status, created_at desc);
+create index if not exists enquiries_email_idx  on enquiries (email, created_at desc);
 
-create table public.enquiry_messages (
+alter table public.enquiries drop constraint if exists enquiries_status_check;
+alter table public.enquiries add constraint enquiries_status_check
+  check (status in ('new','contacted','in_progress','responded','quoted','won','lost','closed'));
+
+create table if not exists public.enquiry_messages (
   id         bigint generated always as identity primary key,
   enquiry_id bigint not null references public.enquiries (id) on delete cascade,
   sender     text not null check (sender in ('customer','staff')),
   body       text not null,
   created_at timestamptz not null default now()
 );
-create index enquiry_messages_enq_idx on enquiry_messages (enquiry_id, created_at);
+create index if not exists enquiry_messages_enq_idx on enquiry_messages (enquiry_id, created_at);
 
 -- -------------------------------------------------------------- favourites
-create table public.favourites (
+create table if not exists public.favourites (
   user_id    uuid not null references auth.users (id) on delete cascade,
   vehicle_id bigint not null references public.vehicles (id) on delete cascade,
   created_at timestamptz not null default now(),
@@ -112,7 +132,7 @@ create table public.favourites (
 );
 
 -- ------------------------------------------------------------------ orders
-create table public.orders (
+create table if not exists public.orders (
   id         bigint generated always as identity primary key,
   vehicle_id bigint not null references public.vehicles (id) on delete cascade,
   user_id    uuid references auth.users (id) on delete set null,
@@ -125,10 +145,10 @@ create table public.orders (
   notes      text not null default '',
   created_at timestamptz not null default now()
 );
-create index orders_vehicle_idx on orders (vehicle_id);
+create index if not exists orders_vehicle_idx on orders (vehicle_id);
 
 -- ----------------------------------------------------------------- banners
-create table public.banners (
+create table if not exists public.banners (
   id         bigint generated always as identity primary key,
   title      text not null,
   subtitle   text not null default '',
@@ -140,7 +160,7 @@ create table public.banners (
 );
 
 -- ------------------------------------------------------------ testimonials
-create table public.testimonials (
+create table if not exists public.testimonials (
   id            bigint generated always as identity primary key,
   name          text not null,
   location      text not null default '',
@@ -153,7 +173,7 @@ create table public.testimonials (
 );
 
 -- ----------------------------------------------------------- notifications
-create table public.notifications (
+create table if not exists public.notifications (
   id         bigint generated always as identity primary key,
   user_id    uuid not null references auth.users (id) on delete cascade,
   title      text not null,
@@ -162,24 +182,24 @@ create table public.notifications (
   is_read    boolean not null default false,
   created_at timestamptz not null default now()
 );
-create index notifications_user_idx on notifications (user_id, is_read, created_at desc);
+create index if not exists notifications_user_idx on notifications (user_id, is_read, created_at desc);
 
 -- ---------------------------------------------------------------- settings
-create table public.settings (
+create table if not exists public.settings (
   key        text primary key,
   value      text not null default '',
   updated_at timestamptz not null default now()
 );
 
 -- ------------------------------------------------------------ activity log
-create table public.activity_logs (
+create table if not exists public.activity_logs (
   id         bigint generated always as identity primary key,
   actor      text not null default 'system',
   action     text not null,
   detail     text not null default '',
   created_at timestamptz not null default now()
 );
-create index activity_logs_time_idx on activity_logs (created_at desc);
+create index if not exists activity_logs_time_idx on activity_logs (created_at desc);
 
 -- ============================================================================
 -- Helpers (security definer so RLS on profiles never recurses)
@@ -204,14 +224,6 @@ $$;
 create or replace function public.is_admin () returns boolean
 language sql stable security definer set search_path = public as $$
   select coalesce ((select role = 'admin' from public.profiles where id = auth.uid ()), false);
-$$;
-
--- Busy slug utilisation used by the Worker: slugify + disambiguate
-create or replace function public.base_slug (brand text, model text, yr int)
-returns text language sql immutable as $$
-  select lower (regexp_replace (
-    concat (brand, ' ', model, ' ', yr),
-    '[^a-z0-9]+', '-', 'g'))
 $$;
 
 -- New user bootstrap: every signup gets a profile (customer). The FIRST
@@ -241,7 +253,8 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user ();
 
--- Workshop default settings the owner will personalise in the admin dashboard
+-- Default settings the owner personalises in the admin dashboard.
+-- Keys match exactly what admin.js renders (site + payments + legal notes).
 insert into public.settings (key, value) values
   ('dealership_name',        'DM Motor Group'),
   ('tagline',                'Premium international automobile dealership'),
@@ -257,6 +270,9 @@ insert into public.settings (key, value) values
   ('facebook',               ''),
   ('youtube',                ''),
   ('tiktok',                 ''),
+  ('payment_info',           ''),
+  ('inspection_note',        ''),
+  ('trade_license',          ''),
   ('currency',               'USD'),
   ('dev_reset_tokens',       '0'),
   ('site_url',               'https://dmmotorgroup.com')
