@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid meet">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b2f36"/><stop offset="1" stop-color="#101318"/></linearGradient>
+  <linearGradient id="body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a3262b"/><stop offset="1" stop-color="#5c0000"/></linearGradient>
+  <radialGradient id="glow" cx="0.5" cy="0.3" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.22"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="1920" height="1080" fill="url(#bg)"/><rect width="1920" height="1080" fill="url(#glow)"/>
+<rect x="0" y="860" width="1920" height="220" fill="#0b0d10"/><ellipse cx="960" cy="884" rx="820" ry="46" fill="#000" opacity="0.5"/>
+<g transform="translate(430,430) scale(6.2)">
+  <path d="M14 70 q4 -14 20 -18 q6 -16 26 -20 h52 q22 4 30 18 q14 2 22 8 q8 4 8 12 l-4 6 H10 q-4 -6 4 -6z" fill="url(#body)" stroke="rgba(0,0,0,.35)" stroke-width="1.4"/>
+  <path d="M14 70 q4 -14 20 -18 q6 -16 26 -20 h52 q22 4 30 18 q14 2 22 8 q8 4 8 12 l-4 6 H10 q-4 -6 4 -6z" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="0.8" transform="translate(0,-1.5)"/>
+  <rect x="66" y="42" width="30" height="14" rx="4" fill="#aee3ff" opacity="0.75"/>
+  <rect x="102" y="40" width="26" height="14" rx="4" fill="#aee3ff" opacity="0.6"/>
+  <circle cx="42" cy="84" r="13" fill="#14161a"/><circle cx="42" cy="84" r="7.5" fill="#3a3f47"/><circle cx="42" cy="84" r="3" fill="#8b929c"/><circle cx="148" cy="84" r="13" fill="#14161a"/><circle cx="148" cy="84" r="7.5" fill="#3a3f47"/><circle cx="148" cy="84" r="3" fill="#8b929c"/>
+  <rect x="6" y="70" width="10" height="5" rx="2" fill="#ffd9a0"/><rect x="182" y="70" width="10" height="5" rx="2" fill="#ff8f8f"/>
+</g>
+<text x="50%" y="906" text-anchor="middle" font-family="Georgia,serif" font-size="52" fill="#f5f2ea" letter-spacing="6">HONDA CR-V E:HEV EXECUTIVE</text>
+<text x="50%" y="960" text-anchor="middle" font-family="Arial" font-size="26" fill="#9aa3ad" letter-spacing="3">2022 · SUV · Radiant Red [side angle]</text>
+<text x="40" y="1040" font-family="Arial" font-size="22" fill="#6e7681">DM Motor Group — demo placeholder. Replace with genuine photography in Admin → Media.</text>
+</svg>

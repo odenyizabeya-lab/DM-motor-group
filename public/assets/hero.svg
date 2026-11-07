@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
+<defs>
+<linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d2127"/><stop offset="1" stop-color="#07080a"/></linearGradient>
+<linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2e333b"/><stop offset="1" stop-color="#14161a"/></linearGradient>
+<radialGradient id="g" cx="0.5" cy="0.25" r="0.95"><stop offset="0" stop-color="#ffffff" stop-opacity="0.16"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="1920" height="1080" fill="url(#a)"/><rect width="1920" height="1080" fill="url(#g)"/>
+<rect x="0" y="880" width="1920" height="200" fill="#050607"/><ellipse cx="960" cy="902" rx="860" ry="42" fill="#000" opacity="0.55"/>
+<g transform="translate(360,400) scale(6.2)">
+<path d="M14 70 q4 -14 20 -18 q6 -16 26 -20 h52 q22 4 30 18 q14 2 22 8 q8 4 8 12 l-4 6 H10 q-4 -6 4 -6z" fill="url(#b)" stroke="rgba(0,0,0,.4)" stroke-width="1.4"/>
+<path d="M14 70 q4 -14 20 -18 q6 -16 26 -20 h52 q22 4 30 18 q14 2 22 8 q8 4 8 12 l-4 6 H10 q-4 -6 4 -6z" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="0.9" transform="translate(0,-1.6)"/>
+<rect x="64" y="42" width="30" height="15" rx="4" fill="#aee3ff" opacity="0.7"/><rect x="102" y="41" width="26" height="14" rx="4" fill="#aee3ff" opacity="0.55"/>
+<circle cx="42" cy="84" r="13" fill="#101216"/><circle cx="42" cy="84" r="7.5" fill="#343a42"/><circle cx="42" cy="84" r="3" fill="#8b929c"/>
+<circle cx="148" cy="84" r="13" fill="#101216"/><circle cx="148" cy="84" r="7.5" fill="#343a42"/><circle cx="148" cy="84" r="3" fill="#8b929c"/>
+<rect x="6" y="70" width="10" height="5" rx="2" fill="#ffd9a0"/><rect x="182" y="70" width="10" height="5" rx="2" fill="#ff8f8f"/>
+</g>
+<text x="960" y="120" text-anchor="middle" font-family="Georgia,serif" font-size="64" fill="#c9a45c" letter-spacing="18">DM MOTOR GROUP</text>
+<text x="960" y="178" text-anchor="middle" font-family="Arial" font-size="26" fill="#9aa3ad" letter-spacing="6">HAND-SELECTED VEHICLES · FULL HISTORIES · WORLDWIDE DELIVERY</text>
+</svg>

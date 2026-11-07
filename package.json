@@ -1,0 +1,21 @@
+{
+  "name": "dm-motor-group",
+  "version": "2.0.0",
+  "type": "module",
+  "description": "DM Motor Group — international automobile dealership platform: website, admin dashboard and Android app (PWA). Cloudflare Pages + Workers with a Supabase backend.",
+  "scripts": {
+    "build": "node build.mjs",
+    "deploy": "node build.mjs && npx wrangler pages deploy dist --project-name dm-motor-group --branch main",
+    "serve": "node server.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
+}

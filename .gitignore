@@ -1,0 +1,11 @@
+node_modules/
+dist/
+data/
+uploads/
+supabase/.branches/
+supabase/.temp/
+.env
+.env.*
+.dev.vars
+*.log
+test/dbg.js

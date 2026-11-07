@@ -1,0 +1,21 @@
+{
+  "name": "DM Motor Group",
+  "short_name": "DM Motors",
+  "description": "Premium international automobile dealership — Android mobile application with full spec sheets, photographs and full-length video presentations.",
+  "start_url": "/?utm_source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b0d10",
+  "theme_color": "#0b0d10",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Vehicle showroom", "url": "/vehicles" },
+    { "name": "Video presentations", "url": "/videos" },
+    { "name": "Compare", "url": "/compare" }
+  ]
+}

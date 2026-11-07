@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Administration — DM Motor Group</title>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css?v=3">
+</head>
+<body>
+<div id="loginScreen" hidden>
+  <div class="login-card">
+    <div class="logo"><span class="logo-mark">DM</span><span>ADMINISTRATION</span></div>
+    <h1>Secure administrator sign-in</h1>
+    <p>Access is restricted and fully logged. All sign-in attempts from unknown addresses are rate-limited.</p>
+    <form id="loginForm">
+      <label>Email</label><input type="email" name="email" required autocomplete="username">
+      <label>Password</label><input type="password" name="password" required autocomplete="current-password">
+      <button class="btn btn-gold wide" type="submit">Sign in</button>
+      <p id="loginErr" class="login-err" hidden></p>
+    </form>
+    <a class="back" href="/">← Back to website</a>
+  </div>
+</div>
+<div id="shell" hidden>
+  <aside id="sidebar">
+    <div class="logo"><span class="logo-mark">DM</span><span>ADMIN</span></div>
+    <nav>
+      <a href="#/dashboard" data-pg="dashboard">▦ Dashboard</a>
+      <a href="#/vehicles" data-pg="vehicles">▤ Vehicles</a>
+      <a href="#/enquiries" data-pg="enquiries">✉ Enquiries <span class="pill" id="eqPill" hidden></span></a>
+      <a href="#/customers" data-pg="customers">◉ Customers</a>
+      <a href="#/testimonials" data-pg="testimonials">❝ Testimonials</a>
+      <a href="#/banners" data-pg="banners">▭ Homepage banners</a>
+      <a href="#/settings" data-pg="settings">⚙ Dealership settings</a>
+      <a href="#/activity" data-pg="activity">≡ Activity log</a>
+    </nav>
+    <div class="side-bottom">
+      <a href="/" target="_blank" rel="noopener">↗ Open website</a>
+      <button id="btnLogout">Sign out</button>
+      <div id="whoami"></div>
+    </div>
+  </aside>
+  <main id="main"><div id="pg"></div></main>
+</div>
+<div id="toast"></div>
+<div id="modal" hidden></div>
+<input type="file" id="pickImgs" accept="image/*" multiple hidden>
+<input type="file" id="pickVid" accept="video/*" hidden>
+<input type="file" id="pickBannerImg" accept="image/*" hidden>
+<script src="/admin/admin.js?v=5" defer></script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>__TITLE__</title>
+<meta name="description" content="__DESC__">
+<meta name="theme-color" content="#0b0d10">
+<link rel="canonical" href="__URL__">
+<meta property="og:title" content="__TITLE__">
+<meta property="og:description" content="__DESC__">
+<meta property="og:type" content="__TYPE__">
+<meta property="og:url" content="__URL__">
+<meta property="og:image" content="__IMG__">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="__TITLE__">
+<meta name="twitter:description" content="__DESC__">
+<meta name="twitter:image" content="__IMG__">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+<!-- Android mobile application (installable PWA). iOS is intentionally not targeted. -->
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">__LD__</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"AutoDealer","name":"DM Motor Group","telephone":"+971 4 584 2200",
+"address":{"@type":"PostalAddress","streetAddress":"Showroom 4, Al Awir Auto Market","addressLocality":"Dubai","addressCountry":"AE"},
+"openingHours":"Mo-Sa 09:00-19:00","priceRange":"$$$"}
+</script>
+<link rel="stylesheet" href="/styles.css?v=4">
+</head>
+<body>
+<div id="topbar">
+  <div class="wrap topbar-in">
+    <span class="tb-item tb-hide">☎ <a href="tel:+97145842200" id="tb-phone">+971 4 584 2200</a></span>
+    <span class="tb-item tb-hide" id="tb-hours">Mon–Sat 9:00–19:00</span>
+    <span class="tb-item tb-trust">✓ Verified vehicles · Accurate descriptions · Escrow payments</span>
+    <a class="tb-item tb-cta" href="/contact">Contact dealership</a>
+  </div>
+</div>
+<header id="header">
+  <div class="wrap header-in">
+    <a class="logo" href="/" aria-label="DM Motor Group home">
+      <span class="logo-mark" aria-hidden="true">DM</span>
+      <span class="logo-text">DM MOTOR <em>GROUP</em></span>
+    </a>
+    <nav id="nav" aria-label="Main">
+      <a href="/" data-nav="/">Home</a>
+      <a href="/vehicles" data-nav="/vehicles">Showroom</a>
+      <a href="/videos" data-nav="/videos">Videos</a>
+      <a href="/compare" data-nav="/compare">Compare</a>
+      <a href="/contact" data-nav="/contact">Contact</a>
+    </nav>
+    <div class="header-actions">
+      <button class="h-icon" id="btnSearch" aria-label="Search vehicles" title="Search">⌕</button>
+      <a class="h-icon" href="/account?tab=favourites" id="btnFav" aria-label="Favourites" title="Favourites">♥<span class="badge" id="favCount" hidden>0</span></a>
+      <a class="h-icon" href="/compare" id="btnCmp" aria-label="Comparison" title="Comparison">⇄<span class="badge" id="cmpCount" hidden>0</span></a>
+      <a class="h-icon" href="/account" id="btnAcc" aria-label="Account" title="Account"><i id="accIcon">○</i><span class="badge" id="notifCount" hidden>0</span></a>
+      <button class="h-icon burger" id="btnMenu" aria-label="Menu">☰</button>
+    </div>
+  </div>
+</header>
+
+<!-- search overlay -->
+<div id="searchOverlay" class="overlay" hidden>
+  <div class="overlay-backdrop" data-close></div>
+  <div class="search-panel" role="dialog" aria-label="Vehicle search">
+    <button class="x" data-close aria-label="Close">✕</button>
+    <h3>Find your vehicle</h3>
+    <form id="quickSearchForm" action="/vehicles" method="get">
+      <div class="qs-row qs-key">
+        <input type="text" name="q" placeholder="Search brand, model or VIN (e.g. Range Rover, 911…)">
+      </div>
+      <div class="qs-grid" id="quickFields"></div>
+      <div class="qs-actions">
+        <button type="submit" class="btn btn-gold wide">Search the showroom</button>
+        <a class="btn btn-ghost wide" href="/vehicles">Browse all vehicles</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<main id="app" class="wrap-page"></main>
+
+<footer id="footer">
+  <div class="wrap foot-grid">
+    <div>
+      <div class="logo" style="margin-bottom:14px"><span class="logo-mark">DM</span><span class="logo-text">DM MOTOR <em>GROUP</em></span></div>
+      <p class="foot-tag" id="ft-tagline">Premium international automobile dealership.</p>
+      <p class="foot-addr" id="ft-address"></p>
+    </div>
+    <div>
+      <h4>Explore</h4>
+      <a href="/vehicles">Vehicle showroom</a>
+      <a href="/vehicles?category=luxury">Luxury collection</a>
+      <a href="/vehicles?category=suv">SUVs</a>
+      <a href="/videos">Video presentations</a>
+      <a href="/compare">Compare vehicles</a>
+    </div>
+    <div>
+      <h4>Contact</h4>
+      <a href="tel:+97145842200" id="ft-phone">+971 4 584 2200</a>
+      <a id="ft-email" href="mailto:sales@dmmotorgroup.com">sales@dmmotorgroup.com</a>
+      <a id="ft-wa" href="#" target="_blank" rel="noopener">WhatsApp sales desk</a>
+      <a href="/contact">Send an enquiry</a>
+    </div>
+    <div>
+      <h4>Trust</h4>
+      <p class="foot-note">No fake badges, no invented reviews: verified information is labelled as verified. Payments run through escrow with the purchase agreement — never card links or messaging apps.</p>
+    </div>
+  </div>
+  <div class="wrap foot-legal">
+    <span>© <span id="ft-year"></span> DM Motor Group. All vehicle listing data is supplied by the dealership.</span>
+    <span class="foot-social" id="foot-social"></span>
+  </div>
+</footer>
+
+<!-- compare tray -->
+<div id="cmpTray" hidden>
+  <div class="cmp-items" id="cmpItems"></div>
+  <div class="cmp-actions">
+    <button class="btn btn-ghost sm" id="cmpClear">Clear</button>
+    <a class="btn btn-gold sm" id="cmpGo" href="/compare">Compare now</a>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="lightbox" hidden></div>
+<div id="modal" hidden></div>
+
+<nav id="bottomNav" aria-label="App navigation">
+  <a href="/" data-bn="/"><i>⌂</i><span>Home</span></a>
+  <a href="/vehicles" data-bn="/vehicles"><i>▤</i><span>Showroom</span></a>
+  <a href="/videos" data-bn="/videos"><i>▶</i><span>Videos</span></a>
+  <a href="/account?tab=favourites" data-bn="/favourites"><i>♥</i><span>Saved</span></a>
+  <a href="/account" data-bn="/account"><i>○</i><span>Account</span></a>
+</nav>
+
+<script src="/app.js?v=4" defer></script>
+</body>
+</html>

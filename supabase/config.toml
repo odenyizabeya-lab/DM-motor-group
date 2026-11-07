@@ -1,0 +1,47 @@
+# DM Motor Group — Supabase local dev configuration
+project_id = "dm-motor-group"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
+smtp_port = 54325
+pop3_port = 54326
+
+[storage]
+enabled = true
+file_size_limit = "2GiB"
+
+[auth]
+enabled = true
+site_url = "http://localhost:8788"
+additional_redirect_urls = ["https://dmmotorgroup.com", "http://localhost:3000"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+enable_refresh_token_reuse = false
+minimum_password_length = 8
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false
+
+[auth.external.apple]
+enabled = false
+
+[analytics]
+enabled = false

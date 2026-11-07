@@ -1,0 +1,31 @@
+/*
+  Cache control for the deployed site.
+ */
+/assets/img/*.svg
+  Cache-Control: public, max-age=86400
+
+/admin/admin.css
+  Cache-Control: public, max-age=3600
+/admin/admin.js
+  Cache-Control: public, max-age=3600
+
+/styles.css
+  Cache-Control: public, max-age=3600
+/app.js
+  Cache-Control: public, max-age=3600
+
+/sw.js
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Cache-Control: no-cache
+/robots.txt
+  Cache-Control: public, max-age=86400
+/index.html
+  Cache-Control: no-cache
+
+/*.png
+  Cache-Control: public, max-age=604800
+/*.svg
+  Cache-Control: public, max-age=86400
+/*.webp
+  Cache-Control: public, max-age=604800
