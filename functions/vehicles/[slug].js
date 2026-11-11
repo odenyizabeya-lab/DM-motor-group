@@ -4,6 +4,7 @@
  * values injected server-side so scrapers and social platforms see live data.
  * ========================================================================== */
 import L from '../../shared/api-lib.js';
+import { HTML_HEADERS } from '../../shared/security.js';
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -19,13 +20,15 @@ export async function onRequest({ request, env, params, siteurl }) {
 
   let v = null;
   try {
-    const rows = await L.rest.get(env, 'vehicles', { slug: `eq.${slug}`, select: 'slug,brand,model,year,price,currency,mileage,condition,description,location,vin,status,category,body_type,exterior_color,transmission,fuel' });
+    const rows = await L.rest.get(env, 'vehicles', { slug: `eq.${slug}`, select: 'id,slug,brand,model,year,price,currency,mileage,condition,description,location,vin,status,category,body_type,exterior_color,transmission,fuel' });
     v = rows && rows[0];
   } catch {}
 
-  /* fetch shell from static assets */
-  const shell = await fetch(new URL(request.url).origin + '/index.html', { headers: { 'x-served-by': 'dm-shell' } })
-    .then((r) => r.text()).catch(() => '');
+  /* fetch shell from static assets (no extra network hop through the worker) */
+  const shellUrl = new URL('/index.html', url.origin).toString();
+  const shell = env && env.ASSETS
+    ? await env.ASSETS.fetch(new Request(shellUrl)).then((r) => (r.ok ? r.text() : '')).catch(() => '')
+    : await fetch(shellUrl).then((r) => r.text()).catch(() => '');
 
   if (!v || !['published', 'reserved'].includes(v.status)) {
     /* shell without vehicle data (404 semantics preserved) */
@@ -36,7 +39,7 @@ export async function onRequest({ request, env, params, siteurl }) {
           TYPE: 'website',
         })
       : '<!doctype html><title>Vehicle not found — DM Motor Group</title>';
-    return new Response(html, { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' } });
+    return new Response(html, { status: 404, headers: HTML_HEADERS });
   }
 
   /* media (og:image from the real cover photo) */
@@ -46,8 +49,10 @@ export async function onRequest({ request, env, params, siteurl }) {
     if (md && md[0]) img = md[0].url;
   } catch {}
 
+  const hasPrice = Number(v.price) > 0;
   const title = `${v.brand} ${v.model} ${v.year} — DM Motor Group`;
-  const desc = (v.description || `${v.year} ${v.brand} ${v.model} — ${String(v.price)} ${v.currency}`).replace(/\s+/g, ' ').slice(0, 300);
+  const priceText = hasPrice ? `${v.currency || 'USD'} ${Number(v.price).toLocaleString('en-US')}` : 'Price on request';
+  const desc = (v.description || `${v.year} ${v.brand} ${v.model} — ${priceText}`).replace(/\s+/g, ' ').slice(0, 300);
 
   const ld = {
     '@context': 'https://schema.org',
@@ -56,7 +61,6 @@ export async function onRequest({ request, env, params, siteurl }) {
     brand: { '@type': 'Brand', name: v.brand },
     model: v.model,
     vehicleModelDate: String(v.year),
-    itemCondition: /new/i.test(v.condition || '') ? 'https://schema.org/NewCondition' : 'https://schema.org/UsedCondition',
     url: `${base}/vehicles/${v.slug}`,
     image: [img],
     color: v.exterior_color || undefined,
@@ -65,13 +69,14 @@ export async function onRequest({ request, env, params, siteurl }) {
     vehicleConfiguration: v.body_type || undefined,
     offers: {
       '@type': 'Offer',
-      price: String(v.price),
-      priceCurrency: v.currency || 'USD',
+      /* never advertise a price of zero: vehicles without a price are "on request" */
+      ...(hasPrice ? { price: String(v.price), priceCurrency: v.currency || 'USD' } : {}),
       availability: v.status === 'published' ? 'https://schema.org/InStock' : 'https://schema.org/LimitedAvailability',
       url: `${base}/vehicles/${v.slug}`,
       seller: { '@type': 'AutoDealer', name: 'DM Motor Group', url: base },
     },
   };
+  if (v.condition) ld.itemCondition = /new/i.test(v.condition) ? 'https://schema.org/NewCondition' : 'https://schema.org/UsedCondition';
   if (v.vin) ld.vehicleIdentificationNumber = v.vin;
   if (v.mileage) ld.mileageFromOdometer = { '@type': 'QuantitativeValue', value: v.mileage, unitCode: 'KMT' };
 
@@ -87,11 +92,5 @@ export async function onRequest({ request, env, params, siteurl }) {
   const html = shell ? inject(shell, map)
     : `<!doctype html><title>${map.TITLE}</title><meta name="description" content="${map.DESC}">`;
 
-  return new Response(html, {
-    status: 200,
-    headers: {
-      'Content-Type': 'text/html; charset=utf-8',
-      'Cache-Control': 'no-cache',
-    },
-  });
+  return new Response(html, { status: 200, headers: HTML_HEADERS });
 }

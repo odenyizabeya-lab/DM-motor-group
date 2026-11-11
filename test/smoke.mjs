@@ -46,6 +46,14 @@ const PASSWORD = 'SmokeTest#2026';
 
 /* ---------- 0: establish an admin token (login if possible, else fresh
  * registration — a fresh DB registration is the owner-bootstrap admin) ---- */
+/* ensure the smoke mailbox account is an admin (owner bootstrap applies only
+ * to the very first registration ever made in this project) */
+{
+  const pr = await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(EMAIL)}&select=id`, { headers: SERVICE });
+  const pj = await pr.json();
+  const pid = pj && pj[0] ? pj[0].id : null;
+  if (pid) await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${pid}`, { method: 'PATCH', headers: { ...SERVICE, Prefer: 'return=representation' }, body: JSON.stringify({ role: 'admin' }) });
+}
 let r = await api('POST', '/api/auth/login', { body: { email: EMAIL, password: PASSWORD } });
 let freshAdmin = false;
 if (!(r.status === 200 && r.data?.token)) {

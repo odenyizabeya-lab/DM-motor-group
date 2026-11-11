@@ -5,6 +5,8 @@
  * ========================================================================== */
 'use strict';
 
+import { SECURITY_HEADERS } from './security.js';
+
 /* ---------------------------------------------------------------- utilities */
 const err = (status, message) => { const e = new Error(message); e.status = status; return e; };
 const slugify = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'item';
@@ -12,15 +14,21 @@ const slugify = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').repla
 function json(obj, code = 200) {
   return new Response(JSON.stringify(obj), {
     status: code,
-    headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
+    headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...SECURITY_HEADERS },
   });
 }
 
-async function readJson(request) {
+async function readJson(request, maxBytes = 1024 * 1024) {
+  const declared = +(request.headers.get('content-length') || 0);
+  if (declared > maxBytes) throw err(413, 'Request body is too large.');
   try {
     const t = await request.text();
+    if (t.length > maxBytes) throw err(413, 'Request body is too large.');
     return t ? JSON.parse(t) : {};
-  } catch { throw err(400, 'Invalid JSON body'); }
+  } catch (e) {
+    if (e.status) throw e;
+    throw err(400, 'Invalid JSON body');
+  }
 }
 
 /* per-isolate rate limiter (first line of defence; a Cloudflare WAF rule adds a network-wide one) */
@@ -131,7 +139,16 @@ async function storageDelete(env, urls) {
 }
 
 /* -------------------------------------------------------------------- auth */
-const authCache = new Map(); // access token -> { user, expires }
+const authCache = new Map(); // access token -> { user, userId, expires }
+const AUTH_CACHE_MS = 120 * 1000; /* short: a role change or profile edit must be visible quickly */
+
+/** Drop every cached session for a user (after a profile or role change). */
+function invalidateAuthCache(userId) {
+  if (!userId) return;
+  for (const [tok, entry] of authCache) {
+    if (entry.userId === userId) authCache.delete(tok);
+  }
+}
 
 async function authUser(env, request) {
   const tok = (request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
@@ -173,7 +190,7 @@ async function authUser(env, request) {
     role: (profile && profile.role) || 'customer',
   };
   if (authCache.size > 800) authCache.clear();
-  authCache.set(tok, { expires: Date.now() + 10 * 60e3, user });
+  authCache.set(tok, { expires: Date.now() + AUTH_CACHE_MS, user: user, userId: u.id });
   return user;
 }
 
@@ -229,6 +246,110 @@ async function logActivity(env, actor, action, detail = '') {
   await rest.insert(env, 'activity_logs', { actor, action, detail }).catch(() => {});
 }
 
+/* ------------------------------------------------------------------ AI providers */
+/* Server-side AI clients (official provider APIs). Keys + models live in
+ * server env ONLY (GEMINI_API_KEY / GEMINI_MODEL / OPENAI_API_KEY / OPENAI_MODEL);
+ * private keys are never exposed to the frontend. Gemini is the PRIMARY provider
+ * (free-tier default model: gemini-2.0-flash); OpenAI is a fully supported
+ * alternative (default model: gpt-4o-mini) so the scanner never hard-depends on
+ * one vendor. The scan route can request a provider, and falls back to the
+ * server-wide default (env.AI_PROVIDER) when none is supplied. */
+async function geminiGenerate(env, { images = [], video = null, prompt }) {
+  const key = env.GEMINI_API_KEY;
+  if (!key) throw err(503, 'AI scanner is not configured on the server (missing GEMINI_API_KEY).');
+  const model = env.GEMINI_MODEL || 'gemini-2.0-flash';
+  const parts = [{ text: prompt }];
+  for (const im of images || []) {
+    const d = String(im && im.dataBase64 || '');
+    if (!d) continue;
+    parts.push({ inlineData: { mimeType: (im && im.mimeType) || 'image/jpeg', data: d } });
+  }
+  if (video && String(video.dataBase64 || '')) {
+    parts.push({ inlineData: { mimeType: (video.mimeType) || 'video/mp4', data: String(video.dataBase64) } });
+  }
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+    body: JSON.stringify({ contents: [{ parts }], generationConfig: { responseMimeType: 'application/json', temperature: 0.2 } }),
+  });
+  const d = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = d && d.error && d.error.message ? d.error.message : `Gemini request failed (${res.status})`;
+    throw err(res.status >= 500 ? 502 : 400, `AI scan failed: ${msg}`);
+  }
+  const txt = ((d && d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts) || []).map((p) => p && p.text ? p.text : '').join('').trim();
+  if (!txt) throw err(502, 'AI scan returned an empty response.');
+  try { return JSON.parse(txt); } catch { return { raw: txt }; }
+}
+
+async function openaiGenerate(env, { images = [], video = null, prompt }) {
+  const key = env.OPENAI_API_KEY;
+  if (!key) throw err(503, 'AI scanner is not configured on the server (missing OPENAI_API_KEY).');
+  const model = env.OPENAI_MODEL || 'gpt-4o-mini';
+  const content = [{ type: 'text', text: prompt }];
+  for (const im of images || []) {
+    const d = String(im && im.dataBase64 || '');
+    if (!d) continue;
+    content.push({ type: 'image_url', image_url: { url: `data:${(im && im.mimeType) || 'image/jpeg'};base64,${d}` } });
+  }
+  if (video && String(video.dataBase64 || '')) {
+    /* OpenAI accepts video inputs on multimodal models via the Files API */
+    try {
+      const bytes = Uint8Array.from(atob(String(video.dataBase64 || '')), (c) => c.charCodeAt(0));
+      const fd = new FormData();
+      fd.append('purpose', 'vision');
+      fd.append('file', new Blob([bytes], { type: video.mimeType || 'video/mp4' }), String(video.name || 'vehicle.mp4'));
+      const fr = await fetch('https://api.openai.com/v1/files', { method: 'POST', headers: { Authorization: `Bearer ${key}` }, body: fd });
+      if (fr.ok) {
+        const fj = await fr.json().catch(() => ({}));
+        const fid = fj && fj.id;
+        if (fid) content.push({ type: 'file', file: { file_id: fid } });
+      }
+    } catch { /* file-upload is best-effort; still analyse any photos */ }
+  }
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+    body: JSON.stringify({ model, messages: [{ role: 'user', content }], response_format: { type: 'json_object' }, temperature: 0.2 }),
+  });
+  const d = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const rawMsg = d && d.error && (d.error.message || d.error);
+    throw err(res.status >= 500 ? 502 : 400, `AI scan failed via OpenAI: ${typeof rawMsg === 'string' ? rawMsg : JSON.stringify(rawMsg || `OpenAI request failed (${res.status})`)}`);
+  }
+  const choice = (d && d.choices && d.choices[0]) || {};
+  const txt = String((choice.message && choice.message.content) || '').trim();
+  if (!txt) throw err(502, 'AI scan returned an empty response.');
+  try { return JSON.parse(txt); } catch { return { raw: txt }; }
+}
+
+/* Resolve which AI provider the scanner should use. Priority:
+ * explicit scan request -> server-wide AI_PROVIDER env -> 'gemini' (primary). */
+function aiProviderId(env, requested) {
+  const p = String(requested || env.AI_PROVIDER || 'gemini').trim().toLowerCase();
+  const id = (p === 'openai' || p === 'gpt' || p === 'gpt4o') ? 'openai' : 'gemini';
+  return id;
+}
+
+/* Provider-agnostic scan call with light retry for transient upstream failures. */
+async function aiGenerate(env, { provider, images = [], video = null, prompt } = {}) {
+  const pid = aiProviderId(env, provider);
+  const impl = pid === 'openai' ? openaiGenerate : geminiGenerate;
+  let attempt = 0;
+  const run = async () => {
+    try { return await impl(env, { images, video, prompt }); }
+    catch (e) {
+      const retry = attempt < 2 && (e.status === 429 || e.status === 500 || e.status === 502 || e.status === 503);
+      if (!retry) throw e;
+      attempt += 1;
+      await new Promise((r) => setTimeout(r, [400, 900][attempt - 1]));
+      return run();
+    }
+  };
+  return run();
+}
+
 /* ---------------------------------------------------------- vehicle shaping */
 async function mediaFor(env, vehicleIds) {
   if (!vehicleIds.length) return new Map();
@@ -278,6 +399,33 @@ function vehicleDetailOut(v, media) {
   return out;
 }
 
+/* ------------------------------------------------------------- table probe */
+/* PostgREST reports a missing table with 4xx and a "Could not find the table"
+ * / "schema cache" message. These helpers let the dashboard tell the truth
+ * ("apply migration 00007") instead of showing silent zeros. */
+function missingRelationMessage(e) {
+  const m = String((e && e.message) || e || '');
+  return /could not find the table|schema cache|does not exist|relation .* does not exist/i.test(m);
+}
+async function tableExists(env, table) {
+  try {
+    await sb(env, `/rest/v1/${table}?select=*&limit=1`);
+    return true;
+  } catch (e) {
+    if (missingRelationMessage(e)) return false;
+    /* any other failure (network, auth) is not proof the table is missing */
+    throw e;
+  }
+}
+async function missingTables(env, tables) {
+  const list = Array.isArray(tables) ? tables : [];
+  const checks = await Promise.all(list.map(async (t) => {
+    try { return (await tableExists(env, t)) ? null : t; }
+    catch { return null; }
+  }));
+  return checks.filter(Boolean);
+}
+
 /* ------------------------------------------------------------- constants */
 const ENQ_TYPES_ = ['price', 'question', 'pictures', 'videos', 'inspection', 'testdrive', 'delivery', 'purchase', 'whatsapp'];
 const IMG_EXT_ = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
@@ -288,7 +436,8 @@ const apiLib = {
   err, json, readJson, rateLimit, slugify, extractStoragePath,
   sb, rest, storageUpload, storageDelete, storagePublic, storageUrl, storageHeaders,
   authUser, requireAuth, staff, writeStaff, loginPayload, sendNotification, logActivity,
-  mediaFor, vehicleOut, vehicleDetailOut,
+  mediaFor, vehicleOut, vehicleDetailOut, geminiGenerate, openaiGenerate, aiGenerate, aiProviderId,
+  missingRelationMessage, tableExists, missingTables, invalidateAuthCache,
   ENQ_TYPES: ENQ_TYPES_, IMG_EXT: IMG_EXT_, VID_EXT: VID_EXT_, VEHICLE_STATUSES: VEHICLE_STATUSES_,
 };
 export default apiLib;

@@ -1,6 +1,12 @@
+# Security headers for every static asset. Worker-generated HTML/JSON adds the
+# same headers in code because _headers does not apply to Worker responses.
 /*
-  Cache control for the deployed site.
- */
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://cloudflareinsights.com; worker-src 'self'; manifest-src 'self'; upgrade-insecure-requests
 /assets/img/*.svg
   Cache-Control: public, max-age=86400
 

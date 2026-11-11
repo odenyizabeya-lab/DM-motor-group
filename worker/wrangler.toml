@@ -1,0 +1,10 @@
+name = "dm-motor-group-ai-cron"
+main = "index.js"
+compatibility_date = "2026-01-01"
+workers_dev = true
+
+[triggers]
+crons = ["* * * * *"]
+
+[vars]
+AI_TICK_URL = "https://dmmotorgroup.com/api/internal/ai/tick"

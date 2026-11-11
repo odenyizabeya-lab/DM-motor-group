@@ -1,5 +1,6 @@
 /* Dynamic sitemap — real published vehicles from Supabase */
 import L from '../shared/api-lib.js';
+import { SECURITY_HEADERS } from '../shared/security.js';
 
 export async function onRequest({ request, env }) {
   const url = new URL(request.url);
@@ -27,5 +28,5 @@ export async function onRequest({ request, env }) {
   <url><loc>${base}/account</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>
 ${out.map((v) => `  <url><loc>${base}/vehicles/${v.slug}</loc><lastmod>${(v.updated_at || today).slice(0, 10)}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`).join('\n')}
 </urlset>`;
-  return new Response(xml, { headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'max-age=3600' } });
+  return new Response(xml, { headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'max-age=3600', ...SECURITY_HEADERS } });
 }

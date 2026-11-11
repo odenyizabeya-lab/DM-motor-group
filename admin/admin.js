@@ -30,6 +30,8 @@ function toast(msg, err = false) {
 function modal(html) { const m = $('#modal'); m.hidden = false; m.innerHTML = `<div class="modal-card">${html}<button class="x btn btn-ghost sm" onclick="closeModal()">✕ Close</button></div>`; }
 window.closeModal = () => { $('#modal').hidden = true; $('#modal').innerHTML = ''; };
 $('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
+const F = (s, key, label, ph, type = 'text') => `<div><label>${label}</label><input name="${key}" type="${type}" value="${esc((s && s[key]) || '')}" placeholder="${esc(ph || '')}"></div>`;
+const T = (s, key, label) => `<div class="full"><label>${label}</label><textarea name="${key}">${esc((s && s[key]) || '')}</textarea></div>`;
 
 /* ---------------- auth ---------------- */
 function showLogin(msg) {
@@ -49,7 +51,7 @@ $('#loginForm').onsubmit = async (e) => {
 $('#btnLogout').onclick = async () => { try { await api('/api/auth/logout', { method: 'POST' }); } catch {} localStorage.removeItem('dm_admin_token'); showLogin(); };
 
 /* ---------------- routing ---------------- */
-const PAGES = { dashboard, vehicles, enqueue: null, enquiries, customers, testimonials, banners, settings: settingsPage, activity };
+const PAGES = { dashboard, vehicles, enqueue: null, enquiries, customers, testimonials, banners, ai: aiScanner, ai_service: aiService, integrations: integrationsPage, settings: settingsPage, settings_general: settingsGeneral, settings_media: settingsMedia, settings_users: settingsUsers, settings_maintenance: settingsMaintenance, activity };
 window.addEventListener('hashchange', renderRoute);
 async function renderRoute() {
   if (!state.user) return;
@@ -170,7 +172,7 @@ async function editorPage(id) {
         <div><label>Registration information</label><input name="registration" value="${esc(v?.registration || '')}" placeholder="e.g. GCC import · duty paid"></div>
       </div></div>
       <div class="panel"><h3>Pricing & condition</h3><div class="fgrid">
-        ${f('Selling price *', 'price', 'number', 'required min=0 step=1')}${f('Currency', 'currency')}
+        ${f('Selling price (0 = price on request)', 'price', 'number', 'min=0 step=1')}${f('Currency', 'currency')}
         ${f('Mileage (km) *', 'mileage', 'number', 'required min=0')}${f('Condition', 'condition')}
         <div><label>Availability / location</label><input name="location" value="${esc(v?.location || '')}" placeholder="e.g. Dubai, UAE Showroom"></div>
       </div></div>
@@ -381,6 +383,191 @@ async function makeThumb(mediaId, blob) {
   await api(`/api/admin/media/${mediaId}/thumb`, { method: 'PUT', raw: { type: 'image/webp', data: blob } });
 }
 
+/* ================================================== AI CAR SCANNER */
+let aiImages = [];
+let aiVideo = null;
+let aiBusy = false;
+let aiReport = null;
+let aiVehicleId = null;
+let aiProvider = 'gemini';
+
+const aiReadBase64 = (f) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
+
+async function aiRunScan(images, video, provider) {
+  const r = await api('/api/admin/scan', { method: 'POST', body: { images, video, provider } });
+  aiReport = r.scan || {}; aiVehicleId = r.vehicleId || null; aiProvider = r.provider || provider || aiProvider;
+  return r;
+}
+
+function aiRenderReport() {
+  const l = aiReport || {};
+  const fields = [
+    ['brand', 'Manufacturer'], ['model', 'Model'], ['year', 'Year'], ['price', 'Price'], ['mileage', 'Mileage'],
+    ['engine', 'Engine / capacity'], ['transmission', 'Transmission'], ['fuel', 'Fuel'], ['bodyType', 'Body type'],
+    ['exteriorColor', 'Exterior colour'], ['interiorColor', 'Interior colour'], ['vin', 'VIN'], ['condition', 'Condition'],
+    ['location', 'Location'], ['category', 'Category'],
+  ];
+  let html = `<div class="fgrid">`;
+  for (const [k, label] of fields) {
+    const v = l[k];
+    const val = (v == null ? '' : (typeof v === 'object' ? (v.brand || v.name || '') : v));
+    const type = ['year', 'price', 'mileage'].includes(k) ? 'number' : 'text';
+    html += `<div><label>${label}</label><input id="aiF-${k}" type="${type}" value="${esc(val ?? '')}"></div>`;
+  }
+  html += `<div class="full"><label>Full description</label><textarea id="aiF-description" style="min-height:90px">${esc(l.description || '')}</textarea></div>`;
+  html += `<div class="full"><label>Key features (comma separated)</label><textarea id="aiF-keyFeatures" style="min-height:60px">${esc((l.keyFeatures || []).join(', '))}</textarea></div>`;
+  html += `<div class="full"><label>Sales headline</label><input id="aiF-headline" value="${esc(l.headline || '')}"></div>`;
+  html += `<div class="full"><label>Safety features (comma separated)</label><textarea id="aiF-safetyFeatures" style="min-height:60px">${esc((l.safetyFeatures || []).join(', '))}</textarea></div>`;
+  html += `<div class="full"><label>Interior features (comma separated)</label><textarea id="aiF-interiorFeatures" style="min-height:50px">${esc((l.interiorFeatures || []).join(', '))}</textarea></div>`;
+  html += `<div class="full"><label>Exterior features (comma separated)</label><textarea id="aiF-exteriorFeatures" style="min-height:50px">${esc((l.exteriorFeatures || []).join(', '))}</textarea></div>`;
+  html += `<div class="full"><label>Technology features (comma separated)</label><textarea id="aiF-technologyFeatures" style="min-height:50px">${esc((l.technologyFeatures || []).join(', '))}</textarea></div>`;
+  html += `<div class="full"><label>Visible damage / condition notes</label><textarea id="aiF-damage" style="min-height:50px">${esc((l.damage || []).join(', '))}</textarea></div>`;
+  const mv = l.marketValueEstimate != null ? String(l.marketValueEstimate) : '';
+  html += `<div class="full"><label>Market value estimate (USD)</label><input id="aiF-marketValueEstimate" type="number" value="${esc(String(mv))}"></div>`;
+  const host = document.getElementById('aiReport');
+  if (host) host.innerHTML = html;
+}
+
+async function aiScanner() {
+  const host = document.createElement('div');
+  host.innerHTML = `
+    <div class="pg-head"><div><span class="crumb">AI · Automation</span><h1>🤖 AI Car Scanner</h1></div></div>
+    <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:16px;align-items:start">
+      <div>
+        <div class="panel"><h3>1 · Upload media for scanning</h3>
+          <div style="margin-bottom:12px"><label>AI provider</label><select id="aiProvider"><option value="gemini">Google Gemini (primary)</option><option value="openai">OpenAI (alternative)</option></select></div>
+          <div class="dropzone" id="aiVidZone"><div style="font-size:26px">🎬</div><div><b>Full-length vehicle video</b></div><div class="muted">MP4 / WebM / MOV — the AI watches the full clip.</div>
+            <input type="file" id="aiVid" accept="video/*" hidden></div>
+          <div class="toolbar" style="margin-top:10px"><button class="btn btn-gold" id="aiScanBtn" ${aiBusy ? 'disabled' : ''}>🤖 Scan vehicle</button><span class="muted" id="aiScanStatus">No media yet.</span></div>
+        </div>
+        <div class="panel" style="margin-top:16px"><h3>2 · Photographs</h3>
+          <div class="dropzone" id="aiImgZone"><div style="font-size:26px">📷</div><div><b>Car photographs</b></div><div class="muted">Add one or more photos (exterior/interior).</div>
+            <input type="file" id="aiImgs" accept="image/*" multiple hidden></div>
+          <div class="toolbar" style="margin-top:10px"><button class="btn btn-ghost" id="aiAddImgsBtn">＋ Add photographs</button><span class="muted" id="aiImgCount">0 photos.</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="panel"><h3>🤖 AI scan report</h3>
+          <div id="aiReport">Run a scan to generate a professional listing.</div>
+          <div class="rowbtns" style="margin-top:12px">
+            <button class="btn btn-ghost" id="aiEditBtn" ${aiVehicleId ? '' : 'disabled'}>✏ Edit listing</button>
+            <button class="btn btn-gold" id="aiSaveDraft">💾 Save as draft</button>
+            <button class="btn btn-gold" id="aiPublish">🚀 Publish listing</button>
+            <button class="btn btn-ghost" id="aiRescanVid">🔄 Rescan video</button>
+            <button class="btn btn-ghost" id="aiRescanImg">🔄 Rescan images</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  pg.innerHTML = host.innerHTML;
+
+  const renderReport = () => {
+    const l = aiReport || {};
+    const fields = [
+      ['brand', 'Manufacturer'], ['model', 'Model'], ['year', 'Year'], ['price', 'Price'], ['mileage', 'Mileage'],
+      ['engine', 'Engine / capacity'], ['transmission', 'Transmission'], ['fuel', 'Fuel'], ['bodyType', 'Body type'],
+      ['exteriorColor', 'Exterior colour'], ['interiorColor', 'Interior colour'], ['vin', 'VIN'], ['condition', 'Condition'],
+      ['location', 'Location'], ['category', 'Category'],
+    ];
+    let html = `<div class="fgrid">`;
+    for (const [k, label] of fields) {
+      const v = l[k];
+      const val = (v == null ? '' : (typeof v === 'object' ? (v.brand || v.name || '') : v));
+      const type = ['year', 'price', 'mileage'].includes(k) ? 'number' : 'text';
+      html += `<div><label>${label}</label><input id="aiF-${k}" type="${type}" value="${esc(val ?? '')}"></div>`;
+    }
+    html += `<div class="full"><label>Full description</label><textarea id="aiF-description" style="min-height:90px">${esc(l.description || '')}</textarea></div>`;
+    html += `<div class="full"><label>Key features (comma separated)</label><textarea id="aiF-keyFeatures" style="min-height:60px">${esc((l.keyFeatures || []).join(', '))}</textarea></div>`;
+    html += `<div class="full"><label>Sales headline</label><input id="aiF-headline" value="${esc(l.headline || '')}"></div>`;
+    html += `<div class="full"><label>Safety features (comma separated)</label><textarea id="aiF-safetyFeatures" style="min-height:60px">${esc((l.safetyFeatures || []).join(', '))}</textarea></div>`;
+    html += `<div class="full"><label>Interior features (comma separated)</label><textarea id="aiF-interiorFeatures" style="min-height:50px">${esc((l.interiorFeatures || []).join(', '))}</textarea></div>`;
+    html += `<div class="full"><label>Exterior features (comma separated)</label><textarea id="aiF-exteriorFeatures" style="min-height:50px">${esc((l.exteriorFeatures || []).join(', '))}</textarea></div>`;
+    html += `<div class="full"><label>Technology features (comma separated)</label><textarea id="aiF-technologyFeatures" style="min-height:50px">${esc((l.technologyFeatures || []).join(', '))}</textarea></div>`;
+    html += `<div class="full"><label>Visible damage / condition notes</label><textarea id="aiF-damage" style="min-height:50px">${esc((l.damage || []).join(', '))}</textarea></div>`;
+    const mv = l.marketValueEstimate != null ? String(l.marketValueEstimate) : '';
+    html += `<div class="full"><label>Market value estimate (USD)</label><input id="aiF-marketValueEstimate" type="number" value="${esc(String(mv))}"></div>`;
+    const rep = document.getElementById('aiReport');
+    if (rep) rep.innerHTML = html;
+  };
+
+  const collectListing = () => {
+    const o = {};
+    for (const el of document.querySelectorAll('#aiReport input, #aiReport textarea')) {
+      const id = el.id; const k = id.replace(/^aiF-/, '');
+      let v = el.value;
+      if (['year', 'price', 'mileage'].includes(k)) v = v === '' ? null : +v;
+      if (k === 'keyFeatures') v = String(v || '').split(',').map((s) => s.trim()).filter(Boolean);
+      o[k] = v;
+    }
+    return o;
+  };
+
+  const doScan = async (images, video) => {
+    if (aiBusy) return;
+    if (!images.length && !video) { toast('Add at least one photograph or the full-length video to scan.', true); return; }
+    const provider = (document.getElementById('aiProvider') || {}).value || state.settings?.ai_provider || aiProvider || 'gemini';
+    aiBusy = true; const sb = document.getElementById('aiScanBtn'); if (sb) sb.disabled = true; const st = document.getElementById('aiScanStatus'); if (st) st.textContent = `Contacting ${provider === 'openai' ? 'OpenAI' : 'Gemini'}… analysing media.`;
+    toast(`🤖 AI scanning… analysing media with ${provider === 'openai' ? 'OpenAI' : 'Gemini'}.`);
+    try {
+      const r = await api('/api/admin/scan', { method: 'POST', body: { images, video, provider } });
+      aiReport = r.scan || {}; aiVehicleId = r.vehicleId || null; aiProvider = r.provider || provider;
+      renderReport();
+      if (st) st.textContent = `AI scan complete via ${aiProvider} — review the generated listing.`;
+      toast(`AI scan complete via ${aiProvider} — review the generated listing.`);
+    } catch (e) { if (st) st.textContent = 'AI scan failed — please retry.'; toast(`AI scan failed: ${e.message}`, true); }
+    finally { aiBusy = false; const sb2 = document.getElementById('aiScanBtn'); if (sb2) sb2.disabled = false; }
+  };
+
+  const saveDraft = async () => {
+    if (!aiVehicleId) { toast('Scan first to create the draft listing.', true); return; }
+    const d = collectListing();
+    await api(`/api/admin/vehicles/${aiVehicleId}`, { method: 'PUT', body: d });
+    await api(`/api/admin/vehicles/${aiVehicleId}/status`, { method: 'POST', body: { status: 'draft' } });
+    toast('AI listing saved as draft.');
+  };
+  const publishListing = async () => {
+    if (!aiVehicleId) { toast('Scan first to create the draft listing.', true); return; }
+    const d = collectListing();
+    await api(`/api/admin/vehicles/${aiVehicleId}`, { method: 'PUT', body: d });
+    await api(`/api/admin/vehicles/${aiVehicleId}/status`, { method: 'POST', body: { status: 'published' } });
+    toast('AI listing published.');
+  };
+
+  pg.innerHTML = host.innerHTML;
+
+  const aiScanBtn = document.getElementById('aiScanBtn');
+  aiScanBtn.onclick = () => doScan(aiImages, aiVideo);
+  const aiAddImgsBtn = document.getElementById('aiAddImgsBtn');
+  const aiImgs = document.getElementById('aiImgs');
+  if (aiAddImgsBtn) aiAddImgsBtn.onclick = () => aiImgs && aiImgs.click();
+  if (aiImgs) aiImgs.onchange = async (e) => {
+    const files = [...(e.target.files || [])].filter((f) => f.type.startsWith('image/'));
+    for (const f of files) {
+      const b64 = await aiReadBase64(f);
+      aiImages.push({ name: f.name, mimeType: f.type || 'image/jpeg', dataBase64: b64 });
+    }
+    const cnt = document.getElementById('aiImgCount');
+    if (cnt) cnt.textContent = `${aiImages.length} photos.`;
+    e.target.value = '';
+  };
+  const aiVid = document.getElementById('aiVid');
+  if (aiVid) aiVid.onchange = async (e) => { const f = e.target.files && e.target.files[0]; if (f) { aiVideo = { name: f.name, mimeType: f.type || 'video/mp4', dataBase64: await aiReadBase64(f) }; } };
+
+  const aiEditBtn = document.getElementById('aiEditBtn');
+  if (aiEditBtn) aiEditBtn.onclick = () => { if (aiVehicleId) location.hash = '#/vehicles/' + aiVehicleId; };
+  const aiSaveDraftBtn = document.getElementById('aiSaveDraft'); if (aiSaveDraftBtn) aiSaveDraftBtn.onclick = saveDraft;
+  const aiPublishBtn = document.getElementById('aiPublish'); if (aiPublishBtn) aiPublishBtn.onclick = publishListing;
+  const aiRescanVidBtn = document.getElementById('aiRescanVid'); if (aiRescanVidBtn) aiRescanVidBtn.onclick = async () => {
+    if (!aiVideo) { toast('Add the video first to rescan.', true); return; }
+    await doScan(aiImages, aiVideo);
+  };
+  const aiRescanImgBtn = document.getElementById('aiRescanImg'); if (aiRescanImgBtn) aiRescanImgBtn.onclick = async () => {
+    if (!aiImages.length) { toast('Add photos first to rescan.', true); return; }
+    await doScan(aiImages, aiVideo);
+  };
+  renderReport();
+}
+
 /* ================================================== ENQUIRIES */
 async function enquiries(filter) {
   const rows = await api(`/api/admin/enquiries${filter ? `?status=${filter}` : ''}`);
@@ -527,30 +714,62 @@ $('#pickBannerImg').onchange = async (e) => {
   if (f && pendingBanner) { try { await api(`/api/admin/banners/${pendingBanner}/image`, { method: 'PUT', raw: { type: f.type, data: f } }); toast('Banner image replaced — homepage updated.'); banners(); } catch (err) { toast(err.message, true); } }
 };
 
+/* ================================================== SETTINGS SUB-PAGES */
+async function settingsGeneral() { await settingsPage(); }
+async function settingsMedia() {
+  const s = await api('/api/admin/settings'); state.settings = s;
+  if (state.user.role !== 'admin') { pg.innerHTML = `<div class="panel"><h3>Read-only view</h3></div>`; return; }
+  pg.innerHTML = `
+  <div class="pg-head"><div><span class="crumb">Configuration</span><h1>Image &amp; video upload settings</h1></div></div>
+  <form id="setForm"><div class="panel"><h3>Media</h3><div class="fgrid">
+    ${F(s, 'media_max_mb', 'Maximum image size (MB)')}${F(s, 'media_max_video_mb', 'Maximum video size (MB)')}
+  </div></div>
+  <button class="btn btn-gold" type="submit">💾 Save media settings</button>
+  <p class="muted" style="margin-top:10px">Limits apply immediately to new uploads. Images: JPG, PNG, WebP, GIF. Video: MP4, WebM, M4V, MOV. The file type is checked server-side and cannot be spoofed by renaming a file.</p></form>`;
+  $('#setForm').onsubmit = async (e) => { e.preventDefault(); const d = Object.fromEntries(new FormData(e.target)); try { await api('/api/admin/settings', { method: 'PUT', body: d }); toast('Media settings saved.'); } catch (err) { toast(err.message, true); } };
+}
+async function settingsUsers() {
+  pg.innerHTML = `
+  <div class="pg-head"><div><span class="crumb">People</span><h1>User &amp; staff management</h1></div>
+    <a class="btn btn-gold" href="#/customers">Manage staff accounts →</a></div>
+  <div class="panel"><h3>Access roles</h3><p class="muted">Roles: admin, manager, viewer, customer. Admins manage staff, vehicles, integrations and settings; managers handle inventory; viewers are read-only.</p></div>`;
+}
+async function settingsMaintenance() {
+  const s = await api('/api/admin/settings'); state.settings = s;
+  if (state.user.role !== 'admin') { pg.innerHTML = `<div class="panel"><h3>Read-only view</h3></div>`; return; }
+  pg.innerHTML = `
+  <div class="pg-head"><div><span class="crumb">Configuration</span><h1>Maintenance mode</h1></div></div>
+  <form id="setForm"><div class="panel"><div class="fgrid">
+    <div><label>Public website</label><select name="maintenance_mode">
+      <option value="no" ${s.maintenance_mode === 'yes' ? '' : 'selected'}>Online — normal service</option>
+      <option value="yes" ${s.maintenance_mode === 'yes' ? 'selected' : ''}>Maintenance notice — pause public pages</option>
+    </select></div>
+  </div></div>
+  <button class="btn btn-gold" type="submit">💾 Save maintenance settings</button>
+  <p class="muted" style="margin-top:10px">While active, public pages show a maintenance notice with a 503 response. The admin dashboard and API stay available, and the change takes effect within about a minute.</p></form>`;
+  $('#setForm').onsubmit = async (e) => { e.preventDefault(); const d = Object.fromEntries(new FormData(e.target)); try { await api('/api/admin/settings', { method: 'PUT', body: d }); toast('Maintenance settings saved.'); } catch (err) { toast(err.message, true); } };
+}
+
 /* ================================================== SETTINGS */
 async function settingsPage() {
   const s = await api('/api/admin/settings'); state.settings = s;
   if (state.user.role !== 'admin') { pg.innerHTML = `<div class="panel"><h3>Read-only view</h3><p class="muted">Dealership settings are restricted to full administrators.</p></div>`; return; }
-  const F = (key, label, ph, type = 'text') => `<div><label>${label}</label><input name="${key}" type="${type}" value="${esc(s[key] || '')}" placeholder="${esc(ph || '')}"></div>`;
-  const T = (key, label) => `<div class="full"><label>${label}</label><textarea name="${key}">${esc(s[key] || '')}</textarea></div>`;
   pg.innerHTML = `
   <div class="pg-head"><div><span class="crumb">Configuration</span><h1>Dealership settings</h1></div></div>
   <form id="setForm"><div class="panel"><h3>Company profile</h3><div class="fgrid">
-    ${F('company_name', 'Company name')}${F('tagline', 'Tagline')}${F('phone_main', 'Main telephone')}${F('phone_sales', 'Sales telephone')}
-    ${F('whatsapp', 'WhatsApp number (digits incl. country code)')}${F('email_sales', 'Sales email')}
-    ${F('email_support', 'Support email')}${F('currency', 'Default currency code')}
-    ${T('address_primary', 'Primary showroom address')}${T('address_secondary', 'Secondary address')}${T('hours', 'Opening hours')}
+    ${F(s, 'company_name', 'Company name')}${F(s, 'tagline', 'Tagline')}${F(s, 'phone_main', 'Main telephone')}${F(s, 'phone_sales', 'Sales telephone')}
+    ${F(s, 'whatsapp', 'WhatsApp number (digits incl. country code)')}${F(s, 'email_sales', 'Sales email')}
+    ${F(s, 'email_support', 'Support email')}${F(s, 'currency', 'Default currency code')}
+    ${T(s, 'address_primary', 'Primary showroom address')}${T(s, 'address_secondary', 'Secondary address')}${T(s, 'hours', 'Opening hours')}
   </div></div>
   <div class="panel"><h3>Trust & payment information (shown verbatim to customers)</h3><div class="fgrid">
-    ${T('payment_info', 'Payment instructions')}${T('inspection_note', 'Inspection policy note')}${T('trade_license', 'Trade licence note')}
-    ${F('social_instagram', 'Instagram URL')}${F('social_facebook', 'Facebook URL')}${F('social_youtube', 'YouTube URL')}${F('social_linkedin', 'LinkedIn URL')}
-    <div><label style="display:flex;gap:10px;align-items:center;margin-top:10px"><input type="checkbox" name="dev_reset_tokens" value="1" ${s.dev_reset_tokens === '1' ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--gold)"> Expose password-reset codes in-app (development only — disable in production)</label></div>
+    ${T(s, 'payment_info', 'Payment instructions')}${T(s, 'inspection_note', 'Inspection policy note')}${T(s, 'trade_license', 'Trade licence note')}
+    ${F(s, 'social_instagram', 'Instagram URL')}${F(s, 'social_facebook', 'Facebook URL')}${F(s, 'social_youtube', 'YouTube URL')}${F(s, 'social_linkedin', 'LinkedIn URL')}
   </div></div>
   <button class="btn btn-gold" type="submit">💾 Save all settings</button>
   <p class="muted" style="margin-top:10px">Settings persist in the database and apply instantly to the website, mobile app and admin dashboard.</p></form>`;
   $('#setForm').onsubmit = async (e) => {
     e.preventDefault(); const d = Object.fromEntries(new FormData(e.target));
-    d.dev_reset_tokens = d.dev_reset_tokens ? '1' : '0';
     try { await api('/api/admin/settings', { method: 'PUT', body: d }); toast('Settings saved to the database.'); } catch (err) { toast(err.message, true); }
   };
 }
@@ -563,6 +782,371 @@ async function activity() {
   <div class="panel"><div class="table-wrap" style="margin:-20px"><table class="tbl">
     <thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Detail</th></tr></thead><tbody>
     ${rows.map((a) => `<tr><td class="muted">${esc(a.created_at)}</td><td><b>${esc(a.actor)}</b></td><td><span style="color:var(--gold2)">${esc(a.action)}</span></td><td class="muted">${esc(a.detail)}</td></tr>`).join('')}</tbody></table></div></div>`;
+}
+
+/* ================================================== AI CUSTOMER SERVICE */
+const AI_SECRET_LABELS = {
+  gemini_api_key: 'Google Gemini API key (free tier)',
+  openai_api_key: 'OpenAI API key (optional fallback)',
+  resend_api_key: 'Resend API key (email delivery + inbound)',
+  brevo_api_key: 'Brevo API key (optional email fallback)',
+  resend_webhook_secret: 'Resend webhook signing secret (starts with whsec_)',
+};
+const fmtWhen = (s) => { if (!s) return '—'; const d = new Date(s); return Number.isNaN(d.getTime()) ? esc(s) : d.toLocaleString(); };
+const badge = (on, label, cls = 'published') => `<span class="status ${on ? cls : 'draft'}">${esc(label)}</span>`;
+
+async function aiService() {
+  if (state.user.role !== 'admin') { pg.innerHTML = `<div class="panel"><h3>Read-only view</h3><p class="muted">AI Customer Service configuration is restricted to full administrators.</p></div>`; return; }
+  let ov, creds;
+  try {
+    [ov, creds] = await Promise.all([api('/api/admin/ai/overview'), api('/api/admin/ai/credentials')]);
+  } catch (e) {
+    pg.innerHTML = `<div class="pg-head"><div><span class="crumb">AI · Automation</span><h1>AI Customer Service</h1></div></div>
+      <div class="panel" style="border-color:var(--gold)"><h3>Database setup required</h3>
+      <p class="muted">The AI tables are not available yet. Apply migration <code>00007_ai_customer_service.sql</code> in the Supabase SQL Editor, then reload this page.</p>
+      <p class="muted" style="margin-top:8px">Details: ${esc(e.message)}</p>
+      <a class="btn btn-gold" href="https://supabase.com/dashboard/project/gevxgqdevaanmxqzverv/sql/new" target="_blank" rel="noopener">Open Supabase SQL Editor</a></div>`;
+    return;
+  }
+  /* The overview tells us whether the AI tables exist. Without them nothing on
+   * this page can work, so say so instead of showing empty tables and zeros. */
+  if (ov.db && ov.db.ready === false) {
+    pg.innerHTML = `<div class="pg-head"><div><span class="crumb">AI · Automation</span><h1>AI Customer Service</h1></div></div>
+      <div class="panel" style="border-color:var(--gold)"><h3>Database setup required</h3>
+      <p class="muted">The AI tables are not available yet. Apply migration <code>00007_ai_customer_service.sql</code> in the Supabase SQL Editor, then reload this page.</p>
+      <p class="muted" style="margin-top:8px">Missing tables: <code>${esc((ov.db.missingTables || []).join(', '))}</code></p>
+      <p class="muted" style="margin-top:8px">Until the migration is applied the assistant, the job queue, inspection bookings and inbound email handling all stay inactive. No email is sent and no conversation is stored.</p>
+      <a class="btn btn-gold" href="https://supabase.com/dashboard/project/gevxgqdevaanmxqzverv/sql/new" target="_blank" rel="noopener">Open Supabase SQL Editor</a></div>`;
+    return;
+  }
+  const s = ov.settings || {};
+  const st = ov.status || {};
+  const stats = ov.stats || {};
+  state.aiInspections = new Map();
+
+  pg.innerHTML = `
+  <div class="pg-head"><div><span class="crumb">AI · Automation</span><h1>AI Customer Service</h1></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="aiRunNow()">▶ Run automation now</button>
+      <button class="btn btn-ghost" onclick="aiService()">↻ Refresh</button>
+    </div></div>
+
+  ${ov.missing && ov.missing.length ? `<div class="panel" style="border-color:var(--gold)"><h3>Setup checklist</h3>
+    <ul class="muted" style="margin-left:18px;line-height:1.9">${ov.missing.map((m) => `<li>${esc(m)}</li>`).join('')}</ul></div>` : ''}
+
+  <div class="stat-grid">
+    <div class="stat"><b>${stats.open || 0}</b><span>Open conversations</span></div>
+    <div class="stat"><b>${stats.requested || 0}</b><span>Inspection requests</span></div>
+    <div class="stat"><b>${stats.emailsToday || 0}</b><span>Emails sent today</span></div>
+    <div class="stat"><b>${stats.escalated || 0}</b><span>Need a human</span></div>
+    <div class="stat"><b>${stats.pendingJobs || 0}</b><span>Queued jobs</span></div>
+    <div class="stat"><b>${stats.failedJobs || 0}</b><span>Failed jobs</span></div>
+  </div>
+
+  <div class="panel"><h3>Assistant status</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      ${badge(st.enabled, st.enabled ? 'Assistant active' : 'Assistant disabled')}
+      ${badge(st.aiConfigured, st.aiConfigured ? `AI: ${esc(st.provider || '')} ${esc(st.model || '')}` : 'AI key missing')}
+      ${badge(st.emailConfigured, st.emailConfigured ? 'Email delivery ready' : 'Email key missing')}
+      ${badge(st.inboundConfigured, st.inboundConfigured ? 'Inbound replies ready' : 'Inbound not configured')}
+      <span class="status draft">Daily cap: ${esc(String(s.daily_email_cap == null ? 100 : s.daily_email_cap))}</span>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn ${st.enabled ? 'btn-ghost' : 'btn-gold'}" onclick="aiToggle(${st.enabled ? 'false' : 'true'})">${st.enabled ? '⏸ Disable assistant' : '▶ Activate assistant'}</button>
+      <button class="btn btn-ghost" onclick="aiTestAi()">Test AI reply</button>
+      <input id="aiTestEmail" type="email" value="${esc(state.user.email || '')}" placeholder="you@example.com" style="max-width:240px">
+      <button class="btn btn-ghost" onclick="aiTestEmail()">Send test email</button>
+    </div>
+    <div id="aiTestOut" class="muted" style="margin-top:12px;white-space:pre-wrap"></div>
+  </div>
+
+  <div class="panel"><h3>Assistant instructions &amp; email identity</h3>
+  <form id="aiSetForm">
+    <div class="fgrid">
+      <div><label>Status</label><select name="enabled"><option value="true" ${s.enabled ? 'selected' : ''}>Active</option><option value="false" ${!s.enabled ? 'selected' : ''}>Disabled</option></select></div>
+      <div><label>AI provider</label><select name="ai_provider"><option value="gemini" ${s.ai_provider === 'gemini' ? 'selected' : ''}>Google Gemini (free tier)</option><option value="openai" ${s.ai_provider === 'openai' ? 'selected' : ''}>OpenAI (fallback)</option></select></div>
+      <div><label>Business name</label><input name="business_name" value="${esc(s.business_name || 'DM Motor Group')}"></div>
+      <div><label>Team name</label><input name="team_name" value="${esc(s.team_name || 'Customer Relations Team')}"></div>
+      <div><label>Sender name</label><input name="from_name" value="${esc(s.from_name || 'DM Motor Group')}"></div>
+      <div><label>Sender email</label><input name="from_email" type="email" value="${esc(s.from_email || '')}" placeholder="hello@dmmotorgroup.com"></div>
+      <div><label>Inbound reply domain</label><input name="reply_domain" value="${esc(s.reply_domain || '')}" placeholder="inbound.dmmotorgroup.com"></div>
+      <div><label>Admin alert email</label><input name="admin_email" type="email" value="${esc(s.admin_email || '')}" placeholder="sales@dmmotorgroup.com"></div>
+      <div><label>Gemini model</label><input name="gemini_model" value="${esc(s.gemini_model || 'gemini-2.5-flash')}"></div>
+      <div><label>OpenAI model</label><input name="openai_model" value="${esc(s.openai_model || 'gpt-4o-mini')}"></div>
+      <div><label>Daily email cap</label><input name="daily_email_cap" type="number" min="0" max="500" value="${esc(String(s.daily_email_cap == null ? 100 : s.daily_email_cap))}"></div>
+      <div><label>Reply delay (seconds)</label><input name="reply_delay_seconds" type="number" min="0" max="86400" value="${esc(String(s.reply_delay_seconds == null ? 20 : s.reply_delay_seconds))}"></div>
+      <div><label>Follow-up after (hours, 0=off)</label><input name="followup_hours" type="number" min="0" max="720" value="${esc(String(s.followup_hours == null ? 48 : s.followup_hours))}"></div>
+      <div><label>Timezone</label><input name="timezone" value="${esc(s.timezone || 'Asia/Dubai')}"></div>
+      <div class="full"><label>Communication tone</label><input name="tone" value="${esc(s.tone || 'warm, professional, respectful and reassuring')}"></div>
+      <div class="full"><label>Custom instructions (applied to every AI email)</label><textarea name="instructions" style="min-height:90px">${esc(s.instructions || '')}</textarea></div>
+      <div class="full"><label>Sign-off</label><input name="signature" value="${esc(s.signature || 'Warm regards,')}"></div>
+    </div>
+    <button class="btn btn-gold" type="submit">💾 Save assistant settings</button>
+  </form></div>
+
+  <div class="panel"><h3>Email &amp; AI credentials</h3>
+    <p class="muted" style="margin-bottom:10px">Secrets are stored server-side in a locked table and are never returned to the browser. Leave a field blank to keep the existing value.</p>
+    <form id="aiCredForm"><div class="fgrid">
+      ${Object.entries(AI_SECRET_LABELS).map(([k, label]) => `<div><label>${esc(label)} ${creds[k] && creds[k].configured ? `<span style="color:var(--gold2)">· ${esc(creds[k].source || 'set')} ${esc(creds[k].masked || '')}</span>` : '<span style="color:var(--faint)">· not set</span>'}</label><input name="${k}" type="password" autocomplete="new-password" placeholder="${creds[k] && creds[k].configured ? 'Leave blank to keep' : 'Paste key'}"></div>`).join('')}
+      <div class="full"><p class="muted">Cron secret: ${creds.internal_key && creds.internal_key.configured ? `configured (${esc(creds.internal_key.source)})` : 'not configured'} — managed at deploy time.</p></div>
+    </div>
+    <button class="btn btn-gold" type="submit">🔐 Save credentials</button>
+  </form></div>
+
+  <div class="panel"><h3>Conversations</h3>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <input id="aiConvSearch" placeholder="Search name or email" style="max-width:280px">
+      <select id="aiConvStatus"><option value="">All</option><option value="open">Open</option><option value="pending">Pending</option><option value="closed">Closed</option></select>
+      <button class="btn btn-ghost" onclick="aiLoadConversations()">Search</button>
+    </div>
+    <div class="table-wrap"><table class="tbl"><thead><tr><th>Updated</th><th>Customer</th><th>Vehicle</th><th>Status</th><th></th></tr></thead>
+      <tbody id="aiConvRows"></tbody></table></div>
+  </div>
+
+  <div id="aiConvDetail"></div>
+
+  <div class="panel"><h3>Inspection requests</h3>
+    <div class="table-wrap"><table class="tbl"><thead><tr><th>Created</th><th>Customer</th><th>Vehicle</th><th>Preferred</th><th>Confirmed</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="aiInspRows"></tbody></table></div>
+  </div>
+
+  <div class="panel"><h3>Automation jobs</h3>
+    <p class="muted" style="margin-bottom:10px">Background queue with automatic retries and exponential backoff. The cron heartbeat runs every minute.</p>
+    <div class="table-wrap"><table class="tbl"><thead><tr><th>#</th><th>Kind</th><th>Status</th><th>Attempts</th><th>Run after</th><th>Last error</th><th></th></tr></thead>
+      <tbody id="aiJobRows"></tbody></table></div>
+  </div>`;
+
+  aiRenderConversations(ov.conversations || []);
+  /* One failing panel must not wipe the whole page — show the failure inline. */
+  const inlineFail = (sel, label, cols) => (e) => {
+    const el = $(sel); if (!el) return;
+    el.innerHTML = `<tr><td colspan="${cols}" class="muted">${esc(label)} could not be loaded: ${esc(e.message)}</td></tr>`;
+  };
+  await Promise.all([
+    aiLoadConversations().catch(inlineFail('#aiConvRows', 'Conversations', 5)),
+    aiLoadInspections().catch(inlineFail('#aiInspRows', 'Inspection requests', 7)),
+    aiLoadJobs().catch(inlineFail('#aiJobRows', 'Automation jobs', 7)),
+  ]);
+
+  $('#aiSetForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(e.target));
+    d.enabled = d.enabled === 'true';
+    ['daily_email_cap', 'reply_delay_seconds', 'followup_hours'].forEach((k) => { d[k] = Number(d[k]); });
+    try { await api('/api/admin/ai/settings', { method: 'PUT', body: d }); toast('Assistant settings saved.'); aiService(); }
+    catch (err) { toast(err.message, true); }
+  };
+  $('#aiCredForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(e.target));
+    try { const r = await api('/api/admin/ai/credentials', { method: 'PUT', body: d }); toast(`${r.updated} credential(s) saved.`); aiService(); }
+    catch (err) { toast(err.message, true); }
+  };
+}
+
+async function aiToggle(on) {
+  try { await api('/api/admin/ai/settings', { method: 'PUT', body: { enabled: on } }); toast(on ? 'Assistant activated.' : 'Assistant disabled.'); aiService(); }
+  catch (e) { toast(e.message, true); }
+}
+async function aiRunNow() {
+  try { const r = await api('/api/admin/ai/tick', { method: 'POST' }); toast(`Automation ran — ${r.processed} job(s) processed.`); aiService(); }
+  catch (e) { toast(e.message, true); }
+}
+async function aiTestAi() {
+  const out = $('#aiTestOut'); out.textContent = 'Testing AI…';
+  try { const r = await api('/api/admin/ai/test', { method: 'POST' });
+    out.textContent = `Provider: ${r.decision.provider} (${r.decision.model})\nSubject: ${r.decision.subject}\nEscalate: ${r.decision.escalate}\n\n${r.decision.reply}`;
+  } catch (e) { out.textContent = 'AI test failed: ' + e.message; toast(e.message, true); }
+}
+async function aiTestEmail() {
+  const out = $('#aiTestOut'); const to = ($('#aiTestEmail') || {}).value || '';
+  out.textContent = 'Sending real test email…';
+  try { const r = await api('/api/admin/ai/test-email', { method: 'POST', body: { to } });
+    out.textContent = `Real email accepted by ${r.provider}.\nProvider id: ${r.id}\nRecipient: ${r.to}\n\nIf it does not arrive, check the Resend dashboard for delivery status.`;
+  } catch (e) { out.textContent = 'Email test failed: ' + e.message; toast(e.message, true); }
+}
+
+function aiRenderConversations(items) {
+  const body = $('#aiConvRows'); if (!body) return;
+  body.innerHTML = (items || []).map((c) => {
+    const v = c.vehicles || {};
+    return `<tr>
+      <td class="muted">${fmtWhen(c.last_message_at || c.updated_at)}</td>
+      <td><b>${esc(c.customer_name || c.customer_email)}</b><br><span class="muted">${esc(c.customer_email)}</span></td>
+      <td>${v.brand ? esc(`${v.brand} ${v.model} ${v.year}`) : '—'}</td>
+      <td>${esc(c.status)}${c.ai_paused ? ' · AI paused' : ''}${c.human_takeover ? ' · human' : ''}${c.escalated ? ' · <b style="color:var(--gold2)">escalated</b>' : ''}</td>
+      <td><button class="btn btn-ghost sm" onclick="aiOpenConv('${esc(c.id)}')">Open</button></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" class="muted">No conversations yet.</td></tr>';
+}
+
+async function aiLoadConversations() {
+  const q = ($('#aiConvSearch') && $('#aiConvSearch').value) || '';
+  const status = ($('#aiConvStatus') && $('#aiConvStatus').value) || '';
+  const r = await api(`/api/admin/ai/conversations?per=50&q=${encodeURIComponent(q)}&status=${encodeURIComponent(status)}`);
+  aiRenderConversations(r.items);
+}
+
+async function aiOpenConv(id) {
+  const box = $('#aiConvDetail'); box.innerHTML = '<div class="panel"><p class="muted">Loading conversation…</p></div>';
+  try {
+    const d = await api('/api/admin/ai/conversations/' + encodeURIComponent(id));
+    const c = d.conversation; const v = c.vehicles || {};
+    const msgs = (d.messages || []).map((m) => `
+      <div style="align-self:${m.direction === 'inbound' ? 'flex-start' : 'flex-end'};max-width:78%;background:${m.direction === 'inbound' ? 'rgba(255,255,255,.035)' : 'rgba(201,162,39,.10)'};border:1px solid var(--line);border-radius:10px;padding:10px 12px">
+        <div style="font-size:11px;color:var(--faint);margin-bottom:4px">${m.direction === 'inbound' ? 'Customer' : 'Dealership'} · ${fmtWhen(m.created_at)} · ${esc(m.status)}${m.provider ? ` · ${esc(m.provider)}` : ''}</div>
+        ${m.subject ? `<b style="font-size:13px">${esc(m.subject)}</b>` : ''}
+        <div style="white-space:pre-wrap;font-size:13px;line-height:1.6;max-height:220px;overflow:auto;margin-top:6px">${esc(m.body_text || '')}</div>
+        ${m.error ? `<div style="color:#e6a29a;font-size:11.5px;margin-top:6px">${esc(m.error)}</div>` : ''}
+      </div>`).join('');
+    const insp = (d.inspections || [])[0];
+    box.innerHTML = `
+    <div class="panel" id="aiConvPanel"><h3>Conversation — ${esc(c.customer_name || c.customer_email)}</h3>
+      <div class="muted" style="margin-bottom:10px">${esc(c.customer_email)} · ${v.brand ? esc(`${v.brand} ${v.model} ${v.year}`) : 'no vehicle'} · ${esc(c.status)}${c.escalated ? ' · <b style="color:var(--gold2)">escalated: ' + esc(c.escalation_reason || '') + '</b>' : ''}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+        <button class="btn btn-ghost sm" onclick="aiPause('${esc(c.id)}',${c.ai_paused ? 'false' : 'true'})">${c.ai_paused ? '▶ Resume AI' : '⏸ Pause AI'}</button>
+        <button class="btn btn-ghost sm" onclick="aiTakeover('${esc(c.id)}',${c.human_takeover ? 'false' : 'true'})">${c.human_takeover ? '↩ Return to AI' : '👤 Take over'}</button>
+        <button class="btn btn-ghost sm" onclick="aiClose('${esc(c.id)}')">✕ Close conversation</button>
+        ${insp ? `<span class="status ${insp.status === 'confirmed' ? 'published' : 'draft'}">Inspection: ${esc(insp.status)} ${esc(insp.preferred_date || '')} ${esc(insp.preferred_time || '')}</span>` : ''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;max-height:480px;overflow:auto;padding:4px">${msgs || '<p class="muted">No messages.</p>'}</div>
+      <form id="aiReplyForm" style="margin-top:16px">
+        <div class="fgrid"><div class="full"><label>Reply as the dealership (sends a real email and pauses AI for this customer)</label><textarea name="text" required style="min-height:100px"></textarea></div>
+        <div class="full"><label>Subject</label><input name="subject" value="${esc('Re: ' + (c.subject || 'your enquiry'))}"></div></div>
+        <button class="btn btn-gold" type="submit">✉ Send reply</button>
+      </form>
+    </div>`;
+    $('#aiReplyForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const f = Object.fromEntries(new FormData(e.target));
+      try { await api('/api/admin/ai/conversations/' + encodeURIComponent(c.id) + '/reply', { method: 'POST', body: f }); toast('Reply sent.'); aiOpenConv(c.id); aiLoadConversations(); }
+      catch (err) { toast(err.message, true); }
+    };
+    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (e) { box.innerHTML = `<div class="panel"><h3>Could not load conversation</h3><p class="muted">${esc(e.message)}</p></div>`; }
+}
+
+async function aiPause(id, paused) { try { await api(`/api/admin/ai/conversations/${encodeURIComponent(id)}/pause`, { method: 'POST', body: { paused } }); toast(paused ? 'AI paused for this customer.' : 'AI resumed.'); aiOpenConv(id); } catch (e) { toast(e.message, true); } }
+async function aiTakeover(id, takeover) { try { await api(`/api/admin/ai/conversations/${encodeURIComponent(id)}/takeover`, { method: 'POST', body: { takeover } }); toast(takeover ? 'You have taken over this conversation.' : 'Returned to AI.'); aiOpenConv(id); } catch (e) { toast(e.message, true); } }
+async function aiClose(id) { try { await api(`/api/admin/ai/conversations/${encodeURIComponent(id)}/close`, { method: 'POST', body: {} }); toast('Conversation closed.'); aiOpenConv(id); aiLoadConversations(); } catch (e) { toast(e.message, true); } }
+
+async function aiLoadInspections() {
+  const r = await api('/api/admin/ai/inspections');
+  state.aiInspections = new Map((r.items || []).map((x) => [String(x.id), x]));
+  const body = $('#aiInspRows'); if (!body) return;
+  body.innerHTML = (r.items || []).map((x) => {
+    const v = x.vehicles || {};
+    const actions = [];
+    if (['requested', 'confirmed', 'rescheduled'].includes(x.status)) {
+      actions.push(`<button class="btn btn-ghost sm" onclick="aiInspection(${x.id},'confirmed')">Confirm</button>`);
+      actions.push(`<button class="btn btn-ghost sm" onclick="aiInspection(${x.id},'rescheduled')">Reschedule</button>`);
+    }
+    if (x.status !== 'cancelled' && x.status !== 'completed') actions.push(`<button class="btn btn-ghost sm" onclick="aiInspection(${x.id},'cancelled')">Cancel</button>`);
+    if (x.status !== 'completed') actions.push(`<button class="btn btn-ghost sm" onclick="aiInspection(${x.id},'completed')">Complete</button>`);
+    return `<tr>
+      <td class="muted">${fmtWhen(x.created_at)}</td>
+      <td><b>${esc(x.customer_name)}</b><br><span class="muted">${esc(x.customer_email)}</span></td>
+      <td>${v.brand ? esc(`${v.brand} ${v.model} ${v.year}`) : '—'}</td>
+      <td>${esc(x.preferred_date || 'flexible')}<br><span class="muted">${esc(x.preferred_time || '')}</span></td>
+      <td>${esc(x.confirmed_date || '—')}<br><span class="muted">${esc(x.confirmed_time || '')}</span></td>
+      <td><span class="status ${x.status === 'confirmed' ? 'published' : (x.status === 'cancelled' ? 'sold' : 'draft')}">${esc(x.status)}</span></td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">${actions.join('')}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" class="muted">No inspection requests yet.</td></tr>';
+}
+
+async function aiInspection(id, status) {
+  const x = state.aiInspections && state.aiInspections.get(String(id));
+  if (!x) return;
+  const body = { status };
+  if (status === 'confirmed' || status === 'rescheduled') {
+    const date = prompt('Confirmed date (YYYY-MM-DD)', x.confirmed_date || x.preferred_date || new Date().toISOString().slice(0, 10));
+    if (!date) return;
+    const time = prompt('Confirmed time', x.confirmed_time || x.preferred_time || '11:00');
+    if (!time) return;
+    body.confirmedDate = date; body.confirmedTime = time;
+  }
+  if (status === 'cancelled' || status === 'completed') {
+    const note = prompt('Optional note for the customer (visible in the email context)', x.admin_notes || '');
+    if (note != null) body.admin_notes = note;
+  }
+  try { await api('/api/admin/ai/inspections/' + id, { method: 'PUT', body }); toast(`Inspection marked ${status}. The customer will be emailed.`); aiLoadInspections(); }
+  catch (e) { toast(e.message, true); }
+}
+
+async function aiLoadJobs() {
+  const r = await api('/api/admin/ai/jobs');
+  const body = $('#aiJobRows'); if (!body) return;
+  body.innerHTML = (r.items || []).map((j) => `<tr>
+    <td class="muted">#${j.id}</td>
+    <td>${esc(j.kind)}</td>
+    <td><span class="status ${j.status === 'done' ? 'published' : (j.status === 'failed' ? 'sold' : 'draft')}">${esc(j.status)}</span></td>
+    <td>${j.attempts}/${j.max_attempts}</td>
+    <td class="muted">${fmtWhen(j.run_after)}</td>
+    <td class="muted" style="max-width:320px">${esc(j.last_error || '')}</td>
+    <td>${j.status === 'failed' || j.status === 'done' ? `<button class="btn btn-ghost sm" onclick="aiRetry(${j.id})">Retry</button>` : ''}</td>
+  </tr>`).join('') || '<tr><td colspan="7" class="muted">No jobs queued yet.</td></tr>';
+}
+async function aiRetry(id) { try { await api('/api/admin/ai/jobs/' + id + '/retry', { method: 'POST' }); toast('Job queued for retry.'); aiLoadJobs(); } catch (e) { toast(e.message, true); } }
+
+/* ----------------------------------------------------- API & integrations */
+const INTEGRATION_KINDS_UI = ['ai', 'database', 'infra', 'email', 'payment', 'social', 'other'];
+
+async function integrationsPage() {
+  const rows = await api('/api/admin/integrations');
+  pg.innerHTML = `
+  <div class="pg-head"><div><span class="crumb">Configuration</span><h1>API &amp; integrations</h1></div>
+    <button class="btn btn-gold" id="addI">＋ Add integration</button></div>
+  <div class="panel"><h3>Connected providers</h3>
+    <p class="muted" style="margin-bottom:12px">Live credentials for AI and email are managed in <a href="#/ai_service" style="color:var(--gold2)">AI Customer Service</a>. This page records <b>metadata only</b> — which providers the dealership works with and whether they are connected. Secrets are never stored here.</p>
+    <div class="table-wrap"><table class="tbl"><thead><tr><th>Provider</th><th>Name</th><th>Kind</th><th>Status</th><th>Masked value</th><th></th></tr></thead><tbody>
+      ${(rows || []).map((r) => `<tr>
+        <td><b>${esc(r.provider)}</b></td>
+        <td>${esc(r.name)}</td>
+        <td>${esc(r.kind)}</td>
+        <td><span class="status ${r.status === 'connected' ? 'published' : 'draft'}">${esc(r.status)}</span></td>
+        <td class="muted">${esc(r.masked_value || '—')}</td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-ghost sm" data-ie="${esc(r.id)}">Edit</button>
+          <button class="btn btn-danger sm" data-idel="${esc(r.id)}">Delete</button>
+        </td></tr>`).join('') || '<tr><td colspan="6" class="muted">No integrations registered.</td></tr>'}
+    </tbody></table></div></div>`;
+
+  const openForm = (row) => {
+    const r = row || { provider: '', name: '', kind: 'other', status: 'disconnected', masked_value: '' };
+    modal(`<h2>${row ? 'Edit integration' : 'Add integration'}</h2>
+      <p class="muted" style="margin-bottom:12px">Metadata only. Never paste an API key here — keys live in AI&nbsp;Customer&nbsp;Service.</p>
+      <div class="fgrid">
+        <div><label>Provider</label><input id="i_provider" value="${esc(r.provider)}" placeholder="e.g. gemini"></div>
+        <div><label>Display name</label><input id="i_name" value="${esc(r.name)}" placeholder="e.g. Google Gemini AI"></div>
+        <div><label>Kind</label><select id="i_kind">${INTEGRATION_KINDS_UI.map((k) => `<option value="${k}" ${r.kind === k ? 'selected' : ''}>${esc(k)}</option>`).join('')}</select></div>
+        <div><label>Status</label><select id="i_status"><option value="connected" ${r.status === 'connected' ? 'selected' : ''}>connected</option><option value="disconnected" ${r.status !== 'connected' ? 'selected' : ''}>disconnected</option></select></div>
+        <div class="full"><label>Masked value (display only, e.g. ••••1234)</label><input id="i_masked" value="${esc(r.masked_value || '')}"></div>
+      </div>
+      <button class="btn btn-gold" style="margin-top:14px" id="iGo">Save integration</button>`);
+    $('#iGo').onclick = async () => {
+      const body = {
+        provider: $('#i_provider').value.trim(),
+        name: $('#i_name').value.trim() || $('#i_provider').value.trim(),
+        kind: $('#i_kind').value,
+        status: $('#i_status').value,
+        masked_value: $('#i_masked').value.trim(),
+      };
+      try {
+        if (row) await api(`/api/admin/integrations/${encodeURIComponent(row.id)}`, { method: 'PUT', body });
+        else await api('/api/admin/integrations', { method: 'POST', body });
+        closeModal(); toast(row ? 'Integration updated.' : 'Integration added.'); integrationsPage();
+      } catch (e) { toast(e.message, true); }
+    };
+  };
+
+  $('#addI').onclick = () => openForm(null);
+  $$('[data-ie]').forEach((b) => b.onclick = () => openForm(rows.find((r) => String(r.id) === b.dataset.ie)));
+  $$('[data-idel]').forEach((b) => b.onclick = async () => {
+    if (!confirm('Delete this integration record?')) return;
+    try { await api(`/api/admin/integrations/${encodeURIComponent(b.dataset.idel)}`, { method: 'DELETE' }); toast('Deleted.'); integrationsPage(); }
+    catch (e) { toast(e.message, true); }
+  });
 }
 
 /* ---------------- boot ---------------- */

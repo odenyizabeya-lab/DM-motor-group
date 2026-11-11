@@ -1,7 +1,7 @@
 'use strict';
 /* DM Motor Group — service worker: app shell + offline fallback */
-const CACHE = 'dm-v5';
-const ASSETS = ['/', '/styles.css', '/app.js', '/manifest.webmanifest', '/assets/icon.svg'];
+const CACHE = 'dm-v8';
+const ASSETS = ['/', '/styles.css', '/app.js?v=6', '/manifest.webmanifest', '/assets/icon.svg'];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
 });

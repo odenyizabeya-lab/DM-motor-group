@@ -22,14 +22,17 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Fonts load off the critical path so the stylesheet never blocks first paint -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
+<link rel="preload" as="image" href="/assets/hero.svg" fetchpriority="high">
 <script type="application/ld+json">__LD__</script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"AutoDealer","name":"DM Motor Group","telephone":"+971 4 584 2200",
 "address":{"@type":"PostalAddress","streetAddress":"Showroom 4, Al Awir Auto Market","addressLocality":"Dubai","addressCountry":"AE"},
 "openingHours":"Mo-Sa 09:00-19:00","priceRange":"$$$"}
 </script>
-<link rel="stylesheet" href="/styles.css?v=4">
+<link rel="stylesheet" href="/styles.css?v=6">
 </head>
 <body>
 <div id="topbar">
@@ -138,6 +141,6 @@
   <a href="/account" data-bn="/account"><i>○</i><span>Account</span></a>
 </nav>
 
-<script src="/app.js?v=4" defer></script>
+<script src="/app.js?v=7" defer></script>
 </body>
 </html>

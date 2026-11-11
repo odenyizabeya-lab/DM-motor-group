@@ -9,6 +9,7 @@ const app = $('#app');
 const state = { user: null, favourites: new Set(), unread: 0, meta: null, settings: {}, wa: '' };
 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const fmtMoney = (n, cur = 'USD') => `${cur === 'USD' ? '$' : esc(cur) + ' '}${Number(n || 0).toLocaleString('en-US')}`;
+const priceText = (n, cur = 'USD') => (Number(n) > 0 ? fmtMoney(n, cur) : 'Price on request');
 const fmtKm = (n) => Number(n || 0).toLocaleString('en-US') + ' km';
 const title = (t) => { document.title = t; };
 
@@ -97,7 +98,7 @@ function vCard(v, opts = {}) {
       <div class="vmeta"><span>${esc(v.bodyType || '')}</span><span>${esc(v.location || '')}</span></div>
       <div class="specs"><span>${v.year}</span><span>${fmtKm(v.mileage)}</span><span>${esc(v.fuel || '—')}</span><span>${esc(v.transmission || '—')}</span></div>
       <div class="price-row">
-        <span class="price"><span class="cur">${esc(v.currency)}</span>${Number(v.price).toLocaleString()}</span>
+        <span class="price">${Number(v.price) > 0 ? `<span class="cur">${esc(v.currency)}</span>${Number(v.price).toLocaleString()}` : 'Price on request'}</span>
         ${v.isFeatured && opts.offer ? '<span class="offer-tag">Special offer</span>' : ''}
       </div>
       ${opts.offer ? `<div style="color:var(--ink-dim);font-size:12.5px">Offer ends when reserved — ask for the current drive-away price.</div>` : ''}
@@ -136,10 +137,11 @@ async function toggleFav(v, btn) {
 
 /* ---------------- enquiry modal ---------------- */
 function enquiryModal({ vehicleId, vehicleTitle = 'General enquiry', type = 'question' } = {}) {
+  if (type === 'inspection') return inspectionModal({ vehicleId, vehicleTitle });
   const types = [['price', 'Request selling price'], ['question', 'Ask a question'], ['pictures', 'Request more photos'], ['videos', 'Request more videos'], ['inspection', 'Book an inspection'], ['testdrive', 'Arrange a test drive'], ['delivery', 'Request delivery information'], ['purchase', 'Submit a purchase enquiry']];
   modal(`
     <h3>${esc(type === 'whatsapp' ? 'WhatsApp enquiry' : 'Vehicle enquiry')}</h3>
-    <p class="sub">${esc(vehicleTitle)} — our team replies within one business day. We never ask for deposits by text or messaging apps.</p>
+    <p class="sub">${esc(vehicleTitle)} — our team replies by email. We never ask for deposits by text or messaging apps.</p>
     <form id="enqForm">
       <div class="qs-grid" style="grid-template-columns:1fr">
         <div class="field"><label>Enquiry type</label><select name="type">${types.map(([k, l]) => `<option value="${k}" ${k === type ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
@@ -147,8 +149,7 @@ function enquiryModal({ vehicleId, vehicleTitle = 'General enquiry', type = 'que
       <div class="form-grid">
         <div class="field"><label>Full name *</label><input name="name" required minlength="2" value="${esc(state.user?.name || '')}"></div>
         <div class="field"><label>Email *</label><input name="email" type="email" required value="${esc(state.user?.email || '')}"></div>
-        <div class="field full"><label>Phone (incl. country code)</label><input name="phone" value="${esc(state.user?.phone || '')}" placeholder="+971 …"></div>
-        <div class="field full"><label>Your message *</label><textarea name="message" required>${esc(vehicleTitle !== 'General enquiry' ? `Please send me the full details and bite / drive-away price for the ${vehicleTitle}.` : 'Hello DM Motor Group, I would like to enquire about…')}</textarea></div>
+        <div class="field full"><label>Your message *</label><textarea name="message" required>${esc(vehicleTitle !== 'General enquiry' ? `Please send me the full details and drive-away price for the ${vehicleTitle}.` : 'Hello DM Motor Group, I would like to enquire about…')}</textarea></div>
       </div>
       <!-- honeypot -->
       <input type="text" name="website" style="position:absolute;left:-9000px" tabindex="-1" autocomplete="off">
@@ -158,10 +159,53 @@ function enquiryModal({ vehicleId, vehicleTitle = 'General enquiry', type = 'que
     e.preventDefault();
     const f = new FormData(e.target);
     try {
-      const r = await api('/api/enquiries', { method: 'POST', body: { vehicleId, type: f.get('type'), name: f.get('name'), email: f.get('email'), phone: f.get('phone'), message: f.get('message'), website: f.get('website') } });
+      const r = await api('/api/enquiries', { method: 'POST', body: { vehicleId, type: f.get('type'), name: f.get('name'), email: f.get('email'), message: f.get('message'), website: f.get('website') } });
       $('#modal .modal-card').innerHTML = `<h3>Enquiry received ✓</h3><p class="sub">${esc(r.message || 'Thank you — your enquiry has been received.')}</p><button class="btn btn-gold wide" onclick="closeModal()">Close</button>`;
       if (state.user) api('/api/auth/me').then((m) => { state.unread = m.unread; hdrCount(); }).catch(() => {});
     } catch (err) { toast(err.message, true); }
+  });
+}
+
+/* ---------------- book an inspection (email only, no phone) ---------------- */
+function inspectionModal({ vehicleId, vehicleTitle = 'Vehicle of interest' } = {}) {
+  const today = new Date().toISOString().slice(0, 10);
+  const times = ['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00', '18:00', 'Flexible'];
+  modal(`
+    <h3>Book an inspection</h3>
+    <p class="sub">${esc(vehicleTitle)} — request an appointment. Our team confirms every inspection by email. We never ask for a phone number.</p>
+    <form id="inspForm">
+      <div class="form-grid">
+        <div class="field"><label>Full name *</label><input name="name" required minlength="2" value="${esc(state.user?.name || '')}"></div>
+        <div class="field"><label>Email *</label><input name="email" type="email" required value="${esc(state.user?.email || '')}"></div>
+        <div class="field full"><label>Vehicle of interest</label><input name="vehicle" value="${esc(vehicleTitle)}" readonly></div>
+        <div class="field"><label>Preferred inspection date</label><input name="preferredDate" type="date" min="${today}"></div>
+        <div class="field"><label>Preferred inspection time</label><select name="preferredTime">${times.map((t) => `<option value="${t}">${t === 'Flexible' ? 'Flexible / contact me' : t}</option>`).join('')}</select></div>
+        <div class="field full"><label>Customer message</label><textarea name="message" placeholder="Tell us anything specific you would like checked, or any questions about the vehicle…"></textarea></div>
+      </div>
+      <input type="text" name="website" style="position:absolute;left:-9000px" tabindex="-1" autocomplete="off">
+      <p style="color:var(--ink-faint);font-size:12.5px;margin:10px 0 14px">This is a request, not a confirmed appointment. You will receive an email confirming the date and time.</p>
+      <button class="btn btn-gold wide" type="submit">Request inspection</button>
+    </form>`);
+  $('#inspForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const btn = e.target.querySelector('button[type=submit]');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      const r = await api('/api/inspections', { method: 'POST', body: {
+        vehicleId,
+        name: f.get('name'),
+        email: f.get('email'),
+        preferredDate: f.get('preferredDate'),
+        preferredTime: f.get('preferredTime'),
+        message: f.get('message'),
+        website: f.get('website'),
+      } });
+      $('#modal .modal-card').innerHTML = `<h3>Inspection requested ✓</h3>
+        <p class="sub">${esc(r.message || 'Your inspection request has been received. Our team will email you to confirm the appointment.')}</p>
+        <p class="sub">A confirmation will be sent to <b>${esc(String(f.get('email') || ''))}</b>. No phone number is needed — everything happens by email.</p>
+        <button class="btn btn-gold wide" onclick="closeModal()">Close</button>`;
+    } catch (err) { btn.disabled = false; btn.textContent = 'Request inspection'; toast(err.message, true); }
   });
 }
 function modal(html) {
@@ -421,15 +465,15 @@ async function viewHome() {
       <div class="panel">
         <h3 style="margin-bottom:10px">Contact information</h3>
         <div class="info-rows">
-          <div><span>Sales telephone</span><a href="tel:${esc((state.settings.phone_sales || '').replace(/\s/g, ''))}">${esc(state.settings.phone_sales || '')}</a></div>
-          <div><span>Main line</span><a href="tel:${esc((state.settings.phone_main || '').replace(/\s/g, ''))}">${esc(state.settings.phone_main || '')}</a></div>
-          <div><span>Email</span><a href="mailto:${esc(state.settings.email_sales)}">${esc(state.settings.email_sales || '')}</a></div>
-          <div><span>WhatsApp</span><a id="waHref" href="#" target="_blank" rel="noopener">Sales desk</a></div>
-          <div><span>Showroom</span><span>${esc(state.settings.address_primary || '')}</span></div>
-          <div><span>Qatar office</span><span>${esc(state.settings.address_secondary || '')}</span></div>
-          <div><span>Opening hours</span><span>${esc(state.settings.hours || '')}</span></div>
+          ${state.settings.phone_sales ? `<div><span>Sales telephone</span><a href="tel:${esc(state.settings.phone_sales.replace(/\s/g, ''))}">${esc(state.settings.phone_sales)}</a></div>` : ''}
+          ${state.settings.phone_main ? `<div><span>Main line</span><a href="tel:${esc(state.settings.phone_main.replace(/\s/g, ''))}">${esc(state.settings.phone_main)}</a></div>` : ''}
+          ${state.settings.email_sales ? `<div><span>Email</span><a href="mailto:${esc(state.settings.email_sales)}">${esc(state.settings.email_sales)}</a></div>` : ''}
+          ${state.wa ? '<div><span>WhatsApp</span><a id="waHref" href="#" target="_blank" rel="noopener">Sales desk</a></div>' : ''}
+          ${state.settings.address_primary ? `<div><span>Showroom</span><span>${esc(state.settings.address_primary)}</span></div>` : ''}
+          ${state.settings.address_secondary ? `<div><span>Qatar office</span><span>${esc(state.settings.address_secondary)}</span></div>` : ''}
+          ${state.settings.hours ? `<div><span>Opening hours</span><span>${esc(state.settings.hours)}</span></div>` : ''}
         </div>
-        <a id="waHref2" class="btn btn-wa wide" style="margin-top:16px" target="_blank" rel="noopener">✆ WhatsApp the dealership</a>
+        ${state.wa ? '<a id="waHref2" class="btn btn-wa wide" style="margin-top:16px" target="_blank" rel="noopener">✆ WhatsApp the dealership</a>' : ''}
       </div>
     </div>
   </section></div>`;
@@ -443,7 +487,10 @@ async function viewHome() {
 }
 function applySettings(data) {
   const s = state.settings;
-  state.wa = s.whatsapp || '971';
+  /* only expose WhatsApp when a complete number is configured — a country code
+   * alone produces a dead wa.me link, so hide the feature entirely instead. */
+  const waDigits = String(s.whatsapp || '').replace(/\D/g, '');
+  state.wa = waDigits.length >= 8 && waDigits.length <= 15 ? waDigits : '';
   if (s.tagline) $('#ft-tagline').textContent = s.tagline;
   if (s.address_primary) $('#ft-address').textContent = s.address_primary;
   if (s.phone_main) { $('#ft-phone').textContent = s.phone_main; $('#ft-phone').href = 'tel:' + s.phone_main.replace(/\s/g, ''); $('#tb-phone').textContent = s.phone_main; $('#tb-phone').href = 'tel:' + s.phone_main.replace(/\s/g, ''); }
@@ -452,15 +499,22 @@ function applySettings(data) {
   $('#ft-year').textContent = new Date().getFullYear();
   $('#foot-social').innerHTML = [s.social_instagram && ['Instagram', s.social_instagram], s.social_facebook && ['Facebook', s.social_facebook], s.social_youtube && ['YouTube', s.social_youtube], s.social_linkedin && ['LinkedIn', s.social_linkedin]].filter(Boolean).map(([n, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${n}</a>`).join('');
   $$('.wa-float').forEach((e) => e.remove());
-  const wa = document.createElement('a'); wa.className = 'wa-float'; wa.target = '_blank'; wa.rel = 'noopener';
-  wa.href = `https://wa.me/${esc(s.whatsapp || '')}?text=${encodeURIComponent('Hello DM Motor Group, I would like to enquire about a vehicle.')}`;
-  wa.innerHTML = '✆'; wa.title = 'WhatsApp the sales desk'; document.body.appendChild(wa);
+  if (state.wa) {
+    const wa = document.createElement('a'); wa.className = 'wa-float'; wa.target = '_blank'; wa.rel = 'noopener';
+    wa.href = `https://wa.me/${esc(state.wa)}?text=${encodeURIComponent('Hello DM Motor Group, I would like to enquire about a vehicle.')}`;
+    wa.innerHTML = '✆'; wa.title = 'WhatsApp the sales desk'; document.body.appendChild(wa);
+  }
+  bindWA();
   void data;
 }
 function bindWA() {
   const txt = encodeURIComponent('Hello DM Motor Group — I am browsing your showroom and would like to enquire about a vehicle.');
-  $$('#waHref, #waHref2, #ft-wa').forEach((a) => { if (a) a.href = `https://wa.me/${esc(state.wa)}?text=${txt}`; });
-  $('#ft-wa').href = `https://wa.me/${esc(state.wa)}?text=${txt}`;
+  $$('#waHref, #waHref2, #ft-wa, #btnWa').forEach((a) => {
+    if (!a) return;
+    if (!state.wa) { a.style.display = 'none'; a.removeAttribute('href'); return; }
+    a.style.display = '';
+    a.href = `https://wa.me/${esc(state.wa)}?text=${txt}`;
+  });
 }
 function heroCarousel(sel) {
   const hero = $(sel); if (!hero) return;
@@ -480,9 +534,9 @@ function buildQuickSearch(host) {
   const opt = (arr, ph) => `<option value="">${ph}</option>` + arr.map((x) => `<option>${esc(x)}</option>`).join('');
   host.innerHTML = `
     <input type="text" id="qsKw" placeholder="Search brand, model or VIN…">
-    <select id="qsBrand"><option value="">All brands</option>${m.brands.map((b) => `<option>${esc(b)}</option>`).join('')}</select>
-    <select id="qsBody"><option value="">All body types</option>${m.bodyTypes.map((b) => `<option>${esc(b)}</option>`).join('')}</select>
-    <select id="qsPrice"><option value="">Any price</option><option value="20000">Under 20,000</option><option value="40000">Under 40,000</option><option value="70000">Under 70,000</option><option value="120000">Under 120,000</option><option value="250000">Under 250,000</option></select>
+    <select id="qsBrand" aria-label="Filter by brand"><option value="">All brands</option>${m.brands.map((b) => `<option>${esc(b)}</option>`).join('')}</select>
+    <select id="qsBody" aria-label="Filter by body type"><option value="">All body types</option>${m.bodyTypes.map((b) => `<option>${esc(b)}</option>`).join('')}</select>
+    <select id="qsPrice" aria-label="Filter by price"><option value="">Any price</option><option value="20000">Under 20,000</option><option value="40000">Under 40,000</option><option value="70000">Under 70,000</option><option value="120000">Under 120,000</option><option value="250000">Under 250,000</option></select>
     <button class="btn btn-gold" id="qsGo">Search</button>`;
   $('#qsGo').onclick = () => {
     const p = new URLSearchParams();
@@ -589,7 +643,7 @@ async function viewVehicle(m) {
     <div class="detail-top">
       <div class="gallery" id="gallery">
         <div class="gallery-main" id="galleryMain">
-          <img id="galleryImg" src="${esc((images[0] || {}).url || '')}" alt="${esc(v.brand + ' ' + v.model + ' ' + v.year)} ${(images[0] || {}).caption || ''}" width="1600" height="1000" fetchpriority="high">
+          <img id="galleryImg" src="${esc((images[0] || {}).url || '')}" alt="${esc(v.brand + ' ' + v.model + ' ' + v.year + ' ' + ((images[0] || {}).caption || ''))}" width="1600" height="1000" fetchpriority="high">
           <span class="gcount" id="gcount">1 / ${images.length + videos.length}${videos.length ? ' · includes ' + videos.length + ' video(s)' : ''}</span>
           ${images.length + videos.length > 1 ? `<button class="lb-nav" style="left:12px" data-n="-1">‹</button><button class="lb-nav" style="right:12px" data-n="1">›</button>` : ''}
         </div>
@@ -608,7 +662,7 @@ async function viewVehicle(m) {
         </div>
         <h1>${esc(v.brand)} ${esc(v.model)} <span style="color:var(--ink-faint)">${v.year}</span></h1>
         <div class="price-line">
-          <span class="price"><span class="cur">${esc(v.currency)}</span>${Number(v.price).toLocaleString()}</span>
+          <span class="price">${Number(v.price) > 0 ? `<span class="cur">${esc(v.currency)}</span>${Number(v.price).toLocaleString()}` : 'Price on request'}</span>
           <span style="color:var(--ink-faint);font-size:13px">Transparent pricing · the final drive-away figure is confirmed in writing before any payment.</span>
         </div>
         <div class="cta-stack">
@@ -643,7 +697,7 @@ async function viewVehicle(m) {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:34px" class="spec-2col">
         <div><table class="spec-table">${
           [
-            ['Manufacturer', v.brand], ['Model', v.model], ['Year', v.year], ['Selling price', fmtMoney(v.price, v.currency)],
+            ['Manufacturer', v.brand], ['Model', v.model], ['Year', v.year], ['Selling price', priceText(v.price, v.currency)],
             ['Mileage', fmtKm(v.mileage)], ['Engine', v.engine], ['Transmission', v.transmission], ['Fuel type', v.fuel],
             ['Body type', v.bodyType], ['Exterior colour', v.exteriorColor], ['Interior colour', v.interiorColor],
             ['VIN', v.vin], ['Condition', v.condition], ['Registration', v.registration], ['Location', v.location],
@@ -713,7 +767,7 @@ async function viewVehicle(m) {
     $('#btnFavD').onclick = async () => { await toggleFav(v); $('#btnFavD').textContent = state.favourites.has(v.id) ? '♥ Saved to favourites' : '♡ Save to favourites'; };
     $('#btnCmpD').onclick = (e) => { const add = cmpToggle({ slug: v.slug, title: `${v.brand} ${v.model} ${v.year}`, cover: v.cover }, e); $('#btnCmpD').textContent = cmpList().some((x) => x.slug === v.slug) ? '✓ In comparison' : '⇄ Compare this vehicle'; };
     $('#btnShare').onclick = async () => {
-      const url = location.origin + '/vehicles/' + v.slug, text = `${v.brand} ${v.model} ${v.year} — ${fmtMoney(v.price, v.currency)} at DM Motor Group`;
+      const url = location.origin + '/vehicles/' + v.slug, text = `${v.brand} ${v.model} ${v.year} — ${priceText(v.price, v.currency)} at DM Motor Group`;
       try { if (navigator.share) await navigator.share({ title: text, text, url }); else { await navigator.clipboard.writeText(url); toast('Link copied — share it anywhere.'); } } catch {}
     };
     $('#copyVin') && ($('#copyVin').onclick = async () => { await navigator.clipboard.writeText(v.vin); toast('VIN copied.'); });
@@ -776,7 +830,7 @@ function cmpTable(vs) {
   return `<div class="cmp-table-wrap"><table class="cmp">
     <thead><tr><th></th>${vs.map((v) => `<th><div class="cmp-hero"><img src="${esc(v.cover)}" alt=""><b><a href="/vehicles/${esc(v.slug)}" style="color:var(--gold2)">${esc(v.brand)} ${esc(v.model)}</a></b><span style="color:var(--ink-faint);font-size:13px">${v.year} · ${esc(v.bodyType || '')}</span><button class="btn btn-ghost sm rm-cmp" data-slug="${esc(v.slug)}">Remove</button></div></th>`).join('')}</tr></thead>
     <tbody>
-      ${row('Selling price', (v) => `<b class="price">${fmtMoney(v.price, v.currency)}</b>`)}
+      ${row('Selling price', (v) => `<b class="price">${priceText(v.price, v.currency)}</b>`)}
       ${row('Year', (v) => v.year)}
       ${row('Mileage', (v) => fmtKm(v.mileage))}
       ${row('Engine', (v) => esc(v.engine || '—'))}
@@ -840,7 +894,6 @@ async function viewAccount(_m, sp) {
     <div class="panel"><h3 style="margin-bottom:16px">Personal information</h3>
     <form id="profForm" class="form-grid">
       <div class="field"><label>Full name</label><input name="name" value="${esc(state.user.name)}" required></div>
-      <div class="field"><label>Phone</label><input name="phone" value="${esc(state.user.phone || '')}"></div>
       <div class="field full"><label>Email (login)</label><input value="${esc(state.user.email)}" disabled style="opacity:.6"></div>
       <div class="field"><label>Current password</label><input name="currentPassword" type="password" placeholder="Required to change password"></div>
       <div class="field"><label>New password</label><input name="password" type="password" placeholder="min 8 characters"></div>
@@ -855,7 +908,7 @@ async function viewAccount(_m, sp) {
   $('#btnLogout').onclick = async () => { try { await api('/api/auth/logout', { method: 'POST' }); } catch {} localStorage.removeItem(TOKEN_KEY); state.user = null; state.favourites.clear(); state.unread = 0; hdrCount(); toast('Signed out.'); route('/account'); };
   $('#profForm') && ($('#profForm').onsubmit = async (e) => {
     e.preventDefault(); const f = Object.fromEntries(new FormData(e.target));
-    try { await api('/api/auth/profile', { method: 'PUT', body: f }); toast('Profile updated.'); state.user.name = f.name || state.user.name; state.user.phone = f.phone || state.user.phone; route('/account?tab=profile'); }
+    try { await api('/api/auth/profile', { method: 'PUT', body: f }); toast('Profile updated.'); state.user.name = f.name || state.user.name; route('/account?tab=profile'); }
     catch (err) { toast(err.message, true); }
   });
   $('#readAll') && ($('#readAll').onclick = async () => { await api('/api/notifications/read', { method: 'POST', body: { all: true } }); route('/account?tab=notifications'); });
@@ -870,7 +923,6 @@ function renderAuthPage(tab) {
         ${tab === 'register' ? `
         <div class="field full"><label>Full name</label><input name="name" required minlength="2" placeholder="e.g. Sara Al Maktoum"></div>
         <div class="field full"><label>Email</label><input name="email" type="email" required placeholder="you@example.com"></div>
-        <div class="field full"><label>Phone (incl. country code)</label><input name="phone" placeholder="+971 …"></div>
         <div class="field full"><label>Password (min 8 characters)</label><input name="password" type="password" required minlength="8"></div>
         <div class="field full"><button class="btn btn-gold wide" type="submit">Create my account</button>
         <p style="color:var(--ink-faint);font-size:12.5px;margin-top:8px">Accounts are for favourites, enquiries, inspection requests and notifications. Browsing and searching stay open to everyone.</p></div>` : `
@@ -886,7 +938,7 @@ function renderAuthPage(tab) {
     </div>
     <div>
       <h3 style="margin-bottom:10px">Your data, protected.</h3>
-      <p class="detail-desc" style="margin-bottom:12px">Passwords are stored only as salted scrypt hashes — never in readable form. Sessions use signed, expiring tokens over HTTPS-only cookies, and every administrative action is logged.</p>
+      <p class="detail-desc" style="margin-bottom:12px">Passwords are hashed by our authentication provider and are never stored or displayed in readable form. Sessions use signed, expiring access tokens sent only over HTTPS, and every administrative action is logged.</p>
       <p class="detail-desc">Browsing the showroom never requires an account. Enquiries can be made with or without one — but an account lets you track responses and keep favourites in one place.</p>
     </div>
   </div>`;
@@ -906,17 +958,7 @@ function renderAuthPage(tab) {
     e.preventDefault(); const email = new FormData(e.target).get('email');
     try {
       const r = await api('/api/auth/forgot', { method: 'POST', body: { email } });
-      if (r.devToken) {
-        const tok = r.devToken; r.devToken = '';
-        modal(`<h3>Recovery code (development mode)</h3><p class="sub">${esc(r.message)}</p>
-        <code style="display:block;background:var(--bg2);padding:12px;border-radius:8px;margin-bottom:12px">${esc(tok)}</code>
-        <div class="field"><label>New password</label><input id="rpw" type="password" required minlength="8"></div>
-        <button class="btn btn-gold wide" id="rcfm">Reset password</button>`);
-        $('#rcfm').onclick = async () => {
-          try { const rr = await api('/api/auth/reset', { method: 'POST', body: { token: tok, password: $('#rpw').value } }); closeModal(); toast(rr.message); }
-          catch (err) { toast(err.message, true); }
-        };
-      } else { toast(r.message); $('#forgotArea').style.display = 'none'; }
+      toast(r.message); $('#forgotArea').style.display = 'none';
     } catch (err) { toast(err.message, true); }
   });
   window.innerWidth < 780 && $$('.auth-2col').forEach((el) => (el.style.gridTemplateColumns = '1fr'));
@@ -936,7 +978,6 @@ async function viewContact() {
         <div class="form-grid">
           <div class="field"><label>Your name *</label><input name="name" required></div>
           <div class="field"><label>Email *</label><input name="email" type="email" required></div>
-          <div class="field"><label>Phone</label><input name="phone" placeholder="+971 …"></div>
           <div class="field"><label>Enquiry type</label><select name="type">${[['price', 'Request a selling price'], ['question', 'Ask a question'], ['inspection', 'Book an inspection'], ['testdrive', 'Arrange a test drive / viewing'], ['delivery', 'Request delivery information'], ['purchase', 'Submit a purchase enquiry']].map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select></div>
           <div class="field full"><label>Message *</label><textarea name="message" required placeholder="Tell us what you are looking for (brand, model, budget) or ask about a specific vehicle…"></textarea></div>
         </div>
@@ -947,15 +988,16 @@ async function viewContact() {
     <div>
       <div class="panel" style="margin-bottom:16px"><h3 style="margin-bottom:10px">DM Motor Group</h3>
         <div class="info-rows">
-          <div><span>Sales</span><a href="tel:${esc((s.phone_sales || '').replace(/\s/g, ''))}">${esc(s.phone_sales || '')}</a></div>
-          <div><span>Main</span><a href="tel:${esc((s.phone_main || '').replace(/\s/g, ''))}">${esc(s.phone_main || '')}</a></div>
-          <div><span>Email</span><a href="mailto:${esc(s.email_sales)}">${esc(s.email_sales || '')}</a></div>
-          <div><span>WhatsApp</span><a href="https://wa.me/${esc(s.whatsapp)}" target="_blank" rel="noopener">Open chat</a></div>
-          <div><span>Dubai showroom</span><span>${esc(s.address_primary || '')}</span></div>
-          <div><span>Doha office</span><span>${esc(s.address_secondary || '')}</span></div>
-          <div><span>Hours</span><span>${esc(s.hours || '')}</span></div>
-          <div><span>Licence</span><span>${esc(s.trade_license || '')}</span></div>
+          ${s.phone_sales ? `<div><span>Sales</span><a href="tel:${esc(s.phone_sales.replace(/\s/g, ''))}">${esc(s.phone_sales)}</a></div>` : ''}
+          ${s.phone_main ? `<div><span>Main</span><a href="tel:${esc(s.phone_main.replace(/\s/g, ''))}">${esc(s.phone_main)}</a></div>` : ''}
+          ${s.email_sales ? `<div><span>Email</span><a href="mailto:${esc(s.email_sales)}">${esc(s.email_sales)}</a></div>` : ''}
+          ${state.wa ? `<div><span>WhatsApp</span><a href="https://wa.me/${esc(state.wa)}" target="_blank" rel="noopener">Open chat</a></div>` : ''}
+          ${s.address_primary ? `<div><span>Dubai showroom</span><span>${esc(s.address_primary)}</span></div>` : ''}
+          ${s.address_secondary ? `<div><span>Doha office</span><span>${esc(s.address_secondary)}</span></div>` : ''}
+          ${s.hours ? `<div><span>Hours</span><span>${esc(s.hours)}</span></div>` : ''}
+          ${s.trade_license ? `<div><span>Licence</span><span>${esc(s.trade_license)}</span></div>` : ''}
         </div>
+        ${!s.phone_sales && !s.phone_main && !s.email_sales ? '<p class="detail-desc" style="font-size:13.5px;margin-top:10px">Use the enquiry form to reach the sales desk. Every message is answered by email.</p>' : ''}
       </div>
       <div class="panel"><h3 style="margin-bottom:10px">Payment & security</h3>
         <p class="detail-desc" style="font-size:14px">${esc(s.payment_info || '')}</p>

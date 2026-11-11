@@ -9,3 +9,10 @@ supabase/.temp/
 .dev.vars
 *.log
 test/dbg.js
+
+# audit & lighthouse temp artifacts
+.tmp-*
+
+# cron worker local secret (also stored as a Cloudflare secret)
+worker/.ai-internal-key
+worker/.wrangler/
