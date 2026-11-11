@@ -805,6 +805,7 @@ async function viewVideos() {
     const r = await api(`/api/videos?per=18&page=${b.dataset.p}`);
     cacheVehiclesFromVideos(r.items);
     grid.innerHTML = r.items.map(videoCard).join('');
+    bindVidCards(grid); /* fresh cards need their click handlers re-attached */
     window.scrollTo({ top: 0 });
   });
   bindVidCards(grid);
