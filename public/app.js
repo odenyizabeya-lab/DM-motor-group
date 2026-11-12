@@ -422,6 +422,12 @@ async function viewHome() {
     </div>
   </div>
 
+  ${data.videos.length ? '' : ''}
+  <div class="wrap"><section class="section" id="secVideos">
+    ${secHead('Video presentations', 'full-length · original quality', '/videos')}
+    <div class="media-grid-vids rail" id="railVideos" style="display:flex;overflow-x:auto;display:flex">${data.videos.map(videoCard).join('')}</div>
+  </section></div>
+
   <div class="wrap"><section class="section" id="secFeatured">
     ${secHead('Featured vehicles', data.stats.published + ' in stock', '/vehicles?category=featured')}
     <div class="grid" id="gridFeatured">${data.featured.map((v) => vCard(v)).join('') || `<div class="empty"><b>No featured vehicles yet</b>The dealership pins its hand-picked stock here.</div>`}</div>
@@ -435,12 +441,6 @@ async function viewHome() {
   <div class="wrap"><section class="section" id="secLatest">
     ${secHead('Latest arrivals — recently uploaded', '', '/vehicles?sort=newest')}
     <div class="grid">${data.latest.map((v) => vCard(v)).join('')}</div>
-  </section></div>
-
-  ${data.videos.length ? '' : ''}
-  <div class="wrap"><section class="section" id="secVideos">
-    ${secHead('Video presentations', 'full-length · original quality', '/videos')}
-    <div class="media-grid-vids rail" id="railVideos" style="display:flex;overflow-x:auto;display:flex">${data.videos.map(videoCard).join('')}</div>
   </section></div>
 
   ${rails.map((k) => catList(k).length ? `
@@ -1049,7 +1049,7 @@ window.addEventListener('pageshow', () => {});
   try { await getMeta(); } catch {}
   try { const h = await api('/api/home'); state.settings = h.settings || {}; applySettings(h); } catch {}
   await route(location.pathname + location.search, true);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=12').catch(() => {});
 })();
 /* Android app installation (Chrome "Add to Home screen" flow) */
 window.__pwaPrompt = null;
