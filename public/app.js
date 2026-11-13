@@ -1,6 +1,6 @@
-﻿'use strict';
+'use strict';
 /* ================================================================
-   DM Motor Group â€” Website & Mobile App (PWA)
+   DM Motor Group — Website & Mobile App (PWA)
    Shares the same backend API as the admin dashboard.
 ================================================================ */
 const $ = (s, el = document) => el.querySelector(s);
@@ -52,7 +52,7 @@ function renderTray() {
   const list = cmpList(); const tray = $('#cmpTray');
   if (!list.length || window.innerWidth <= 860) { tray.hidden = true; return; } // mobile keeps bottom nav clean
   tray.hidden = false;
-  $('#cmpItems').innerHTML = list.map((x) => `<span style="position:relative"><img src="${esc(x.cover)}" alt=""><button class="rm" data-slug="${esc(x.slug)}" title="Remove">âœ•</button></span>`).join('');
+  $('#cmpItems').innerHTML = list.map((x) => `<span style="position:relative"><img src="${esc(x.cover)}" alt=""><button class="rm" data-slug="${esc(x.slug)}" title="Remove">✕</button></span>`).join('');
   $('#cmpItems').onclick = (e) => {
     const slug = e.target.dataset && e.target.dataset.slug;
     if (slug) cmpSave(cmpList().filter((x) => x.slug !== slug));
@@ -67,7 +67,7 @@ function hdrCount() {
   if (f) { f.hidden = !state.favourites.size; f.textContent = state.favourites.size; }
   if (c) { c.hidden = !cmpList().length; c.textContent = cmpList().length; }
   if (n) { n.hidden = !state.unread; n.textContent = state.unread; }
-  const ai = $('#accIcon'); if (ai) ai.textContent = state.user ? 'â—' : 'â—‹';
+  const ai = $('#accIcon'); if (ai) ai.textContent = state.user ? '●' : '○';
 }
 function markNav() {
   const path = location.pathname.replace(/\/+$/, '') || '/';
@@ -85,23 +85,23 @@ function vCard(v, opts = {}) {
   return `<article class="vcard reveal" data-vid="${v.id}">
     <div class="ph">
       ${drives || ''}
-      ${v.isFeatured ? '<span class="flags"><span class="flag gold">â˜… Featured</span></span>' : '<span class="flags"></span>'}
+      ${v.isFeatured ? '<span class="flags"><span class="flag gold">★ Featured</span></span>' : '<span class="flags"></span>'}
       <a class="cover" href="/vehicles/${esc(v.slug)}" aria-label="${esc(v.brand + ' ' + v.model)}"></a>
       <img src="${esc(v.cover || v.coverFull)}" alt="${esc(v.brand + ' ' + v.model + ' ' + v.year + ' for sale')}" loading="lazy" decoding="async" width="640" height="400">
       <div class="acts">
-        <button class="mini-btn ${fav ? 'on' : ''}" data-act="fav" title="Save to favourites">${fav ? 'â™¥' : 'â™¡'}</button>
-        <button class="mini-btn ${inCmp ? 'on2' : ''}" data-act="cmp" title="Compare">â‡„</button>
+        <button class="mini-btn ${fav ? 'on' : ''}" data-act="fav" title="Save to favourites">${fav ? '♥' : '♡'}</button>
+        <button class="mini-btn ${inCmp ? 'on2' : ''}" data-act="cmp" title="Compare">⇄</button>
       </div>
     </div>
     <div class="body">
       <h3><a href="/vehicles/${esc(v.slug)}">${esc(v.brand)} ${esc(v.model)} <span style="color:var(--ink-faint)">${v.year}</span></a></h3>
       <div class="vmeta"><span>${esc(v.bodyType || '')}</span><span>${esc(v.location || '')}</span></div>
-      <div class="specs"><span>${v.year}</span><span>${fmtKm(v.mileage)}</span><span>${esc(v.fuel || 'â€”')}</span><span>${esc(v.transmission || 'â€”')}</span></div>
+      <div class="specs"><span>${v.year}</span><span>${fmtKm(v.mileage)}</span><span>${esc(v.fuel || '—')}</span><span>${esc(v.transmission || '—')}</span></div>
       <div class="price-row">
         <span class="price">${Number(v.price) > 0 ? `<span class="cur">${esc(v.currency)}</span>${Number(v.price).toLocaleString()}` : 'Price on request'}</span>
         ${v.isFeatured && opts.offer ? '<span class="offer-tag">Special offer</span>' : ''}
       </div>
-      ${opts.offer ? `<div style="color:var(--ink-dim);font-size:12.5px">Offer ends when reserved â€” ask for the current drive-away price.</div>` : ''}
+      ${opts.offer ? `<div style="color:var(--ink-dim);font-size:12.5px">Offer ends when reserved — ask for the current drive-away price.</div>` : ''}
       <div class="foot">
         <a class="btn btn-ghost sm" href="/vehicles/${esc(v.slug)}">Details</a>
         <button class="btn btn-gold sm" data-act="enq" data-type="price">Request price</button>
@@ -125,7 +125,7 @@ function cacheVehicles(list) { (document.__vidCache = document.__vidCache || {})
 
 /* ---------------- favourites ---------------- */
 async function toggleFav(v, btn) {
-  if (!state.user) { toast('Create a free account to save favourites â€” browsing stays open to everyone.', true); route('/account'); return; }
+  if (!state.user) { toast('Create a free account to save favourites — browsing stays open to everyone.', true); route('/account'); return; }
   const on = state.favourites.has(v.id);
   try {
     if (on) { await api(`/api/favourites/${v.id}`, { method: 'DELETE' }); state.favourites.delete(v.id); }
@@ -141,7 +141,7 @@ function enquiryModal({ vehicleId, vehicleTitle = 'General enquiry', type = 'que
   const types = [['price', 'Request selling price'], ['question', 'Ask a question'], ['pictures', 'Request more photos'], ['videos', 'Request more videos'], ['inspection', 'Book an inspection'], ['testdrive', 'Arrange a test drive'], ['delivery', 'Request delivery information'], ['purchase', 'Submit a purchase enquiry']];
   modal(`
     <h3>${esc(type === 'whatsapp' ? 'WhatsApp enquiry' : 'Vehicle enquiry')}</h3>
-    <p class="sub">${esc(vehicleTitle)} â€” our team replies by email. We never ask for deposits by text or messaging apps.</p>
+    <p class="sub">${esc(vehicleTitle)} — our team replies by email. We never ask for deposits by text or messaging apps.</p>
     <form id="enqForm">
       <div class="qs-grid" style="grid-template-columns:1fr">
         <div class="field"><label>Enquiry type</label><select name="type">${types.map(([k, l]) => `<option value="${k}" ${k === type ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
@@ -149,7 +149,7 @@ function enquiryModal({ vehicleId, vehicleTitle = 'General enquiry', type = 'que
       <div class="form-grid">
         <div class="field"><label>Full name *</label><input name="name" required minlength="2" value="${esc(state.user?.name || '')}"></div>
         <div class="field"><label>Email *</label><input name="email" type="email" required value="${esc(state.user?.email || '')}"></div>
-        <div class="field full"><label>Your message *</label><textarea name="message" required>${esc(vehicleTitle !== 'General enquiry' ? `Please send me the full details and drive-away price for the ${vehicleTitle}.` : 'Hello DM Motor Group, I would like to enquire aboutâ€¦')}</textarea></div>
+        <div class="field full"><label>Your message *</label><textarea name="message" required>${esc(vehicleTitle !== 'General enquiry' ? `Please send me the full details and drive-away price for the ${vehicleTitle}.` : 'Hello DM Motor Group, I would like to enquire about…')}</textarea></div>
       </div>
       <!-- honeypot -->
       <input type="text" name="website" style="position:absolute;left:-9000px" tabindex="-1" autocomplete="off">
@@ -160,7 +160,7 @@ function enquiryModal({ vehicleId, vehicleTitle = 'General enquiry', type = 'que
     const f = new FormData(e.target);
     try {
       const r = await api('/api/enquiries', { method: 'POST', body: { vehicleId, type: f.get('type'), name: f.get('name'), email: f.get('email'), message: f.get('message'), website: f.get('website') } });
-      $('#modal .modal-card').innerHTML = `<h3>Enquiry received âœ“</h3><p class="sub">${esc(r.message || 'Thank you â€” your enquiry has been received.')}</p><button class="btn btn-gold wide" onclick="closeModal()">Close</button>`;
+      $('#modal .modal-card').innerHTML = `<h3>Enquiry received ✓</h3><p class="sub">${esc(r.message || 'Thank you — your enquiry has been received.')}</p><button class="btn btn-gold wide" onclick="closeModal()">Close</button>`;
       if (state.user) api('/api/auth/me').then((m) => { state.unread = m.unread; hdrCount(); }).catch(() => {});
     } catch (err) { toast(err.message, true); }
   });
@@ -172,7 +172,7 @@ function inspectionModal({ vehicleId, vehicleTitle = 'Vehicle of interest' } = {
   const times = ['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00', '18:00', 'Flexible'];
   modal(`
     <h3>Book an inspection</h3>
-    <p class="sub">${esc(vehicleTitle)} â€” request an appointment. Our team confirms every inspection by email. We never ask for a phone number.</p>
+    <p class="sub">${esc(vehicleTitle)} — request an appointment. Our team confirms every inspection by email. We never ask for a phone number.</p>
     <form id="inspForm">
       <div class="form-grid">
         <div class="field"><label>Full name *</label><input name="name" required minlength="2" value="${esc(state.user?.name || '')}"></div>
@@ -180,7 +180,7 @@ function inspectionModal({ vehicleId, vehicleTitle = 'Vehicle of interest' } = {
         <div class="field full"><label>Vehicle of interest</label><input name="vehicle" value="${esc(vehicleTitle)}" readonly></div>
         <div class="field"><label>Preferred inspection date</label><input name="preferredDate" type="date" min="${today}"></div>
         <div class="field"><label>Preferred inspection time</label><select name="preferredTime">${times.map((t) => `<option value="${t}">${t === 'Flexible' ? 'Flexible / contact me' : t}</option>`).join('')}</select></div>
-        <div class="field full"><label>Customer message</label><textarea name="message" placeholder="Tell us anything specific you would like checked, or any questions about the vehicleâ€¦"></textarea></div>
+        <div class="field full"><label>Customer message</label><textarea name="message" placeholder="Tell us anything specific you would like checked, or any questions about the vehicle…"></textarea></div>
       </div>
       <input type="text" name="website" style="position:absolute;left:-9000px" tabindex="-1" autocomplete="off">
       <p style="color:var(--ink-faint);font-size:12.5px;margin:10px 0 14px">This is a request, not a confirmed appointment. You will receive an email confirming the date and time.</p>
@@ -190,7 +190,7 @@ function inspectionModal({ vehicleId, vehicleTitle = 'Vehicle of interest' } = {
     e.preventDefault();
     const f = new FormData(e.target);
     const btn = e.target.querySelector('button[type=submit]');
-    btn.disabled = true; btn.textContent = 'Sendingâ€¦';
+    btn.disabled = true; btn.textContent = 'Sending…';
     try {
       const r = await api('/api/inspections', { method: 'POST', body: {
         vehicleId,
@@ -201,16 +201,16 @@ function inspectionModal({ vehicleId, vehicleTitle = 'Vehicle of interest' } = {
         message: f.get('message'),
         website: f.get('website'),
       } });
-      $('#modal .modal-card').innerHTML = `<h3>Inspection requested âœ“</h3>
+      $('#modal .modal-card').innerHTML = `<h3>Inspection requested ✓</h3>
         <p class="sub">${esc(r.message || 'Your inspection request has been received. Our team will email you to confirm the appointment.')}</p>
-        <p class="sub">A confirmation will be sent to <b>${esc(String(f.get('email') || ''))}</b>. No phone number is needed â€” everything happens by email.</p>
+        <p class="sub">A confirmation will be sent to <b>${esc(String(f.get('email') || ''))}</b>. No phone number is needed — everything happens by email.</p>
         <button class="btn btn-gold wide" onclick="closeModal()">Close</button>`;
     } catch (err) { btn.disabled = false; btn.textContent = 'Request inspection'; toast(err.message, true); }
   });
 }
 function modal(html) {
   const m = $('#modal'); m.hidden = false;
-  m.innerHTML = `<div class="backdrop" onclick="closeModal()"></div><div class="modal-card">${html}<button class="x" style="position:absolute;top:14px;right:14px" onclick="closeModal()">âœ•</button></div>`;
+  m.innerHTML = `<div class="backdrop" onclick="closeModal()"></div><div class="modal-card">${html}<button class="x" style="position:absolute;top:14px;right:14px" onclick="closeModal()">✕</button></div>`;
   document.body.style.overflow = 'hidden';
 }
 window.closeModal = () => { $('#modal').hidden = true; $('#modal').innerHTML = ''; document.body.style.overflow = ''; };
@@ -222,16 +222,16 @@ function videoPlayer(url, poster, { caption = '' } = {}) {
   el.className = 'player paused';
   el.innerHTML = `
     <video playsinline preload="metadata" ${poster ? `poster="${esc(poster)}"` : ''} src="${esc(url)}"></video>
-    <div class="voverlay"><button class="vbig" aria-label="Play">â–¶</button></div>
+    <div class="voverlay"><button class="vbig" aria-label="Play">▶</button></div>
     <div class="vbar">
       <div class="seek"><div class="track"><div class="buf"></div><div class="prog"></div><div class="knob"></div></div></div>
       <div class="vrow">
-        <button class="vbtn pv" aria-label="Play/Pause">â–¶</button>
-        <button class="vbtn mu" aria-label="Mute/Unmute">ðŸ”Š</button>
+        <button class="vbtn pv" aria-label="Play/Pause">▶</button>
+        <button class="vbtn mu" aria-label="Mute/Unmute">🔊</button>
         <input class="vol" type="range" min="0" max="1" step="0.02" value="1" aria-label="Volume">
         <span class="vtime">00:00 / 00:00</span>
         <span style="flex:1"></span>
-        <button class="vbtn fs" aria-label="Fullscreen">â›¶</button>
+        <button class="vbtn fs" aria-label="Fullscreen">⛶</button>
       </div>
     </div>
     ${caption ? `<div style="position:absolute;top:10px;left:12px;z-index:4;color:#dfe3ea;font-size:12px;padding:5px 10px;background:rgba(8,9,11,.7);border-radius:8px">${esc(caption)}</div>` : ''}`;
@@ -240,7 +240,7 @@ function videoPlayer(url, poster, { caption = '' } = {}) {
   const fmt = (t) => `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
   const setUi = () => {
     el.classList.toggle('paused', v.paused);
-    pv.textContent = v.paused ? 'â–¶' : 'âšâš'; big.textContent = v.paused ? 'â–¶' : '';
+    pv.textContent = v.paused ? '▶' : '❚❚'; big.textContent = v.paused ? '▶' : '';
     const d = v.duration || 0, c = v.currentTime || 0;
     prog.style.width = d ? (c / d * 100) + '%' : '0%';
     knob.style.left = d ? (c / d * 100) + '%' : '0%';
@@ -257,8 +257,8 @@ function videoPlayer(url, poster, { caption = '' } = {}) {
   };
   seek.addEventListener('pointerdown', (e) => { scrub(e); seek.setPointerCapture(e.pointerId); });
   seek.addEventListener('pointermove', (e) => { if (e.buttons) scrub(e); });
-  mu.onclick = () => { v.muted = !v.muted; mu.textContent = v.muted ? 'ðŸ”‡' : 'ðŸ”Š'; };
-  vol.oninput = () => { v.volume = vol.value; v.muted = vol.value == 0; mu.textContent = v.muted ? 'ðŸ”‡' : 'ðŸ”Š'; };
+  mu.onclick = () => { v.muted = !v.muted; mu.textContent = v.muted ? '🔇' : '🔊'; };
+  vol.oninput = () => { v.volume = vol.value; v.muted = vol.value == 0; mu.textContent = v.muted ? '🔇' : '🔊'; };
   fs.onclick = () => { el.requestFullscreen ? el.requestFullscreen() : v.webkitEnterFullscreen && v.webkitEnterFullscreen(); };
   el.addEventListener('dblclick', () => fs.click());
   el.addEventListener('click', (e) => { if (!e.target.closest('.vbar') && !e.target.closest('.vbig')) big.click(); });
@@ -268,13 +268,13 @@ function videoCard(video) {
   const thumb = video.thumbUrl || '';
   const ph = thumb ? `<img src="${esc(thumb)}" alt="${esc(video.title)} video thumbnail" loading="lazy">` : `<div class="vph">${esc(video.title)}</div>`;
   return `<div class="vidcard" data-vid="${video.id}" data-slug="${esc(video.slug)}">
-    ${ph}<div class="play"><i>â–¶</i></div><div class="cap">${esc(video.caption || video.title)}</div>
+    ${ph}<div class="play"><i>▶</i></div><div class="cap">${esc(video.caption || video.title)}</div>
   </div>`;
 }
 function playVideoModal(video) {
   modal(`<div style="margin:-28px -28px -0 0;background:#000;border-radius:20px 20px 0 0">${''}</div>
   <h3 style="margin-top:18px">${esc(video.title || 'Vehicle presentation')}</h3>
-  <p class="sub">Full-length presentation â€” play with sound. ${video.slug ? `<a href="/vehicles/${esc(video.slug)}" style="color:var(--gold2)">View vehicle â†’</a>` : ''}</p>
+  <p class="sub">Full-length presentation — play with sound. ${video.slug ? `<a href="/vehicles/${esc(video.slug)}" style="color:var(--gold2)">View vehicle →</a>` : ''}</p>
   <div id="modalPlayer"></div>`);
   $('#modalPlayer').appendChild(videoPlayer(video.url, video.thumbUrl, {}));
 }
@@ -298,13 +298,13 @@ function renderLb() {
   if (!it) return closeLightbox();
   const isVid = it.url && /\.(mp4|webm|mov)$/i.test(it.url);
   el.innerHTML = `
-    <div class="lb-top"><span>${it.caption ? esc(it.caption) : esc(it.type === 'video' ? 'Vehicle presentation' : 'Vehicle photograph')}</span><span style="color:var(--ink-faint)">${lb.i + 1} / ${lb.items.length}</span><button class="x" onclick="closeLightbox()">âœ•</button></div>
+    <div class="lb-top"><span>${it.caption ? esc(it.caption) : esc(it.type === 'video' ? 'Vehicle presentation' : 'Vehicle photograph')}</span><span style="color:var(--ink-faint)">${lb.i + 1} / ${lb.items.length}</span><button class="x" onclick="closeLightbox()">✕</button></div>
     <div class="lb-stage" id="lbStage">
-      ${lb.items.length > 1 ? `<button class="lb-nav" style="left:14px" data-n="-1" aria-label="Previous">â€¹</button><button class="lb-nav" style="right:14px" data-n="1" aria-label="Next">â€º</button>` : ''}
+      ${lb.items.length > 1 ? `<button class="lb-nav" style="left:14px" data-n="-1" aria-label="Previous">‹</button><button class="lb-nav" style="right:14px" data-n="1" aria-label="Next">›</button>` : ''}
       ${isVid ? '' : `<img id="lbImg" src="${esc(it.url)}" alt="${esc(it.caption || 'Vehicle photograph')}" loading="eager">`}
       ${isVid ? `<div style="width:min(100%,960px)"></div>` : ''}
     </div>
-    ${isVid ? `<div class="lb-stage-player" style="padding:0 16px 8px;display:grid;place-items:center" id="lbVideo"></div><div class="lb-cap">${esc(it.caption || 'Full-length video')}</div>` : `<div class="lb-cap">${esc(it.caption || '')} Â· double-click or pinch to zoom, swipe to change</div>`}
+    ${isVid ? `<div class="lb-stage-player" style="padding:0 16px 8px;display:grid;place-items:center" id="lbVideo"></div><div class="lb-cap">${esc(it.caption || 'Full-length video')}</div>` : `<div class="lb-cap">${esc(it.caption || '')} · double-click or pinch to zoom, swipe to change</div>`}
     ${!isVid ? `<div class="lb-thumb">${lb.items.filter((x) => !/\.(mp4|webm|mov)$/i.test(x.url)).map((x, j) => `<img src="${esc(x.thumbUrl || x.url)}" data-j="${lb.items.indexOf(x)}" class="${lb.items[lb.i] === x ? 'on' : ''}">`).join('')}</div>` : ''}`;
   if (isVid) $('#lbVideo') && $('#lbVideo').appendChild(videoPlayer(it.url, it.thumbUrl, {}));
   const img = $('#lbImg');
@@ -336,13 +336,13 @@ window.closeLightbox = () => { $('#lightbox').hidden = true; $('#lightbox').inne
    ROUTES
 ================================================================= */
 const routes = [
-  { re: /^\/$/, view: viewHome, titlev: () => 'DM Motor Group â€” Premium International Automobile Dealership' },
-  { re: /^\/vehicles$/, view: viewShowroom, title: 'Vehicle Showroom â€” DM Motor Group' },
-  { re: /^\/vehicles\/([a-z0-9-]+)\/?$/, view: viewVehicle, title: 'Vehicle Details â€” DM Motor Group' },
-  { re: /^\/videos\/?$/, view: viewVideos, title: 'Video Showroom â€” Full-length vehicle presentations | DM Motor Group' },
-  { re: /^\/compare\/?$/, view: viewCompare, title: 'Compare Vehicles â€” DM Motor Group' },
-  { re: /^\/account\/?$/, view: viewAccount, title: 'Customer Account â€” DM Motor Group' },
-  { re: /^\/contact\/?$/, view: viewContact, title: 'Contact & Purchasing â€” DM Motor Group' },
+  { re: /^\/$/, view: viewHome, titlev: () => 'DM Motor Group — Premium International Automobile Dealership' },
+  { re: /^\/vehicles$/, view: viewShowroom, title: 'Vehicle Showroom — DM Motor Group' },
+  { re: /^\/vehicles\/([a-z0-9-]+)\/?$/, view: viewVehicle, title: 'Vehicle Details — DM Motor Group' },
+  { re: /^\/videos\/?$/, view: viewVideos, title: 'Video Showroom — Full-length vehicle presentations | DM Motor Group' },
+  { re: /^\/compare\/?$/, view: viewCompare, title: 'Compare Vehicles — DM Motor Group' },
+  { re: /^\/account\/?$/, view: viewAccount, title: 'Customer Account — DM Motor Group' },
+  { re: /^\/contact\/?$/, view: viewContact, title: 'Contact & Purchasing — DM Motor Group' },
 ];
 
 async function navigate() { window.scrollTo({ top: 0 }); await route(location.pathname + location.search, true); }
@@ -354,11 +354,11 @@ async function route(path, initial = false) {
   if (match) {
     match.re.test(url.pathname); const m = url.pathname.match(match.re);
     match.title && title(match.title);
-    app.innerHTML = `<div class="page-head"><div><span class="crumb">Loadingâ€¦</span></div></div><div class="skeleton" style="height:340px;border-radius:14px"></div>`;
+    app.innerHTML = `<div class="page-head"><div><span class="crumb">Loading…</span></div></div><div class="skeleton" style="height:340px;border-radius:14px"></div>`;
     try { await match.view(m, url.searchParams); }
     catch (e) { console.error(e); app.innerHTML = `<div class="empty"><b>${esc(e.message || 'Something went wrong')}</b><a class="btn btn-gold" href="/vehicles">Back to showroom</a></div>`; }
   } else {
-    title('Page not found â€” DM Motor Group');
+    title('Page not found — DM Motor Group');
     app.innerHTML = `<div class="empty" style="margin-top:40px"><b>Page not found</b>Check the address, or return to the showroom.<a class="btn btn-gold" href="/">Homepage</a></div>`;
   }
   hdrCount();
@@ -376,7 +376,7 @@ window.route = route;
 
 /* ---------------- section helpers ---------------- */
 const secHead = (t, small, href, label = 'View all') =>
-  `<div class="sec-head reveal"><h2>${t}${small ? `<small>${small}</small>` : ''}</h2>${href ? `<a href="${href}">${label} â†’</a>` : ''}</div>`;
+  `<div class="sec-head reveal"><h2>${t}${small ? `<small>${small}</small>` : ''}</h2>${href ? `<a href="${href}">${label} →</a>` : ''}</div>`;
 function bindSectionVideos(root, list) {
   cacheVehiclesFromVideos(list);
   bindVidCards(root);
@@ -401,12 +401,12 @@ async function viewHome() {
     ${(data.banners.length ? data.banners : [{ title: 'DM Motor Group', subtitle: 'Premium international dealership', image: '/assets/hero.svg', link: '/vehicles' }]).map((b, i) => `
       <div class="hero-slide ${i === 0 ? 'on' : ''}"><img src="${esc(b.image)}" alt="${esc(b.title)}" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'}></div>`).join('')}
     <div class="hero-copy"><div class="wrap">
-      <div class="hero-kicker">${esc(state.settings.tagline ? 'International dealership Â· Verified stock' : 'Premium dealership')}</div>
+      <div class="hero-kicker">${esc(state.settings.tagline ? 'International dealership · Verified stock' : 'Premium dealership')}</div>
       <h1>${esc(data.banners[0]?.title || 'The DM Motor Group Showroom')}</h1>
-      <p>${esc(data.banners[0]?.subtitle || 'Hand-selected vehicles Â· full histories Â· worldwide delivery')}</p>
+      <p>${esc(data.banners[0]?.subtitle || 'Hand-selected vehicles · full histories · worldwide delivery')}</p>
       <div class="hero-cta">
         <a class="btn btn-gold" href="/vehicles">Browse the showroom</a>
-        <a class="btn btn-ghost" href="/videos">â–¶ Watch vehicle presentations</a>
+        <a class="btn btn-ghost" href="/videos">▶ Watch vehicle presentations</a>
         <a class="btn btn-ghost" href="/contact">Contact us</a>
       </div>
     </div></div>
@@ -424,7 +424,7 @@ async function viewHome() {
 
   ${data.videos.length ? '' : ''}
   <div class="wrap"><section class="section" id="secVideos">
-    ${secHead('Video presentations', 'full-length Â· original quality', '/videos')}
+    ${secHead('Video presentations', 'full-length · original quality', '/videos')}
     <div class="media-grid-vids rail" id="railVideos" style="display:flex;overflow-x:auto;display:flex">${data.videos.map(videoCard).join('')}</div>
   </section></div>
 
@@ -439,7 +439,7 @@ async function viewHome() {
   </section></div>
 
   <div class="wrap"><section class="section" id="secLatest">
-    ${secHead('Latest arrivals â€” recently uploaded', '', '/vehicles?sort=newest')}
+    ${secHead('Latest arrivals — recently uploaded', '', '/vehicles?sort=newest')}
     <div class="grid">${data.latest.map((v) => vCard(v)).join('')}</div>
   </section></div>
 
@@ -451,7 +451,7 @@ async function viewHome() {
 
   <div class="wrap"><section class="section">
     ${secHead('What our customers say', 'collected by the dealership')}
-    <div class="tcards">${data.testimonials.map((t) => `<div class="tcard reveal"><div class="stars">${'â˜…'.repeat(t.rating)}${'â˜†'.repeat(5 - t.rating)}</div><p>â€œ${esc(t.text)}â€</p><b>${esc(t.name)}</b><span>${esc(t.location)}</span></div>`).join('') || '<div class="empty" style="grid-column:1/-1"><b>No published testimonials yet</b>Reviews appear here only after the dealership adds verified customer feedback.</div>'}</div>
+    <div class="tcards">${data.testimonials.map((t) => `<div class="tcard reveal"><div class="stars">${'★'.repeat(t.rating)}${'☆'.repeat(5 - t.rating)}</div><p>“${esc(t.text)}”</p><b>${esc(t.name)}</b><span>${esc(t.location)}</span></div>`).join('') || '<div class="empty" style="grid-column:1/-1"><b>No published testimonials yet</b>Reviews appear here only after the dealership adds verified customer feedback.</div>'}</div>
   </section></div>
 
   <div class="wrap"><section class="section" id="about">
@@ -460,7 +460,7 @@ async function viewHome() {
       <div>
         <p class="detail-desc" style="font-size:16px">DM Motor Group is an independently owned international motor company built on one principle: <b style="color:var(--gold2)">what you see is the vehicle you get.</b> Every listing carries genuine photography and full-length video presentations, complete specification and history information, and clear pricing. We supply inspection documentation where it exists and label every claim as dealership-supplied so you can judge for yourself.</p>
         <p class="detail-desc" style="margin-top:14px">Our showrooms serve private buyers, families and trade customers, with logistics partners for worldwide delivery and a purchasing desk that answers every enquiry within one business day.</p>
-        <div class="note" style="margin-top:18px"><b>Buying safely.</b> ${esc(state.settings.payment_info || 'Payments run through escrow with the purchase agreement.')} We never ask for card details or deposits through messaging apps, and availability is confirmed by our team â€” not by enquiry volume.</div>
+        <div class="note" style="margin-top:18px"><b>Buying safely.</b> ${esc(state.settings.payment_info || 'Payments run through escrow with the purchase agreement.')} We never ask for card details or deposits through messaging apps, and availability is confirmed by our team — not by enquiry volume.</div>
       </div>
       <div class="panel">
         <h3 style="margin-bottom:10px">Contact information</h3>
@@ -473,7 +473,7 @@ async function viewHome() {
           ${state.settings.address_secondary ? `<div><span>Qatar office</span><span>${esc(state.settings.address_secondary)}</span></div>` : ''}
           ${state.settings.hours ? `<div><span>Opening hours</span><span>${esc(state.settings.hours)}</span></div>` : ''}
         </div>
-        ${state.wa ? '<a id="waHref2" class="btn btn-wa wide" style="margin-top:16px" target="_blank" rel="noopener">âœ† WhatsApp the dealership</a>' : ''}
+        ${state.wa ? '<a id="waHref2" class="btn btn-wa wide" style="margin-top:16px" target="_blank" rel="noopener">✆ WhatsApp the dealership</a>' : ''}
       </div>
     </div>
   </section></div>`;
@@ -487,7 +487,7 @@ async function viewHome() {
 }
 function applySettings(data) {
   const s = state.settings;
-  /* only expose WhatsApp when a complete number is configured â€” a country code
+  /* only expose WhatsApp when a complete number is configured — a country code
    * alone produces a dead wa.me link, so hide the feature entirely instead. */
   const waDigits = String(s.whatsapp || '').replace(/\D/g, '');
   state.wa = waDigits.length >= 8 && waDigits.length <= 15 ? waDigits : '';
@@ -502,13 +502,13 @@ function applySettings(data) {
   if (state.wa) {
     const wa = document.createElement('a'); wa.className = 'wa-float'; wa.target = '_blank'; wa.rel = 'noopener';
     wa.href = `https://wa.me/${esc(state.wa)}?text=${encodeURIComponent('Hello DM Motor Group, I would like to enquire about a vehicle.')}`;
-    wa.innerHTML = 'âœ†'; wa.title = 'WhatsApp the sales desk'; document.body.appendChild(wa);
+    wa.innerHTML = '✆'; wa.title = 'WhatsApp the sales desk'; document.body.appendChild(wa);
   }
   bindWA();
   void data;
 }
 function bindWA() {
-  const txt = encodeURIComponent('Hello DM Motor Group â€” I am browsing your showroom and would like to enquire about a vehicle.');
+  const txt = encodeURIComponent('Hello DM Motor Group — I am browsing your showroom and would like to enquire about a vehicle.');
   $$('#waHref, #waHref2, #ft-wa, #btnWa').forEach((a) => {
     if (!a) return;
     if (!state.wa) { a.style.display = 'none'; a.removeAttribute('href'); return; }
@@ -533,7 +533,7 @@ function buildQuickSearch(host) {
   const m = state.meta;
   const opt = (arr, ph) => `<option value="">${ph}</option>` + arr.map((x) => `<option>${esc(x)}</option>`).join('');
   host.innerHTML = `
-    <input type="text" id="qsKw" placeholder="Search brand, model or VINâ€¦">
+    <input type="text" id="qsKw" placeholder="Search brand, model or VIN…">
     <select id="qsBrand" aria-label="Filter by brand"><option value="">All brands</option>${m.brands.map((b) => `<option>${esc(b)}</option>`).join('')}</select>
     <select id="qsBody" aria-label="Filter by body type"><option value="">All body types</option>${m.bodyTypes.map((b) => `<option>${esc(b)}</option>`).join('')}</select>
     <select id="qsPrice" aria-label="Filter by price"><option value="">Any price</option><option value="20000">Under 20,000</option><option value="40000">Under 40,000</option><option value="70000">Under 70,000</option><option value="120000">Under 120,000</option><option value="250000">Under 250,000</option></select>
@@ -551,14 +551,14 @@ function buildQuickSearch(host) {
 
 /* ============================================================ SHOWROOM */
 async function viewShowroom(_, sp) {
-  title('Vehicle Showroom â€” DM Motor Group');
+  title('Vehicle Showroom — DM Motor Group');
   await getMeta();
   const cat = sp.get('category') || '';
   const chips = [{ key: '', label: 'All vehicles' }, ...(state.meta.categories || [])];
   const curFilters = Object.fromEntries(sp.entries());
   app.innerHTML = `
   <div class="page-head"><div>
-    <span class="crumb"><a href="/">Home</a> â†’ Showroom</span>
+    <span class="crumb"><a href="/">Home</a> → Showroom</span>
     <h1>${esc(cat ? ((state.meta.categories.find((c) => c.key === cat) || {}).label || cat) : 'Vehicle showroom')}<small style="font-family:var(--sans);font-size:14px;color:var(--ink-faint);margin-left:12px">every vehicle in current inventory</small></h1>
   </div></div>
   <div class="chips" id="catChips">${chips.map((c) => `<button class="chip ${cat === c.key ? 'on' : ''}" data-cat="${esc(c.key)}">${esc(c.label)}</button>`).join('')}</div>
@@ -566,7 +566,7 @@ async function viewShowroom(_, sp) {
     <aside class="filters" id="filters"></aside>
     <div>
       <div class="toolbar">
-        <span class="count" id="resCount">Loading vehiclesâ€¦</span>
+        <span class="count" id="resCount">Loading vehicles…</span>
         <select id="sortSel">
           <option value="newest">Newest first</option><option value="price_asc">Price: low to high</option>
           <option value="price_desc">Price: high to low</option><option value="year_desc">Year: newest</option>
@@ -588,10 +588,10 @@ async function viewShowroom(_, sp) {
     const res = await api('/api/vehicles?' + _q.toString());
     cacheVehicles(res.items);
     total = res.total; pages = res.pages;
-    $('#resCount').textContent = `${total} vehicle${total === 1 ? '' : 's'} found${total ? ' Â· showing ' + ((res.page - 1) * res.per + 1) + 'â€“' + Math.min(res.page * res.per, total) : ''}`;
+    $('#resCount').textContent = `${total} vehicle${total === 1 ? '' : 's'} found${total ? ' · showing ' + ((res.page - 1) * res.per + 1) + '–' + Math.min(res.page * res.per, total) : ''}`;
     $('#sortSel').value = _q.get('sort') || 'newest';
     if (!append) grid.innerHTML = '';
-    grid.insertAdjacentHTML('beforeend', res.items.map((v) => vCard(v, { offer: curFilters.sort === 'price_asc' })).join('') || `<div class="empty" style="grid-column:1/-1"><b>No vehicles match this search</b>Try widening your filters â€” or tell us exactly what you are looking for and we can source it.<a class="btn btn-gold" href="/contact">Request a vehicle search</a></div>`);
+    grid.insertAdjacentHTML('beforeend', res.items.map((v) => vCard(v, { offer: curFilters.sort === 'price_asc' })).join('') || `<div class="empty" style="grid-column:1/-1"><b>No vehicles match this search</b>Try widening your filters — or tell us exactly what you are looking for and we can source it.<a class="btn btn-gold" href="/contact">Request a vehicle search</a></div>`);
     bindCards(grid);
     $('#loadMore').hidden = !(res.page < res.pages);
     $('#loadMore').textContent = `Show more vehicles (${total - res.page * res.per > 0 ? (total - res.page * res.per) + ' more' : ''})`;
@@ -606,7 +606,7 @@ function buildFilters(host, cur, m) {
   host.innerHTML = `
     <button class="btn btn-ghost wide sm" id="fApply" style="order:9">Apply filters</button>
     <button class="btn btn-danger wide sm" id="fClear" style="order:10;border:1px solid var(--line2)">Clear all</button>
-    <h4>Keyword</h4><input type="text" name="q" value="${esc(cur.q || '')}" placeholder="Brand, model, VINâ€¦">
+    <h4>Keyword</h4><input type="text" name="q" value="${esc(cur.q || '')}" placeholder="Brand, model, VIN…">
     <h4>Brand</h4><select name="brand">${opt(m.brands, 'Any brand', cur.brand)}</select>
     <h4>Model</h4><select name="model">${opt(m.models.filter((x) => !cur.brand || x.brand === cur.brand).map((x) => x.model), 'Any model', cur.model)}</select>
     <h4>Price</h4><div class="row2"><input type="number" name="priceMin" placeholder="Min" value="${esc(cur.priceMin || '')}"><input type="number" name="priceMax" placeholder="Max" value="${esc(cur.priceMax || '')}"></div>
@@ -615,7 +615,7 @@ function buildFilters(host, cur, m) {
     <h4>Body type</h4><select name="bodyType">${opt(m.bodyTypes, 'Any body type', cur.bodyType)}</select>
     <h4>Transmission</h4><select name="transmission">${opt(m.transmissions, 'Any transmission', cur.transmission)}</select>
     <h4>Fuel</h4><select name="fuel">${opt(m.fuels, 'Any fuel', cur.fuel)}</select>
-    <h4>Condition</h4><select name="condition">${opt(['New', 'Used â€” as new', 'Used'], 'Any condition', cur.condition)}</select>
+    <h4>Condition</h4><select name="condition">${opt(['New', 'Used — as new', 'Used'], 'Any condition', cur.condition)}</select>
     <h4>Location</h4><select name="location">${opt(m.locations, 'Any location', cur.location)}</select>`;
   const apply = () => {
     const p = new URLSearchParams();
@@ -632,12 +632,12 @@ function buildFilters(host, cur, m) {
 /* ---------------- complete vehicle details form ---------------- */
 /* The details file is generated from the live listing data, a frame-by-frame
  * review of the vehicle footage and published market data (scripts/generate-details.mjs).
- * Anything that could not be verified is shown as "Not verified" - never guessed. */
+ * Anything that could not be verified is stated as such - never guessed. */
 let __DETAILS = null;
 async function loadDetails() {
   if (__DETAILS) return __DETAILS;
   try {
-    const r = await fetch('/details/vehicles.json?v=3');
+    const r = await fetch('/details/vehicles.json?v=4');
     __DETAILS = await r.json();
   } catch (e) { __DETAILS = { vehicles: {} }; }
   return __DETAILS;
@@ -655,23 +655,44 @@ function detailsBlock(d, v) {
     : '<b>Price on request</b>';
   const conf = { high: 'Strong', medium: 'Moderate', low: 'Weak', none: 'No verified figure' }[d.market.confidence] || d.market.confidence;
   return `
-  ${d.mediaNotice ? `<div class="d-warn"><b>Attention â€” please read.</b> ${esc(d.mediaNotice)}</div>` : ''}
+  ${d.mediaNotice ? `<div class="d-warn"><b>Attention - please read.</b> ${esc(d.mediaNotice)}</div>` : ''}
   <div class="d-meta">
     <div><span>Availability</span><b>${esc(d.availability)}</b></div>
     <div><span>Data verified on</span><b>${esc(d.verification.date)}</b></div>
     <div><span>Verification method</span><b>${esc(d.verification.level)}</b></div>
-    <div><span>Media on file</span><b>${d.media.videos} video(s) Â· ${d.media.photos} photo(s)</b></div>
+    <div><span>Media on file</span><b>${d.media.videos} video(s) · ${d.media.photos} photo(s)</b></div>
   </div>
 
   <div class="d-sec">
-    <h3><span class="d-num">1</span> Basic vehicle information</h3>
-    <table class="d-table">
-      ${dRow('Make', d.basic.make)}${dRow('Model', d.basic.model)}${dRow('Year of manufacture', d.basic.year)}
-      ${dRow('Vehicle colour (exterior)', d.basic.exteriorColour)}${dRow('Interior colour', d.basic.interiorColour)}
-      ${dRow('Body type', d.basic.bodyType)}${dRow('Trim and variant', d.basic.trim)}
-      ${dRow('Registration year', d.basic.registrationYear)}${dRow('VIN / chassis number', d.basic.vin)}
-      ${dRow('Engine number', d.basic.engineNumber)}${dRow('Drivetrain', d.basic.drivetrain)}
-    </table>
+    <h3><span class="d-num">1</span> Complete vehicle specification</h3>
+    <div class="d-cols">
+      <div>
+        <h4>Basic information</h4>
+        <table class="d-table">
+          ${dRow('Make', d.spec.make)}${dRow('Model', d.spec.model)}${dRow('Year of manufacture', d.spec.year)}
+          ${dRow('Exterior colour', d.spec.exteriorColour)}${dRow('Interior colour', d.spec.interiorColour)}
+          ${dRow('Body type', d.spec.bodyType)}${dRow('Trim and variant', d.spec.trim)}
+          ${dRow('Engine number', d.spec.engineNumber)}${dRow('VIN / chassis number', d.spec.vin)}
+          ${dRow('Registration year', d.spec.registrationYear)}${dRow('Number of doors', d.spec.doors)}
+          ${dRow('Number of seats', d.spec.seats)}${dRow('Drivetrain', d.spec.drivetrain)}
+        </table>
+      </div>
+      <div>
+        <h4>Engine, performance and equipment</h4>
+        <table class="d-table">
+          ${dRow('Engine capacity', d.spec.engineCapacity)}${dRow('Engine type', d.spec.engineType)}
+          ${dRow('Fuel type', d.spec.fuel)}${dRow('Transmission', d.spec.transmission)}
+          ${dRow('Mileage', d.spec.mileage)}${dRow('Air conditioning', d.spec.airConditioning)}
+          ${dRow('Navigation system', d.spec.navigation)}${dRow('Reverse camera', d.spec.reverseCamera)}
+          ${dRow('Parking sensors', d.spec.parkingSensors)}${dRow('Sunroof', d.spec.sunroof)}
+          ${dRow('Alloy wheels', d.spec.alloyWheels)}
+        </table>
+      </div>
+    </div>
+    <h4 style="margin-top:18px">Safety features</h4>
+    <p class="d-muted">${esc(d.spec.safetyFeatures)}</p>
+    <h4 style="margin-top:14px">Other available equipment</h4>
+    <p class="d-muted">${esc(d.spec.otherEquipment)}</p>
   </div>
 
   <div class="d-sec">
@@ -702,24 +723,13 @@ function detailsBlock(d, v) {
         ${d.features.listing.length ? `<h4 style="margin-top:16px">Listing equipment</h4><ul class="feat-cols">${d.features.listing.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
       </div>
       <div>
-        <h4>Interior, comfort & technology</h4>
-        ${(() => {
-          const rows = [];
-          const seats = d.features.interiorEquipment.find((x) => /seat|leather/i.test(x));
-          const ac = /air.?con/i.test([...d.features.confirmed, ...d.features.listing].join(' '));
-          const tech = d.features.technology;
-          const sunroof = d.features.comfortEquipment.find((x) => /sunroof|roof/i.test(x));
-          rows.push(['Seats / upholstery', seats || 'Not verified']);
-          rows.push(['Air conditioning', ac ? 'Fitted' : 'Not verified']);
-          rows.push(['Touchscreen & entertainment', tech.find((x) => /screen|display|entertain/i.test(x)) || 'Not verified']);
-          rows.push(['Navigation', tech.find((x) => /navigation/i.test(x)) || 'Not verified']);
-          rows.push(['Reverse camera / surround view', tech.find((x) => /camera|surround/i.test(x)) || 'Not verified']);
-          rows.push(['Parking sensors', /sensor/i.test([...d.features.confirmed, ...d.features.listing].join(' ')) ? 'Fitted' : 'Not verified']);
-          rows.push(['Sunroof / panoramic roof', sunroof || 'Not verified']);
-          rows.push(['Premium audio', tech.find((x) => /audio|speaker/i.test(x)) || 'Not verified']);
-          rows.push(['Safety features', d.features.safety.length ? d.features.safety.join(', ') : 'Not verified']);
-          return `<table class="d-table">${rows.map(([k, x]) => dRow(k, x)).join('')}</table>`;
-        })()}
+        <h4>Interior, comfort &amp; technology</h4>
+        <table class="d-table">
+          ${dRow('Seats / upholstery', d.spec.interiorColour)}${dRow('Number of seats', d.spec.seats)}
+          ${dRow('Air conditioning', d.spec.airConditioning)}${dRow('Navigation system', d.spec.navigation)}
+          ${dRow('Reverse camera', d.spec.reverseCamera)}${dRow('Parking sensors', d.spec.parkingSensors)}
+          ${dRow('Sunroof / panoramic roof', d.spec.sunroof)}${dRow('Alloy wheels', d.spec.alloyWheels)}
+        </table>
       </div>
     </div>
   </div>
@@ -737,8 +747,8 @@ function detailsBlock(d, v) {
   <div class="d-sec">
     <h3><span class="d-num">6</span> Market value and our asking price</h3>
     <div class="d-price">
-      <div class="d-ask"><span>Our asking price</span><b>${asking}</b><small>${d.market.askingPrice ? (d.market.pricePosition ? `Sits ${esc(d.market.pricePosition)} the published market band` : 'final figure confirmed in writing before any payment') : 'final figure confirmed in writing before any payment'}</small></div>
-      <div class="d-est"><span>Estimated market range</span><b>${esc(d.market.estimatedRange)}</b><small>${esc(d.market.bandLabel)} Â· Confidence: ${esc(conf)} Â· Source: ${esc(d.market.source)}</small></div>
+      <div class="d-ask"><span>Our asking price</span><b>${asking}</b><small>${d.market.askingPrice && d.market.pricePosition ? `Sits ${esc(d.market.pricePosition)} the published market band` : 'final figure confirmed in writing before any payment'}</small></div>
+      <div class="d-est"><span>Estimated market range</span><b>${esc(d.market.estimatedRange)}</b><small>${esc(d.market.bandLabel)} · Confidence: ${esc(conf)} · Source: ${esc(d.market.source)}</small></div>
     </div>
     ${d.market.recommendedAskingPrice ? `<div class="d-rec"><span>Recommended asking price (our suggestion, pending your approval)</span><b>${esc(d.market.currency)} ${Number(d.market.recommendedAskingPrice).toLocaleString()}</b><small>${esc(d.market.recommendedNote)}</small></div>` : (d.market.recommendedNote ? `<p class="d-muted"><b>No recommended price can be given.</b> ${esc(d.market.recommendedNote)}</p>` : '')}
     <p class="d-muted"><b>How this estimate was reached.</b> ${esc(d.market.basis)}</p>
@@ -770,63 +780,63 @@ async function renderVehicleDetails(slug, v) {
 async function viewVehicle(m) {
   return (async () => {
     const v = await api(`/api/vehicles/${m[1]}`);
-    title(`${v.brand} ${v.model} ${v.year} â€” DM Motor Group`);
+    title(`${v.brand} ${v.model} ${v.year} — DM Motor Group`);
     metaDesc(v.description ? v.description.slice(0, 180) : `View the ${v.brand} ${v.model} ${v.year} at DM Motor Group.`);
     const images = (v.media || []).filter((x) => x.type === 'image');
     const videos = (v.media || []).filter((x) => x.type === 'video');
     const inCmp = cmpList().some((x) => x.slug === v.slug);
-    const avail = v.status === 'published' ? ['Available now', ''] : v.status === 'reserved' ? ['Reserved â€” deposit under agreement', 'r'] : ['Sold â€” archived listing', 's'];
+    const avail = v.status === 'published' ? ['Available now', ''] : v.status === 'reserved' ? ['Reserved — deposit under agreement', 'r'] : ['Sold — archived listing', 's'];
     app.innerHTML = `
-    <div class="crumb"><a href="/">Home</a> â†’ <a href="/vehicles">Showroom</a> â†’ ${esc(v.brand)} ${esc(v.model)} ${v.year}</div>
+    <div class="crumb"><a href="/">Home</a> → <a href="/vehicles">Showroom</a> → ${esc(v.brand)} ${esc(v.model)} ${v.year}</div>
     <div class="detail-top">
       <div class="gallery" id="gallery">
         <div class="gallery-main" id="galleryMain">
           <img id="galleryImg" src="${esc((images[0] || {}).url || '')}" alt="${esc(v.brand + ' ' + v.model + ' ' + v.year + ' ' + ((images[0] || {}).caption || ''))}" width="1600" height="1000" fetchpriority="high">
-          <span class="gcount" id="gcount">1 / ${images.length + videos.length}${videos.length ? ' Â· includes ' + videos.length + ' video(s)' : ''}</span>
-          ${images.length + videos.length > 1 ? `<button class="lb-nav" style="left:12px" data-n="-1">â€¹</button><button class="lb-nav" style="right:12px" data-n="1">â€º</button>` : ''}
+          <span class="gcount" id="gcount">1 / ${images.length + videos.length}${videos.length ? ' · includes ' + videos.length + ' video(s)' : ''}</span>
+          ${images.length + videos.length > 1 ? `<button class="lb-nav" style="left:12px" data-n="-1">‹</button><button class="lb-nav" style="right:12px" data-n="1">›</button>` : ''}
         </div>
         <div class="gthumbs" id="gthumbs">
           ${[...images.map((x) => ({ ...x })), ...videos.map((x) => ({ ...x }))].map((x, i) => `
             <button class="${i === 0 ? 'on' : ''}" data-i="${i}" title="${esc(x.caption)}">
-              <img src="${esc(x.thumbUrl || x.url)}" alt="" loading="lazy"><span class="tag">${esc(x.type === 'video' ? 'â–¶ video' : (x.category || ''))}</span>
+              <img src="${esc(x.thumbUrl || x.url)}" alt="" loading="lazy"><span class="tag">${esc(x.type === 'video' ? '▶ video' : (x.category || ''))}</span>
             </button>`).join('')}
         </div>
       </div>
       <div class="detail-info">
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
           <span class="avail ${avail[1]}"><i></i>${avail[0]}</span>
-          ${v.isFeatured ? '<span class="flag gold">â˜… Featured</span>' : ''}
+          ${v.isFeatured ? '<span class="flag gold">★ Featured</span>' : ''}
           ${v.inspectionStatus !== 'none' ? `<span class="badge-verified">${esc(v.inspectionStatus === 'third_party_inspected' ? 'Third-party inspected' : 'Dealership inspected')}</span>` : ''}
         </div>
         <h1>${esc(v.brand)} ${esc(v.model)} <span style="color:var(--ink-faint)">${v.year}</span></h1>
         <div class="price-line">
           <span class="price">${Number(v.price) > 0 ? `<span class="cur">${esc(v.currency)}</span>${Number(v.price).toLocaleString()}` : 'Price on request'}</span>
-          <span style="color:var(--ink-faint);font-size:13px">Transparent pricing Â· the final drive-away figure is confirmed in writing before any payment.</span>
+          <span style="color:var(--ink-faint);font-size:13px">Transparent pricing · the final drive-away figure is confirmed in writing before any payment.</span>
         </div>
         <div class="cta-stack">
           ${v.status !== 'sold' ? `
             <button class="btn btn-gold wide" id="btnEnqMain">Request information & price</button>
-            <a class="btn btn-wa wide" id="btnWa" target="_blank" rel="noopener">âœ† WhatsApp about this vehicle</a>
+            <a class="btn btn-wa wide" id="btnWa" target="_blank" rel="noopener">✆ WhatsApp about this vehicle</a>
             <div class="cta-2">
               <button class="btn btn-ghost" data-enq="inspection">Book an inspection</button>
               <button class="btn btn-ghost" data-enq="testdrive">Request a viewing / test drive</button>
               <button class="btn btn-ghost" data-enq="purchase">Submit a purchase enquiry</button>
               <button class="btn btn-ghost" data-enq="delivery">Request delivery information</button>
             </div>` : `
-            <div class="note"><b>This vehicle has been sold.</b> Archived listings stay on the site for transparency of our sales history. Ask us about similar stock${v.similar.length ? ' â€” see the selection below' : ''}.</div>
+            <div class="note"><b>This vehicle has been sold.</b> Archived listings stay on the site for transparency of our sales history. Ask us about similar stock${v.similar.length ? ' — see the selection below' : ''}.</div>
             <a class="btn btn-gold wide" href="/contact">Contact the dealership</a>`}
           <div class="cta-2">
-            <button class="btn btn-ghost" id="btnFavD">${state.favourites.has(v.id) ? 'â™¥ Saved to favourites' : 'â™¡ Save to favourites'}</button>
-            <button class="btn btn-ghost" id="btnCmpD">${inCmp ? 'âœ“ In comparison' : 'â‡„ Compare this vehicle'}</button>
-            <button class="btn btn-ghost" id="btnShare">â†— Share vehicle</button>
+            <button class="btn btn-ghost" id="btnFavD">${state.favourites.has(v.id) ? '♥ Saved to favourites' : '♡ Save to favourites'}</button>
+            <button class="btn btn-ghost" id="btnCmpD">${inCmp ? '✓ In comparison' : '⇄ Compare this vehicle'}</button>
+            <button class="btn btn-ghost" id="btnShare">↗ Share vehicle</button>
             <button class="btn btn-ghost" data-enq="pictures">Request more photos & videos</button>
           </div>
         </div>
         <div class="keyfacts">
           <div><span>Year</span><b>${v.year}</b></div><div><span>Mileage</span><b>${fmtKm(v.mileage)}</b></div>
-          <div><span>Engine</span><b>${esc(v.engine || 'â€”')}</b></div><div><span>Transmission</span><b>${esc(v.transmission || 'â€”')}</b></div>
-          <div><span>Fuel</span><b>${esc(v.fuel || 'â€”')}</b></div><div><span>Body</span><b>${esc(v.bodyType || 'â€”')}</b></div>
-          <div><span>Condition</span><b>${esc(v.condition || 'â€”')}</b></div><div><span>Location</span><b>${esc(v.location || 'â€”')}</b></div>
+          <div><span>Engine</span><b>${esc(v.engine || '—')}</b></div><div><span>Transmission</span><b>${esc(v.transmission || '—')}</b></div>
+          <div><span>Fuel</span><b>${esc(v.fuel || '—')}</b></div><div><span>Body</span><b>${esc(v.bodyType || '—')}</b></div>
+          <div><span>Condition</span><b>${esc(v.condition || '—')}</b></div><div><span>Location</span><b>${esc(v.location || '—')}</b></div>
         </div>
       </div>
     </div>
@@ -842,7 +852,7 @@ async function viewVehicle(m) {
           ].filter(([, x]) => x != null && x !== '').map(([k, x]) => `<tr><td>${k}</td><td>${esc(x)}</td></tr>`).join('')
         }</table></div>
         <div>
-          ${v.vin ? `<div class="note" style="margin-top:0"><b>VIN ${esc(v.vin)}</b> <button class="btn btn-ghost sm" id="copyVin" style="border:0;padding:2px 8px">copy</button><br>Copy the VIN and check it with any official history provider â€” our documentation matches it.</div>` : ''}
+          ${v.vin ? `<div class="note" style="margin-top:0"><b>VIN ${esc(v.vin)}</b> <button class="btn btn-ghost sm" id="copyVin" style="border:0;padding:2px 8px">copy</button><br>Copy the VIN and check it with any official history provider — our documentation matches it.</div>` : ''}
           <table class="spec-table">
             <tr><td>Ownership</td><td>${esc(v.ownershipInfo || 'Available on request')}</td></tr>
             <tr><td>Inspection</td><td>${esc(v.inspectionStatus === 'none' ? 'Report available on request' : (v.inspectionStatus === 'third_party_inspected' ? 'Third-party inspected' : 'Dealership 150-point inspected'))}</td></tr>
@@ -853,7 +863,7 @@ async function viewVehicle(m) {
     </section>
 
     <section class="section" id="vehicleDetails">${secHead('Complete vehicle details', 'every specification, what is verified and what is not')}
-      <div id="detailsBody"><div class="note">Loading the complete vehicle fileâ€¦</div></div>
+      <div id="detailsBody"><div class="note">Loading the complete vehicle file…</div></div>
     </section>
 
     <section class="section">${secHead('Vehicle description')}
@@ -869,7 +879,7 @@ async function viewVehicle(m) {
       </div>
     </section>` : ''}
 
-    ${videos.length ? `<section class="section" id="vehicleVideos">${secHead('Video presentations', 'full-length Â· watch with sound')}
+    ${videos.length ? `<section class="section" id="vehicleVideos">${secHead('Video presentations', 'full-length · watch with sound')}
       <div class="media-grid-vids">${videos.map((vid) => `
         <div style="display:flex;flex-direction:column;gap:10px">
           <div class="vidbox" data-vid-id="${vid.id}" data-vid-url="${esc(vid.url)}" data-vid-thumb="${esc(vid.thumbUrl || '')}" data-vid-cap="${esc(vid.caption)}" style="aspect-ratio:16/9"></div>
@@ -889,7 +899,7 @@ async function viewVehicle(m) {
       if (it.type === 'video') { $('#galleryMain .vidbox')?.remove(); im.style.display = 'none'; const box = document.createElement('div'); box.className = 'vidbox'; box.style.cssText = 'position:absolute;inset:0'; $('#galleryMain').insertBefore(box, im); box.appendChild(videoPlayer(it.url, it.thumbUrl || '', {})); }
       else { $('#galleryMain .vidbox')?.remove(); im.style.display = ''; im.src = it.url; }
       $$('#gthumbs button').forEach((b, j) => b.classList.toggle('on', j === gi));
-      $('#gcount').textContent = `${gi + 1} / ${all.length}${videos.length ? ' Â· includes ' + videos.length + ' video(s)' : ''}`;
+      $('#gcount').textContent = `${gi + 1} / ${all.length}${videos.length ? ' · includes ' + videos.length + ' video(s)' : ''}`;
     };
     cacheMediaGalleries(all);
     bindCards(app);
@@ -905,13 +915,13 @@ async function viewVehicle(m) {
     /* CTAs */
     $$('#app [data-enq]').forEach((b) => b.onclick = () => enquiryModal({ vehicleId: v.id, vehicleTitle: `${v.brand} ${v.model} ${v.year}`, type: b.dataset.enq }));
     $('#btnEnqMain') && ($('#btnEnqMain').onclick = () => enquiryModal({ vehicleId: v.id, vehicleTitle: `${v.brand} ${v.model} ${v.year}`, type: 'question' }));
-    const waTxt = encodeURIComponent(`Hello DM Motor Group â€” I am interested in the ${v.brand} ${v.model} ${v.year} (${location.origin}/vehicles/${v.slug}). Please send me the details.`);
+    const waTxt = encodeURIComponent(`Hello DM Motor Group — I am interested in the ${v.brand} ${v.model} ${v.year} (${location.origin}/vehicles/${v.slug}). Please send me the details.`);
     $('#btnWa') && ($('#btnWa').href = `https://wa.me/${esc(state.wa)}?text=${waTxt}`);
-    $('#btnFavD').onclick = async () => { await toggleFav(v); $('#btnFavD').textContent = state.favourites.has(v.id) ? 'â™¥ Saved to favourites' : 'â™¡ Save to favourites'; };
-    $('#btnCmpD').onclick = (e) => { const add = cmpToggle({ slug: v.slug, title: `${v.brand} ${v.model} ${v.year}`, cover: v.cover }, e); $('#btnCmpD').textContent = cmpList().some((x) => x.slug === v.slug) ? 'âœ“ In comparison' : 'â‡„ Compare this vehicle'; };
+    $('#btnFavD').onclick = async () => { await toggleFav(v); $('#btnFavD').textContent = state.favourites.has(v.id) ? '♥ Saved to favourites' : '♡ Save to favourites'; };
+    $('#btnCmpD').onclick = (e) => { const add = cmpToggle({ slug: v.slug, title: `${v.brand} ${v.model} ${v.year}`, cover: v.cover }, e); $('#btnCmpD').textContent = cmpList().some((x) => x.slug === v.slug) ? '✓ In comparison' : '⇄ Compare this vehicle'; };
     $('#btnShare').onclick = async () => {
-      const url = location.origin + '/vehicles/' + v.slug, text = `${v.brand} ${v.model} ${v.year} â€” ${priceText(v.price, v.currency)} at DM Motor Group`;
-      try { if (navigator.share) await navigator.share({ title: text, text, url }); else { await navigator.clipboard.writeText(url); toast('Link copied â€” share it anywhere.'); } } catch {}
+      const url = location.origin + '/vehicles/' + v.slug, text = `${v.brand} ${v.model} ${v.year} — ${priceText(v.price, v.currency)} at DM Motor Group`;
+      try { if (navigator.share) await navigator.share({ title: text, text, url }); else { await navigator.clipboard.writeText(url); toast('Link copied — share it anywhere.'); } } catch {}
     };
     $('#copyVin') && ($('#copyVin').onclick = async () => { await navigator.clipboard.writeText(v.vin); toast('VIN copied.'); });
     /* rendered video boxes inside detail */
@@ -932,14 +942,14 @@ function metaDesc(d) { $$('meta[name=description]').forEach((m) => (m.content = 
 
 /* ============================================================ VIDEOS PAGE */
 async function viewVideos() {
-  title('Video Showroom â€” Full-length vehicle presentations | DM Motor Group');
+  title('Video Showroom — Full-length vehicle presentations | DM Motor Group');
   const res = await api('/api/videos?per=18');
   cacheVehiclesFromVideos(res.items);
   app.innerHTML = `
   <div class="page-head"><div>
-    <span class="crumb"><a href="/">Home</a> â†’ Videos</span>
+    <span class="crumb"><a href="/">Home</a> → Videos</span>
     <h1>Video presentations</h1>
-    <p style="color:var(--ink-dim);max-width:70ch">Every film here is the complete, original presentation as recorded by our team â€” never split into short clips and never cropped to hide part of the vehicle. Press play to watch in full with sound, and use â›¶ for full-screen. Portrait and landscape recordings supported.</p>
+    <p style="color:var(--ink-dim);max-width:70ch">Every film here is the complete, original presentation as recorded by our team — never split into short clips and never cropped to hide part of the vehicle. Press play to watch in full with sound, and use ⛶ for full-screen. Portrait and landscape recordings supported.</p>
   </div></div>
   <div class="vidpage-grid">${res.items.map(videoCard).join('') || '<div class="empty" style="grid-column:1/-1"><b>No videos published yet</b>Videos uploaded through the admin dashboard appear here and on vehicle pages automatically.</div>'}</div>
   <div class="pager" style="margin-top:26px">${res.pages > 1 ? Array.from({ length: res.pages }, (_, i) => `<button ${i + 1 === res.page ? 'class="on"' : ''} data-p="${i + 1}">${i + 1}</button>`).join('') : ''}</div>`;
@@ -956,47 +966,47 @@ async function viewVideos() {
 
 /* ============================================================ COMPARE */
 async function viewCompare() {
-  title('Compare Vehicles â€” DM Motor Group');
+  title('Compare Vehicles — DM Motor Group');
   const list = cmpList();
   const items = await Promise.all(list.map(async (c) => { try { return await api(`/api/vehicles/${c.slug}`); } catch { return null; } }));
   const vs = items.filter(Boolean);
   app.innerHTML = `
   <div class="page-head"><div>
-    <span class="crumb"><a href="/">Home</a> â†’ Compare</span>
-    <h1>Compare vehicles <small style="font-family:var(--sans);font-size:14px;color:var(--ink-faint);margin-left:12px">2â€“4 side by side</small></h1>
+    <span class="crumb"><a href="/">Home</a> → Compare</span>
+    <h1>Compare vehicles <small style="font-family:var(--sans);font-size:14px;color:var(--ink-faint);margin-left:12px">2–4 side by side</small></h1>
   </div></div>
-  ${vs.length ? cmpTable(vs) : `<div class="empty"><b>Nothing to compare yet</b>Open any vehicle in the showroom and press â‡„ â€” collect two to four cars, then compare prices, mileage, engines, transmissions and equipment line by line.<a class="btn btn-gold" href="/vehicles">Browse the showroom</a></div>`}`;
+  ${vs.length ? cmpTable(vs) : `<div class="empty"><b>Nothing to compare yet</b>Open any vehicle in the showroom and press ⇄ — collect two to four cars, then compare prices, mileage, engines, transmissions and equipment line by line.<a class="btn btn-gold" href="/vehicles">Browse the showroom</a></div>`}`;
   $$('#app .rm-cmp').forEach((b) => b.onclick = () => { cmpSave(cmpList().filter((x) => x.slug !== b.dataset.slug)); viewCompare(); });
 }
 function cmpTable(vs) {
   const row = (label, get, cls = '') => `<tr><th>${label}</th>${vs.map((v) => `<td class="${cls}">${get(v)}</td>`).join('')}</tr>`;
-  const has = (v, f) => v.features?.includes(f) ? '<span class="feat-check">âœ“</span>' : '<span class="feat-none">â€”</span>';
+  const has = (v, f) => v.features?.includes(f) ? '<span class="feat-check">✓</span>' : '<span class="feat-none">—</span>';
   return `<div class="cmp-table-wrap"><table class="cmp">
-    <thead><tr><th></th>${vs.map((v) => `<th><div class="cmp-hero"><img src="${esc(v.cover)}" alt=""><b><a href="/vehicles/${esc(v.slug)}" style="color:var(--gold2)">${esc(v.brand)} ${esc(v.model)}</a></b><span style="color:var(--ink-faint);font-size:13px">${v.year} Â· ${esc(v.bodyType || '')}</span><button class="btn btn-ghost sm rm-cmp" data-slug="${esc(v.slug)}">Remove</button></div></th>`).join('')}</tr></thead>
+    <thead><tr><th></th>${vs.map((v) => `<th><div class="cmp-hero"><img src="${esc(v.cover)}" alt=""><b><a href="/vehicles/${esc(v.slug)}" style="color:var(--gold2)">${esc(v.brand)} ${esc(v.model)}</a></b><span style="color:var(--ink-faint);font-size:13px">${v.year} · ${esc(v.bodyType || '')}</span><button class="btn btn-ghost sm rm-cmp" data-slug="${esc(v.slug)}">Remove</button></div></th>`).join('')}</tr></thead>
     <tbody>
       ${row('Selling price', (v) => `<b class="price">${priceText(v.price, v.currency)}</b>`)}
       ${row('Year', (v) => v.year)}
       ${row('Mileage', (v) => fmtKm(v.mileage))}
-      ${row('Engine', (v) => esc(v.engine || 'â€”'))}
-      ${row('Transmission', (v) => esc(v.transmission || 'â€”'))}
-      ${row('Fuel type', (v) => esc(v.fuel || 'â€”'))}
-      ${row('Body type', (v) => esc(v.bodyType || 'â€”'))}
-      ${row('Condition', (v) => esc(v.condition || 'â€”'))}
-      ${row('Exterior colour', (v) => esc(v.exteriorColor || 'â€”'))}
-      ${row('Interior colour', (v) => esc(v.interiorColor || 'â€”'))}
-      ${row('Location', (v) => esc(v.location || 'â€”'))}
+      ${row('Engine', (v) => esc(v.engine || '—'))}
+      ${row('Transmission', (v) => esc(v.transmission || '—'))}
+      ${row('Fuel type', (v) => esc(v.fuel || '—'))}
+      ${row('Body type', (v) => esc(v.bodyType || '—'))}
+      ${row('Condition', (v) => esc(v.condition || '—'))}
+      ${row('Exterior colour', (v) => esc(v.exteriorColor || '—'))}
+      ${row('Interior colour', (v) => esc(v.interiorColor || '—'))}
+      ${row('Location', (v) => esc(v.location || '—'))}
       ${row('Availability', (v) => v.status === 'published' ? '<span class="row-ok">Available</span>' : esc(v.status))}
       ${row('Inspection', (v) => v.inspectionStatus === 'none' ? 'On request' : esc(v.inspectionStatus === 'third_party_inspected' ? 'Third-party inspection' : 'Dealership 150-point'))}
-      ${['Panoramic glass roof', 'Massage & ventilation seats', 'Sport exhaust', '360Â° camera system', 'Wireless Apple CarPlay & Android Auto', 'Adaptive cruise', 'DC fast charging', 'Power tailgate'].map((f) => `<tr><th>${f}</th>${vs.map((v) => `<td>${has(v, f)}</td>`).join('')}</tr>`).join('')}
-      ${row('Photos & videos', (v) => `${v.photoCount} photos Â· ${v.videoCount} videos`)}
+      ${['Panoramic glass roof', 'Massage & ventilation seats', 'Sport exhaust', '360° camera system', 'Wireless Apple CarPlay & Android Auto', 'Adaptive cruise', 'DC fast charging', 'Power tailgate'].map((f) => `<tr><th>${f}</th>${vs.map((v) => `<td>${has(v, f)}</td>`).join('')}</tr>`).join('')}
+      ${row('Photos & videos', (v) => `${v.photoCount} photos · ${v.videoCount} videos`)}
       ${row('Full listing', (v) => `<a class="btn btn-ghost sm" href="/vehicles/${esc(v.slug)}">Open vehicle</a>`)}
     </tbody></table></div>
-    <p class="note">All equipment lists are dealership-supplied. Ask our team to confirm any specific feature on your chosen vehicle before purchase â€” we answer in writing.</p>`;
+    <p class="note">All equipment lists are dealership-supplied. Ask our team to confirm any specific feature on your chosen vehicle before purchase — we answer in writing.</p>`;
 }
 
 /* ============================================================ ACCOUNT */
 async function viewAccount(_m, sp) {
-  title('Customer Account â€” DM Motor Group');
+  title('Customer Account — DM Motor Group');
   const tab = sp.get('tab') || (state.user ? 'overview' : 'signin');
   if (!state.user) return renderAuthPage(tab);
   const tabs = [['overview', 'My account', ''], ['favourites', 'Favourites', state.favourites.size], ['enquiries', 'Enquiry history', ''], ['notifications', 'Notifications', state.unread], ['profile', 'Profile & security', '']];
@@ -1007,7 +1017,7 @@ async function viewAccount(_m, sp) {
     <div class="trust" style="margin-bottom:0">
       <div><b>${state.favourites.size}</b><span>saved favourites</span></div>
       <div><b>${cmpList().length}</b><span>in comparison</span></div>
-      <div><b>${state.enqCount ?? 'â€”'}</b><span>enquiries submitted</span></div>
+      <div><b>${state.enqCount ?? '—'}</b><span>enquiries submitted</span></div>
       <div><b>${state.unread}</b><span>unread messages</span></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px">
@@ -1016,7 +1026,7 @@ async function viewAccount(_m, sp) {
     </div></div>`;
   if (tab === 'favourites') {
     const favs = await api('/api/favourites');
-    body = `<div class="grid">${favs.map((v) => vCard(v)).join('') || `<div class="empty" style="grid-column:1/-1"><b>No favourites yet</b>Press â™¡ on any vehicle to save it here.<a class="btn btn-gold" href="/vehicles">Browse the showroom</a></div>`}</div>`;
+    body = `<div class="grid">${favs.map((v) => vCard(v)).join('') || `<div class="empty" style="grid-column:1/-1"><b>No favourites yet</b>Press ♡ on any vehicle to save it here.<a class="btn btn-gold" href="/vehicles">Browse the showroom</a></div>`}</div>`;
     cacheVehicles(favs); setTimeout(() => bindCards(app));
   }
   if (tab === 'enquiries') {
@@ -1024,15 +1034,15 @@ async function viewAccount(_m, sp) {
     state.enqCount = enq.length;
     body = enq.map((e) => `<div class="enq-row"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><b>${esc(e.vehicleTitle)}</b><span class="status-pill ${esc(e.status)}">${esc(e.status)}</span></div>
       <p style="color:var(--ink-dim);margin-top:8px;font-size:14px">${esc(e.message)}</p>
-      <div style="color:var(--ink-faint);font-size:12.5px;margin-top:8px">${esc(e.type)} Â· submitted ${esc(e.created_at)}${e.admin_notes ? ` Â· dealership response: ${esc(e.admin_notes)}` : ''}</div></div>`).join('') ||
-      `<div class="empty"><b>No enquiries yet</b>Use â€œRequest informationâ€ on any vehicle â€” every message lands here and at the dealership desk.</div>`;
+      <div style="color:var(--ink-faint);font-size:12.5px;margin-top:8px">${esc(e.type)} · submitted ${esc(e.created_at)}${e.admin_notes ? ` · dealership response: ${esc(e.admin_notes)}` : ''}</div></div>`).join('') ||
+      `<div class="empty"><b>No enquiries yet</b>Use “Request information” on any vehicle — every message lands here and at the dealership desk.</div>`;
   }
   if (tab === 'notifications') {
     const n = await api('/api/notifications');
     state.unread = n.unread; hdrCount();
     body = `${n.items.length ? '<button class="btn btn-ghost sm" id="readAll" style="margin-bottom:14px">Mark all as read</button>' : ''}${n.items.map((x) => `
-      <div class="notif ${x.is_read ? '' : 'unread'}"><i>âœ¦</i><div><b>${esc(x.title)}</b><p>${esc(x.body)}</p>
-      <span style="color:var(--ink-faint);font-size:12px">${esc(x.created_at)}${x.link && x.link !== '/' ? ` Â· <a href="${esc(x.link)}" style="color:var(--gold2)">open vehicle â†’</a>` : ''}</span></div></div>`).join('') || '<div class="empty"><b>No notifications</b>Dealership responses will arrive here.</div>'}`;
+      <div class="notif ${x.is_read ? '' : 'unread'}"><i>✦</i><div><b>${esc(x.title)}</b><p>${esc(x.body)}</p>
+      <span style="color:var(--ink-faint);font-size:12px">${esc(x.created_at)}${x.link && x.link !== '/' ? ` · <a href="${esc(x.link)}" style="color:var(--gold2)">open vehicle →</a>` : ''}</span></div></div>`).join('') || '<div class="empty"><b>No notifications</b>Dealership responses will arrive here.</div>'}`;
   }
   if (tab === 'profile') body = `
     <div class="panel"><h3 style="margin-bottom:16px">Personal information</h3>
@@ -1044,9 +1054,9 @@ async function viewAccount(_m, sp) {
       <div class="field full"><button class="btn btn-gold" type="submit">Save changes</button></div>
     </form></div>`;
   app.innerHTML = `
-  <div class="page-head"><div><span class="crumb"><a href="/">Home</a> â†’ Account</span><h1>My account</h1></div></div>
+  <div class="page-head"><div><span class="crumb"><a href="/">Home</a> → Account</span><h1>My account</h1></div></div>
   <div class="account-layout">
-    <aside class="acc-nav">${tabs.map(([k, l, c]) => `<a href="/account?tab=${k}" class="${tab === k ? 'on' : ''}">${c ? 'â™¥ ' : ''}${l}${c ? `<span class="cnt">${c}</span>` : ''}</a>`).join('')}<button id="btnLogout">Sign out</button></aside>
+    <aside class="acc-nav">${tabs.map(([k, l, c]) => `<a href="/account?tab=${k}" class="${tab === k ? 'on' : ''}">${c ? '♥ ' : ''}${l}${c ? `<span class="cnt">${c}</span>` : ''}</a>`).join('')}<button id="btnLogout">Sign out</button></aside>
     <div>${body}</div>
   </div>`;
   $('#btnLogout').onclick = async () => { try { await api('/api/auth/logout', { method: 'POST' }); } catch {} localStorage.removeItem(TOKEN_KEY); state.user = null; state.favourites.clear(); state.unread = 0; hdrCount(); toast('Signed out.'); route('/account'); };
@@ -1059,7 +1069,7 @@ async function viewAccount(_m, sp) {
 }
 function renderAuthPage(tab) {
   app.innerHTML = `
-  <div class="page-head"><div><span class="crumb"><a href="/">Home</a> â†’ Account</span><h1>Customer account</h1></div></div>
+  <div class="page-head"><div><span class="crumb"><a href="/">Home</a> → Account</span><h1>Customer account</h1></div></div>
   <div style="display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:34px;align-items:start" class="auth-2col">
     <div class="panel">
       <div class="chips" style="margin-bottom:18px">${[['signin', 'Sign in'], ['register', 'Create account']].map(([k, l]) => `<button class="chip ${tab === k ? 'on' : ''}" data-t="${k}">${l}</button>`).join('')}</div>
@@ -1083,7 +1093,7 @@ function renderAuthPage(tab) {
     <div>
       <h3 style="margin-bottom:10px">Your data, protected.</h3>
       <p class="detail-desc" style="margin-bottom:12px">Passwords are hashed by our authentication provider and are never stored or displayed in readable form. Sessions use signed, expiring access tokens sent only over HTTPS, and every administrative action is logged.</p>
-      <p class="detail-desc">Browsing the showroom never requires an account. Enquiries can be made with or without one â€” but an account lets you track responses and keep favourites in one place.</p>
+      <p class="detail-desc">Browsing the showroom never requires an account. Enquiries can be made with or without one — but an account lets you track responses and keep favourites in one place.</p>
     </div>
   </div>`;
   $$('#app .chips .chip').forEach((c) => c.onclick = () => route('/account?tab=' + c.dataset.t));
@@ -1110,11 +1120,11 @@ function renderAuthPage(tab) {
 
 /* ============================================================ CONTACT */
 async function viewContact() {
-  title('Contact & Purchasing â€” DM Motor Group');
+  title('Contact & Purchasing — DM Motor Group');
   const s = state.settings;
   app.innerHTML = `
-  <div class="page-head"><div><span class="crumb"><a href="/">Home</a> â†’ Contact</span><h1>Contact the dealership</h1>
-  <p style="color:var(--ink-dim);max-width:70ch">Request prices, extra photographs or videos, book inspections and test drives, ask about delivery â€” or send a purchase enquiry. Every message reaches the sales desk and is answered within one business day.</p></div></div>
+  <div class="page-head"><div><span class="crumb"><a href="/">Home</a> → Contact</span><h1>Contact the dealership</h1>
+  <p style="color:var(--ink-dim);max-width:70ch">Request prices, extra photographs or videos, book inspections and test drives, ask about delivery — or send a purchase enquiry. Every message reaches the sales desk and is answered within one business day.</p></div></div>
   <div class="about-grid">
     <div class="panel">
       <h3 style="margin-bottom:14px">Send an enquiry</h3>
@@ -1123,7 +1133,7 @@ async function viewContact() {
           <div class="field"><label>Your name *</label><input name="name" required></div>
           <div class="field"><label>Email *</label><input name="email" type="email" required></div>
           <div class="field"><label>Enquiry type</label><select name="type">${[['price', 'Request a selling price'], ['question', 'Ask a question'], ['inspection', 'Book an inspection'], ['testdrive', 'Arrange a test drive / viewing'], ['delivery', 'Request delivery information'], ['purchase', 'Submit a purchase enquiry']].map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select></div>
-          <div class="field full"><label>Message *</label><textarea name="message" required placeholder="Tell us what you are looking for (brand, model, budget) or ask about a specific vehicleâ€¦"></textarea></div>
+          <div class="field full"><label>Message *</label><textarea name="message" required placeholder="Tell us what you are looking for (brand, model, budget) or ask about a specific vehicle…"></textarea></div>
         </div>
         <input type="text" name="website" style="position:absolute;left:-9000px" tabindex="-1" autocomplete="off">
         <button class="btn btn-gold" type="submit">Send enquiry</button>
@@ -1175,7 +1185,7 @@ async function buildQuickSearchFields() {
     <select name="bodyType">${opt(m.bodyTypes, 'Any body type')}</select>
     <select name="transmission">${opt(m.transmissions, 'Any transmission')}</select>
     <select name="fuel">${opt(m.fuels, 'Any fuel')}</select>
-    <select name="condition">${opt(['New', 'Used â€” as new', 'Used'], 'Any condition')}</select>`;
+    <select name="condition">${opt(['New', 'Used — as new', 'Used'], 'Any condition')}</select>`;
   void m.locations;
 }
 
@@ -1192,7 +1202,7 @@ window.addEventListener('pageshow', () => {});
   try { await getMeta(); } catch {}
   try { const h = await api('/api/home'); state.settings = h.settings || {}; applySettings(h); } catch {}
   await route(location.pathname + location.search, true);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=15').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=17').catch(() => {});
 })();
 /* Android app installation (Chrome "Add to Home screen" flow) */
 window.__pwaPrompt = null;
@@ -1201,7 +1211,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
   if ($('.install-android')) return;
   const b = document.createElement('button');
   b.className = 'install-android';
-  b.innerHTML = 'ðŸ“² Install the DM Motors Android app';
+  b.innerHTML = '📲 Install the DM Motors Android app';
   b.onclick = async () => { window.__pwaPrompt.prompt(); await window.__pwaPrompt.userChoice; b.remove(); };
   document.body.appendChild(b);
   setTimeout(() => b.remove(), 30000);

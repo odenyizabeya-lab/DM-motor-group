@@ -1,0 +1,286 @@
+{
+  "researchedAt": "2026-11-12",
+  "method": "Market figures were collected from published dealer-listing aggregators, appraisal guides and auction-result databases. Ranges are the source's own published figures for the stated year, not our own opinion. Where no verifiable source could be obtained the entry states that explicitly.",
+  "caveat": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+  "models": {
+    "lexus-ux-250h": {
+      "year": 2019,
+      "marketRange": "$14,075 - $26,698",
+      "basis": "Edmunds appraisal range for a 2019 Lexus UX 250h (assumes 12,000 miles per year, no colour or options selected). Dealer listings for the same model sit between $19,148 and $30,999.",
+      "source": "Edmunds / Autotrader",
+      "confidence": "medium",
+      "bandType": "published",
+      "bandLabel": "Published market band"
+    },
+    "maybach-gls-600": {
+      "year": 2022,
+      "marketRange": "$99,998 - $129,999",
+      "basis": "Dealer listings for 2022 Maybach GLS 600 4MATIC. The wider Maybach GLS 600 population lists between $87,998 and $199,999 depending on specification.",
+      "source": "Autotrader",
+      "confidence": "medium",
+      "bandType": "published",
+      "bandLabel": "Published market band"
+    },
+    "ferrari-sf90": {
+      "year": 2021,
+      "marketRange": "$419,376 - $473,966",
+      "basis": "Market-value band across model years and condition. Original MSRP was $524,815; the current average used price is reported around $484,150 and individual sales have ranged from $363,000 to $935,000.",
+      "source": "DriveIndex / CarBuzz",
+      "confidence": "medium",
+      "bandType": "published",
+      "bandLabel": "Published market band"
+    },
+    "ford-torino-talladega": {
+      "year": 1969,
+      "marketRange": "$16,500 - $110,000",
+      "basis": "Median recorded auction sale price for a 1969 Ford Torino is $42,500 across seven year-specific sales in the last 12 months. A genuine Talladega is far more valuable than a standard Torino; the wide band reflects that uncertainty.",
+      "source": "Auction results database (median $42,500)",
+      "confidence": "low",
+      "bandType": "published",
+      "bandLabel": "Published market band"
+    },
+    "chevrolet-chevelle-ss-1966": {
+      "year": 1966,
+      "marketRange": "$27,495 - $53,995",
+      "basis": "Current 1966 Chevelle value from 1,112 asking prices. Median recorded auction sale price is $52,900 with observed prices from $23,000 to $242,000 depending on specification and originality.",
+      "source": "Classic Cars Arena / auction results",
+      "confidence": "medium",
+      "bandType": "published",
+      "bandLabel": "Published market band"
+    },
+    "chevrolet-c10-1965": {
+      "year": 1965,
+      "marketRange": "$9,170 - $27,995",
+      "basis": "Current 1965 C10 value from 968 asking prices. A wider auction-verified band across all years is $18,521 - $60,528.",
+      "source": "Classic Cars Arena / DriveIndex",
+      "confidence": "medium",
+      "bandType": "published",
+      "bandLabel": "Published market band"
+    },
+    "gmc-sierra-2500hd": {
+      "year": 2022,
+      "marketRange": "$41,095 - $53,897",
+      "basis": "Median asking price for a used 2022 GMC Sierra 2500HD is $48,900 (average $47,322), with the middle half of listings between $41,095 and $53,897. The full listing population spans $32,372 to $74,000.",
+      "source": "Edmunds / Autotrader",
+      "confidence": "medium",
+      "bandType": "published",
+      "bandLabel": "Published market band"
+    },
+    "chevrolet-chevelle-1970": {
+      "year": 1970,
+      "marketRange": "$45,969 - $69,994",
+      "basis": "Current 1970 Chevelle SS value from 302 asking prices. Auction-verified market value across the model is $87,602; genuine SS 454 LS6 cars trade around $159,332.",
+      "source": "Classic Cars Arena / DriveIndex",
+      "confidence": "medium",
+      "bandType": "published",
+      "bandLabel": "Published market band"
+    },
+    "range-rover-velar-2020": {
+      "year": 2020,
+      "marketRange": "$17,990 - $32,495",
+      "basis": "CARFAX used listings for a 2020 Velar start at $17,990; other aggregators list examples from $16,494. The full listing population, including high-specification and low-mileage cars, spans $9,500 to $54,690.",
+      "source": "CARFAX / Carsforsale / Autotrader",
+      "confidence": "medium",
+      "bandType": "published",
+      "bandLabel": "Published market band"
+    },
+    "cadillac-ct5v-blackwing": {
+      "year": 2023,
+      "marketRange": "$73,000 - $104,995",
+      "basis": "Dealer listings for 2023 CT5-V Blackwing cars. Typical asking price observed around $92,695. A standard (non-Blackwing) CT5-V is far lower, from about $13,900 to $36,995.",
+      "source": "Autotrader / Carsforsale",
+      "confidence": "medium",
+      "bandType": "published",
+      "bandLabel": "Published market band"
+    },
+    "kia-ev3-2025": {
+      "year": 2025,
+      "marketRange": "$29,890 - $35,990",
+      "basis": "Published US pricing for the Kia EV3: the 2025 model starts at $35,990 and the following model year at $29,890. A new-car price, not a used-market figure - the model is too new for a settled used market.",
+      "source": "Edmunds / manufacturer pricing",
+      "confidence": "low",
+      "bandType": "msrp",
+      "bandLabel": "Manufacturer price reference (not a used-market band)"
+    },
+    "land-rover-defender-110": {
+      "year": 2022,
+      "marketRange": "$41,398 - $61,495",
+      "basis": "A used 2022 Defender lists for a median $42,825 at 53,923 miles across 348 dealer listings. The wider population spans $27,000 to $98,800.",
+      "source": "Edmunds / Autotrader",
+      "confidence": "medium",
+      "bandType": "published",
+      "bandLabel": "Published market band"
+    },
+    "cadillac-escalade-2022": {
+      "year": 2022,
+      "marketRange": "$53,891 - $63,325",
+      "basis": "Median asking price for a used 2022 Escalade is $58,686 (average $58,925), with the middle half of listings between $53,891 and $63,325.",
+      "source": "Edmunds / Autotrader",
+      "confidence": "medium",
+      "bandType": "published",
+      "bandLabel": "Published market band"
+    },
+    "honda-accord-2016": {
+      "year": 2016,
+      "marketRange": "From about $1,500",
+      "basis": "Original MSRP for a 2016 Accord was $22,205-$34,680. Used examples start from roughly $1,500; a clean, low-mileage car with the EX-L trim sits well above that.",
+      "source": "CarHP / dealer listings",
+      "confidence": "low",
+      "bandType": "derived",
+      "bandLabel": "Derived band (manufacturer price + observed dealer listings)"
+    },
+    "chevrolet-silverado-1500-2021": {
+      "year": 2021,
+      "marketRange": "$29,300 - $64,195",
+      "basis": "Published price band for a 2021 Silverado 1500 across trims (MSRP $29,300-$64,195). A lifted example with aftermarket wheels typically commands a premium, partly offset by the modification.",
+      "source": "CarHP",
+      "confidence": "medium",
+      "bandType": "published",
+      "bandLabel": "Published market band"
+    },
+    "honda-civic-2019": {
+      "year": 2019,
+      "marketRange": "$16,190 - $21,520",
+      "basis": "Published used price band for a 2019 Civic; original MSRP was $20,505-$28,355 across trims.",
+      "source": "CarHP",
+      "confidence": "medium",
+      "bandType": "published",
+      "bandLabel": "Published market band"
+    },
+    "toyota-corolla-2006": {
+      "year": 2006,
+      "marketRange": "$3,500 - $9,000",
+      "basis": "Original MSRP for the 2006 Corolla sedan was around $14,105. Used examples typically transact between $3,500 and $9,000 depending on mileage and condition.",
+      "source": "CarBuzz MSRP / dealer listings",
+      "confidence": "low",
+      "bandType": "derived",
+      "bandLabel": "Derived band (manufacturer price + observed dealer listings)"
+    },
+    "ford-f150-2022": {
+      "year": 2022,
+      "marketRange": "$38,810 - $62,970",
+      "basis": "Published price band for a 2022 F-150; original MSRP $29,640-$39,175 across trims. Lifted aftermarket packages are common on this model and typically add value while reducing resale appeal to some buyers.",
+      "source": "CarHP / CarBuzz",
+      "confidence": "medium",
+      "bandType": "published",
+      "bandLabel": "Published market band"
+    },
+    "ford-f250-2019": {
+      "year": 2019,
+      "marketRange": "$45,000 - $85,000",
+      "basis": "Original MSRP ranged from $33,150 (base XL) to $56,910 (King Ranch) and $63,335 (Platinum). Used examples trade according to trim, mileage and lift package.",
+      "source": "CarBuzz MSRP / dealer listings",
+      "confidence": "low",
+      "bandType": "derived",
+      "bandLabel": "Derived band (manufacturer price + observed dealer listings)"
+    },
+    "tesla-model-3-2021": {
+      "year": 2021,
+      "marketRange": "$24,000 - $38,000",
+      "basis": "Original MSRP was $44,990, and a 2021 Model 3 sedan with typical options came to just under $47,000 new. Used prices have fallen from new-car levels as the model aged.",
+      "source": "CarBuzz MSRP / dealer listings",
+      "confidence": "low",
+      "bandType": "derived",
+      "bandLabel": "Derived band (manufacturer price + observed dealer listings)"
+    },
+    "mercedes-gle53-coupe": {
+      "year": 2021,
+      "marketRange": "$76,500 - $90,940",
+      "basis": "Published MSRP for the 2021 Mercedes-AMG GLE 53 Coupe is $76,500-$77,550, and a typical build came to about $90,940 including the $1,050 destination fee.",
+      "source": "CarBuzz / CarHP",
+      "confidence": "medium",
+      "bandType": "msrp",
+      "bandLabel": "Manufacturer price reference (not a used-market band)"
+    },
+    "ford-ranger-raptor-2023": {
+      "year": 2023,
+      "marketRange": "$51,000 - $52,495",
+      "basis": "Published used price band for a Ranger Raptor; the 2024 model's MSRP is $55,470 and the base 2023 Ranger XL starts at $27,400.",
+      "source": "CarHP / CarBuzz",
+      "confidence": "medium",
+      "bandType": "published",
+      "bandLabel": "Published market band"
+    },
+    "ferrari-laferrari": {
+      "year": 2015,
+      "marketRange": "$2,600,000 - $4,000,000",
+      "basis": "Original MSRP was $1,416,362. Collector hypercars of this type trade in the high millions with wide variation depending on specification, mileage and provenance; the exact figure must come from a specialist valuation.",
+      "source": "CarHP / CarBuzz MSRP",
+      "confidence": "low",
+      "bandType": "derived",
+      "bandLabel": "Derived band (manufacturer price + observed dealer listings)"
+    },
+    "lamborghini-revuelto": {
+      "year": 2024,
+      "marketRange": "$604,363 - $750,000",
+      "basis": "Published US MSRP of $604,363 for the Revuelto, with higher-specification builds commonly quoted above $600,000.",
+      "source": "CarBuzz",
+      "confidence": "medium",
+      "bandType": "msrp",
+      "bandLabel": "Manufacturer price reference (not a used-market band)"
+    },
+    "rolls-royce-cullinan-2025": {
+      "year": 2025,
+      "marketRange": "$407,750 - $601,000",
+      "basis": "Base MSRP $407,750 (about $390,000 depending on market). The specific build shown in the video carries an MSRP of $601,000.",
+      "source": "CarBuzz MSRP / video overlay",
+      "confidence": "medium",
+      "bandType": "msrp",
+      "bandLabel": "Manufacturer price reference (not a used-market band)"
+    },
+    "ford-mustang-gt-2019": {
+      "year": 2019,
+      "marketRange": "$25,000 - $48,000",
+      "basis": "Original MSRP $26,395-$31,410; published used price band $25,000-$48,000 across the 2019 Mustang range.",
+      "source": "CarHP / CarBuzz",
+      "confidence": "medium",
+      "bandType": "published",
+      "bandLabel": "Published market band"
+    },
+    "bugatti-chiron-super-sport": {
+      "year": 2020,
+      "marketRange": "$6,000,080 - $8,500,080",
+      "basis": "Dealer listings for used Bugatti Chirons, including 2022 Chiron Super Sport examples, span $6,000,080 to $8,500,080. The standard Chiron launched at $2,990,000; the Super Sport 300+ is a limited, high-value variant priced far above it.",
+      "source": "Autotrader listings / CarBuzz MSRP",
+      "confidence": "medium",
+      "bandType": "published",
+      "bandLabel": "Published market band"
+    },
+    "bugatti-chiron-2020": {
+      "year": 2020,
+      "marketRange": "$2,990,000 - $3,000,000",
+      "basis": "Published MSRP for the 2020 Bugatti Chiron: $2,990,000-$3,000,000 depending on trim, with used examples typically above list.",
+      "source": "CarBuzz / CarHP",
+      "confidence": "medium",
+      "bandType": "msrp",
+      "bandLabel": "Manufacturer price reference (not a used-market band)"
+    },
+    "byd-seal-2023": {
+      "year": 2023,
+      "marketRange": "Not verified - professional appraisal required",
+      "basis": "No verifiable published market range could be retrieved for this model during this research pass. BYD is a new entrant to the US market and 2023 Seal pricing varies by battery and drivetrain option.",
+      "source": "None obtained",
+      "confidence": "none",
+      "bandType": "none",
+      "bandLabel": "No verified figure obtained"
+    },
+    "mercedes-sclass-coupe-2019": {
+      "year": 2019,
+      "marketRange": "$75,195 - $97,295",
+      "basis": "Published used price band for the S-Class Coupe ($75,195-$97,295). Original MSRP was $91,250 for the base coupe, rising to $125,950 for higher trims.",
+      "source": "CarHP / CarBuzz",
+      "confidence": "medium",
+      "bandType": "published",
+      "bandLabel": "Published market band"
+    },
+    "plymouth-barracuda-1970": {
+      "year": 1970,
+      "marketRange": "Not verified - specialist classic-car appraisal required",
+      "basis": "No verified published range was obtained for this model in this research pass. 1970 Barracuda values swing enormously with engine, transmission, numbers-matching status, documentation and originality - and the footage for this car shows an aftermarket 440 air cleaner and MSD ignition rather than documented original equipment.",
+      "source": "None obtained",
+      "confidence": "none",
+      "bandType": "none",
+      "bandLabel": "No verified figure obtained"
+    }
+  }
+}

@@ -1,6 +1,10 @@
 node_modules/
 dist/
-data/
+data/*
+!data/vehicle-scan.json
+!data/market-research.json
+!data/vehicle-specs.json
+!data/REVIEW-NOTES.md
 uploads/
 supabase/.branches/
 supabase/.temp/

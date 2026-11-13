@@ -1,0 +1,177 @@
+{
+  "generatedAt": "2026-11-12",
+  "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+  "limitations": [
+    "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+    "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+    "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+    "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+  ],
+  "vehicles": {
+    "14": {
+      "visual": "Grey Lexus UX crossover: rear three-quarter and side, roof spoiler, five-spoke alloys, dealership forecourt. Interior: dark dashboard, central navigation screen showing a map, analogue clock, dual-zone climate display reading 67F, drive-mode dial, tan/cognac leather seats and a glass sunroof.",
+      "verified": ["Grey exterior", "Cognac/tan leather seating", "Glass sunroof", "Navigation system fitted", "Five-spoke alloy wheels"],
+      "flags": []
+    },
+    "15": {
+      "visual": "Video 1: white Mercedes-Maybach GLS in an underground car park, Maybach grille and Maybach bonnet badge, LED headlamps. Video 2: rear-cabin tour with purple ambient lighting, cream leather rear seats, rear entertainment screens and a rear climate/console panel.",
+      "verified": ["White exterior shown", "Purple ambient lighting", "Cream leather rear seating", "Rear entertainment screens"],
+      "flags": ["Listing records the colour as 'Obsidian Black / White' two-tone; the footage shows a white body - confirm the exact colour specification before publishing."]
+    },
+    "16": {
+      "visual": "The footage does not show a Ferrari. It shows a red Bugatti (EB emblem, horseshoe grille, full-width rear light bar) in a hypercar showroom, with a purple/blue Pagani Huayra Roadster and a yellow-and-black Bugatti Chiron also in the room.",
+      "verified": [],
+      "flags": ["MISMATCH - the video attached to this listing shows Bugatti and Pagani cars, not a Ferrari SF90 Stradale. A correct video must be supplied before this listing can be published as shown."]
+    },
+    "17": {
+      "visual": "Maroon Ford Torino in a white-brick showroom: hood raised showing the engine bay with a blue air cleaner, chrome bumpers, dual round headlamps, chrome wheel-arch trim and a dark interior.",
+      "verified": ["Maroon exterior", "Engine bay shown with blue Ford air cleaner", "Chrome bumpers and trim", "Dark interior"],
+      "flags": []
+    },
+    "18": {
+      "visual": "Red Chevrolet Chevelle two-door hardtop at an indoor classic-car expo: hood raised, chrome bumpers and side trim, wire-style wheels, engine bay visible, other classics parked nearby.",
+      "verified": ["Red exterior", "Hood and engine bay shown", "Chrome bumpers and trim"],
+      "flags": ["Exact model year, trim and engine cannot be confirmed from the footage; the front styling is consistent with a mid-1960s Chevelle."]
+    },
+    "19": {
+      "visual": "Olive-green Chevrolet C10 pickup in a showroom: chrome grille and bumper, Chevrolet tailgate stamping, blue classic car alongside, classic-car wall art behind.",
+      "verified": ["Olive-green exterior", "Chrome grille and bumper", "Chevrolet-stamped tailgate"],
+      "flags": ["'RK MOTORS Charlotte' plate frame is visible in the footage - this is sourced footage from another dealer. Confirm the vehicle is physically available to DM Motor Group before publishing."]
+    },
+    "20": {
+      "visual": "Black GMC Sierra 2500HD crew cab outdoors: GMC grille, DENALI HD fender badge, running boards, and a lifted suspension on large chrome aftermarket wheels and aggressive tyres.",
+      "verified": ["Black exterior", "DENALI HD specification", "Crew cab", "Running boards"],
+      "flags": ["Modified from stock: lifted suspension with aftermarket wheels and off-road tyres - this reduces resale value and must be declared."]
+    },
+    "21": {
+      "visual": "Black Chevrolet Chevelle hardtop in a dealer showroom with large chrome aftermarket wheels; 'RK MOTORS' signage is visible on the wall behind the car.",
+      "verified": ["Black exterior", "Chrome aftermarket wheels"],
+      "flags": ["Third-party dealer branding (RK Motors) visible - sourced footage. Confirm physical availability before publishing.", "Modified from stock: aftermarket wheels."]
+    },
+    "22": {
+      "visual": "Black Range Rover Velar in a showroom: RANGE ROVER bonnet lettering, honeycomb grille, LED daytime running lights, full-width rear light bar and twin exhaust finishers, polished floor reflections.",
+      "verified": ["Black exterior", "LED lighting", "Twin exhaust finishers"],
+      "flags": []
+    },
+    "23": {
+      "visual": "Black Cadillac CT5-V Blackwing outside a period building: vertical LED daytime running lights, Cadillac crest, mesh grille, and a BLACKWING badge on the front splitter; a dark interior is glimpsed through the windscreen.",
+      "verified": ["Black exterior", "BLACKWING specification confirmed by badge", "Vertical LED lighting"],
+      "flags": []
+    },
+    "24": {
+      "visual": "Ivory Kia EV3 from the rear: KIA and EV3 badging, vertical LED light bar, black lower diffuser. Interior frame shows the digital cluster running the 360-degree surround-view camera with the car in park and a short range reading.",
+      "verified": ["Ivory exterior", "360-degree surround-view camera confirmed on screen", "Digital instrument cluster"],
+      "flags": []
+    },
+    "25": {
+      "visual": "Dark grey Defender 110-style 110 in a showroom with other stock around it and a 'Speedy Car Sales' front plate; an interior frame shows the illuminated door sill reading 'JETOUR'.",
+      "verified": ["Dark grey exterior", "LED round headlamps", "Roof-mounted lamp bar", "Black alloy wheels with running boards"],
+      "flags": ["Third-party dealer branding (Speedy Car Sales) visible - sourced footage.", "The illuminated door sill in the footage reads 'JETOUR'. This must be reconciled with the Land Rover Defender listing before publication."]
+    },
+    "26": {
+      "visual": "Black Cadillac Escalade outside a dealership (unit 2473): blacked-out alloy wheels, wide grille and vertical lighting. The interior frame shows RED leather seats.",
+      "verified": ["Black exterior", "Red leather interior", "Blacked-out wheels (aftermarket)"],
+      "flags": []
+    },
+    "27": {
+      "visual": "White Honda Accord sedan on a gravel forecourt with a dealership sign reading 'APEX MOTORS 501-521-4479'; windscreen stickers read '$13900' and '2016'; alloy wheels, chrome grille, sunroof visible from above.",
+      "verified": ["White exterior", "2016 model year confirmed by windscreen sticker", "Sunroof fitted"],
+      "flags": ["Third-party dealer branding (APEX MOTORS) visible - sourced footage. Confirm physical availability before publishing."]
+    },
+    "28": {
+      "visual": "Red Chevrolet Silverado 1500 in a dealership lot: Raptor-style grille, bonnet scoop, riveted wide-arch extensions, large off-road tyres and aftermarket wheels. Interior frame shows black seats and a centre console with cup holders.",
+      "verified": ["Red exterior", "Crew cab", "Black interior", "Tow mirrors"],
+      "flags": ["Modified from stock: lift, wide-arch extensions and off-road tyres - declare this in the listing."]
+    },
+    "29": {
+      "visual": "Black Honda sedan at dusk on a dealership lot: C-shaped LED tail lamps, a small boot-lip spoiler, twin exhaust finishers and a chrome window surround.",
+      "verified": ["Black exterior", "C-shaped LED tail lamps", "Boot-lip spoiler", "Twin exhaust finishers"],
+      "flags": ["The boot badge reads 'ACCORD' in the footage. Reconcile the Civic/Accord model designation before publishing."]
+    },
+    "30": {
+      "visual": "Silver Toyota Corolla sedan in a used-car lot with dealer signage: four-door body, small boot-lip spoiler, wheel covers or alloys, body style consistent with the 2003-2008 (E120) Corolla.",
+      "verified": ["Silver exterior", "Four-door sedan", "Boot-lip spoiler"],
+      "flags": []
+    },
+    "31": {
+      "visual": "Red Ford F-150 crew cab in a dealer lot: raised ride height, aftermarket black wheels with off-road tyres, riveted wide-arch flares; the presenter points out the arch and tyre package.",
+      "verified": ["Red exterior", "Crew cab", "Black interior with centre console"],
+      "flags": ["Modified from stock: lift, aftermarket wheels and riveted arch flares - declare this in the listing."]
+    },
+    "32": {
+      "visual": "Two-tone white and champagne Ford F-250 Super Duty crew cab outdoors: FX4 OFF ROAD badge, F-250 and POWER STROKE (diesel) badging, raised suspension with aftermarket wheels and off-road tyres, dual exhaust.",
+      "verified": ["White/champagne two-tone exterior", "FX4 Off Road package", "Power Stroke diesel badge", "Crew cab", "Dual exhaust"],
+      "flags": ["Modified from stock: lifted suspension with aftermarket wheels and tyres."]
+    },
+    "33": {
+      "visual": "White Tesla Model 3 photographed from the front on a parking apron beside an industrial building, other vehicles nearby. No aftermarket modifications visible.",
+      "verified": ["White exterior", "Standard bodywork"],
+      "flags": []
+    },
+    "34": {
+      "visual": "White Mercedes-AMG GLE 53 Coupe in a showroom: V8 BITURBO fender badge, AMG wheels with red brake calipers, running boards. Interior frame: dual MBUX screens, blue ambient lighting and red leather.",
+      "verified": ["White exterior", "V8 Biturbo 4MATIC+ badge", "AMG wheels with red calipers", "Running boards", "Red leather interior", "Blue ambient lighting", "Dual-screen MBUX cockpit"],
+      "flags": ["The listing body type says SUV; this car is the GLE 53 COUPE - correct the body type."]
+    },
+    "35": {
+      "visual": "Inside a large warehouse/showroom: a black Ford Ranger Raptor is parked in the front row and a red Ranger Raptor (RAPTOR grille lettering, South African 'GP' registration) is filmed separately.",
+      "verified": ["Raptor grille lettering confirmed", "Crew cab", "Off-road tyres and arches"],
+      "flags": ["The footage shows both a black and a red unit. The listing colour 'Code Orange' must be reconciled with the vehicle actually offered.", "Filmed in South Africa ('GP' plate) - confirm provenance."]
+    },
+    "36": {
+      "visual": "Ferrari showroom with red accent lighting and a full display of Ferraris: a red LaFerrari (distinctive rear light bar and engine cover), a white LaFerrari, a dark-red front-engined Ferrari and a yellow Ferrari behind.",
+      "verified": ["Ferrari showroom setting", "LaFerrari design cues visible"],
+      "flags": ["Several cars appear in the footage - identify and confirm which is the unit being offered before publishing."]
+    },
+    "37": {
+      "visual": "Outdoor Lamborghini forecourt under a canopy: a row of Revuelto coupes in several colours (purple/blue chameleon, green, white, black) with an orange Revuelto among them, plus Urus SUVs.",
+      "verified": ["Revuelto design cues confirmed", "Orange unit present in the row"],
+      "flags": ["Multiple cars appear in the footage - identify and confirm which is the unit being offered before publishing."]
+    },
+    "38": {
+      "visual": "White Rolls-Royce Cullinan outside a dealership with Bentley signage on the building behind: signature grille, split LED headlamps, Spirit of Ecstasy bonnet ornament. Interior frame: black quilted leather with NEON YELLOW/lime accents on the dashboard, door cards and seat inserts.",
+      "verified": ["White exterior", "Neon yellow/lime interior accents", "Quilted leather", "Digital instrument cluster"],
+      "flags": []
+    },
+    "39": {
+      "visual": "At night a black DODGE CHALLENGER with halo LED headlamps, bonnet scoop and front splitter is filmed while flames shoot from the exhaust/bonnet area. The car is not a Ford Mustang.",
+      "verified": [],
+      "flags": ["MISMATCH - the video shows a Dodge Challenger with exhaust flames, not a Ford Mustang GT. A correct video must be supplied before this listing can be published as shown."]
+    },
+    "40": {
+      "visual": "The footage is a general tour of a hypercar showroom: long rows of Ferraris, Lamborghinis, McLarens and other supercars in many colours under bright spotlights. No individual Bugatti Chiron Super Sport can be identified.",
+      "verified": [],
+      "flags": ["UNVERIFIABLE - generic showroom footage; the listed Bugatti Chiron Super Sport 300+ cannot be confirmed from the video. Supply a vehicle-specific video before publishing."]
+    },
+    "41": {
+      "visual": "Silver Bugatti Chiron in a showroom with 'NOVA LUXURY CARS' lettering on the glass: front three-quarter and side views showing the horseshoe grille, C-line and the horseshoe motif. A red Ferrari is also filmed in the same showroom.",
+      "verified": ["Silver exterior", "Chiron body and grille confirmed"],
+      "flags": ["Third-party showroom branding (Nova Luxury Cars) visible - confirm provenance before publishing."]
+    },
+    "42": {
+      "visual": "Black BYD Seal from the rear: BYD emblem and SEAL lettering, black multi-spoke wheels with BYD centre caps and 255-section tyres. Interior frame: red-and-black door card, seat-memory buttons (1/2/3/M), window switches and a premium metal-mesh speaker grille.",
+      "verified": ["Black exterior", "SEAL badging", "BYD-branded wheels", "Red/black interior", "Seat memory function", "Premium audio speaker grille"],
+      "flags": []
+    },
+    "43": {
+      "visual": "Interior-focused footage of a Mercedes coupe: wide twin screens, illuminated turbine-style air vents, red-and-black leather seats, metal-mesh Burmester-style door speakers, rear bench with red inserts and ambient lighting.",
+      "verified": ["Red/black leather interior", "Twin-screen cockpit", "Metal-mesh premium speakers", "Rear seats with red inserts", "Ambient lighting"],
+      "flags": ["Exterior is not shown in the sampled frames - confirm the Obsidian Black paint and the body shape from the listing photo."]
+    },
+    "44": {
+      "visual": "Video 1: selenite-grey Mercedes-AMG GLE 53 Coupe in a showroom, AMG Panamericana grille, AMG display plate, 'GLE 53' boot badge and four trapezoidal exhaust finishers. Video 2: MBUX cabin with blue/purple ambient lighting, black leather and Mercedes-Benz door sills, plus a rear three-quarter shot at sunset.",
+      "verified": ["Selenite grey exterior", "AMG Panamericana grille", "GLE 53 badge", "Quad exhaust", "AMG interior with ambient lighting", "Panoramic-style roof"],
+      "flags": ["The listing body type says SUV; this car is the GLE 53 COUPE - correct the body type."]
+    },
+    "45": {
+      "visual": "Red Mercedes-AMG GLE 53 Coupe outdoors with a black panoramic-style roof, black bonnet vents, black AMG wheels and tinted glass; a South African 'Central Custom' sign is visible in the background.",
+      "verified": ["Red exterior", "Black roof", "AMG wheels", "Bonnet vents"],
+      "flags": ["The listing body type says SUV; this car is the GLE 53 COUPE - correct the body type.", "No asking price is set for this vehicle and none appears in the footage - set a price before publishing.", "Filmed in South Africa - confirm provenance."]
+    },
+    "46": {
+      "visual": "Purple/plum Plymouth Barracuda at an outdoor classic-car gathering with the bonnet raised: the air cleaner lid is marked '440 FOUR BARREL', the valve covers are stamped '440', and there is a red MSD distributor with red ignition leads. Chrome bumper, dual round headlamps, hood pins and a chrome-edged cowl vent.",
+      "verified": ["Purple/plum exterior", "Air cleaner marked 440 Four Barrel", "Valve covers marked 440", "MSD distributor and ignition leads", "Chrome bumper and trim", "Dual round headlamps"],
+      "flags": ["The 440 Four Barrel air cleaner and MSD ignition are aftermarket parts visible on screen - they do not prove a numbers-matching 440 engine. Engine capacity, mileage and originality require physical verification."]
+    }
+  }
+}
