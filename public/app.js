@@ -650,6 +650,12 @@ const nvCell = (x) => {
 const dRow = (k, x) => `<tr><td>${esc(k)}</td><td>${nvCell(x)}</td></tr>`;
 function detailsBlock(d, v) {
   if (!d) return `<div class="note"><b>Details file not available for this listing.</b> The complete vehicle file could not be loaded. Please contact the showroom for verified specifications.</div>`;
+  /* the dealer's own values (saved in the admin dashboard) win over the
+   * generated defaults, field by field */
+  const spec = Object.assign({}, d.spec || {}, (v && v.spec) || {});
+  /* a mileage figure typed into the listing record is the dealer's own number
+   * and is shown as such */
+  if (v && Number(v.mileage) > 0) spec.mileage = Number(v.mileage).toLocaleString() + ' km (listing record)';
   const asking = d.market.askingPrice
     ? `<span class="cur">${esc(d.market.currency)}</span>${Number(d.market.askingPrice).toLocaleString()}`
     : '<b>Price on request</b>';
@@ -669,30 +675,30 @@ function detailsBlock(d, v) {
       <div>
         <h4>Basic information</h4>
         <table class="d-table">
-          ${dRow('Make', d.spec.make)}${dRow('Model', d.spec.model)}${dRow('Year of manufacture', d.spec.year)}
-          ${dRow('Exterior colour', d.spec.exteriorColour)}${dRow('Interior colour', d.spec.interiorColour)}
-          ${dRow('Body type', d.spec.bodyType)}${dRow('Trim and variant', d.spec.trim)}
-          ${dRow('Engine number', d.spec.engineNumber)}${dRow('VIN / chassis number', d.spec.vin)}
-          ${dRow('Registration year', d.spec.registrationYear)}${dRow('Number of doors', d.spec.doors)}
-          ${dRow('Number of seats', d.spec.seats)}${dRow('Drivetrain', d.spec.drivetrain)}
+          ${dRow('Make', spec.make)}${dRow('Model', spec.model)}${dRow('Year of manufacture', spec.year)}
+          ${dRow('Exterior colour', spec.exteriorColour)}${dRow('Interior colour', spec.interiorColour)}
+          ${dRow('Body type', spec.bodyType)}${dRow('Trim and variant', spec.trim)}
+          ${dRow('Engine number', spec.engineNumber)}${dRow('VIN / chassis number', spec.vin)}
+          ${dRow('Registration year', spec.registrationYear)}${dRow('Number of doors', spec.doors)}
+          ${dRow('Number of seats', spec.seats)}${dRow('Drivetrain', spec.drivetrain)}
         </table>
       </div>
       <div>
         <h4>Engine, performance and equipment</h4>
         <table class="d-table">
-          ${dRow('Engine capacity', d.spec.engineCapacity)}${dRow('Engine type', d.spec.engineType)}
-          ${dRow('Fuel type', d.spec.fuel)}${dRow('Transmission', d.spec.transmission)}
-          ${dRow('Mileage', d.spec.mileage)}${dRow('Air conditioning', d.spec.airConditioning)}
-          ${dRow('Navigation system', d.spec.navigation)}${dRow('Reverse camera', d.spec.reverseCamera)}
-          ${dRow('Parking sensors', d.spec.parkingSensors)}${dRow('Sunroof', d.spec.sunroof)}
-          ${dRow('Alloy wheels', d.spec.alloyWheels)}
+          ${dRow('Engine capacity', spec.engineCapacity)}${dRow('Engine type', spec.engineType)}
+          ${dRow('Fuel type', spec.fuel)}${dRow('Transmission', spec.transmission)}
+          ${dRow('Mileage', spec.mileage)}${dRow('Air conditioning', spec.airConditioning)}
+          ${dRow('Navigation system', spec.navigation)}${dRow('Reverse camera', spec.reverseCamera)}
+          ${dRow('Parking sensors', spec.parkingSensors)}${dRow('Sunroof', spec.sunroof)}
+          ${dRow('Alloy wheels', spec.alloyWheels)}
         </table>
       </div>
     </div>
     <h4 style="margin-top:18px">Safety features</h4>
-    <p class="d-muted">${esc(d.spec.safetyFeatures)}</p>
+    <p class="d-muted">${esc(spec.safetyFeatures)}</p>
     <h4 style="margin-top:14px">Other available equipment</h4>
-    <p class="d-muted">${esc(d.spec.otherEquipment)}</p>
+    <p class="d-muted">${esc(spec.otherEquipment)}</p>
   </div>
 
   <div class="d-sec">
@@ -700,7 +706,7 @@ function detailsBlock(d, v) {
     <table class="d-table">
       ${dRow('Engine capacity', d.engine.capacity)}${dRow('Engine type', d.engine.type)}
       ${dRow('Fuel type', d.engine.fuel)}${dRow('Transmission', d.engine.transmission)}
-      ${dRow('Mileage', d.engine.mileage)}${dRow('Horsepower', d.engine.horsepower)}
+      ${dRow('Mileage', spec.mileage)}${dRow('Horsepower', d.engine.horsepower)}
     </table>
   </div>
 
@@ -725,10 +731,10 @@ function detailsBlock(d, v) {
       <div>
         <h4>Interior, comfort &amp; technology</h4>
         <table class="d-table">
-          ${dRow('Seats / upholstery', d.spec.interiorColour)}${dRow('Number of seats', d.spec.seats)}
-          ${dRow('Air conditioning', d.spec.airConditioning)}${dRow('Navigation system', d.spec.navigation)}
-          ${dRow('Reverse camera', d.spec.reverseCamera)}${dRow('Parking sensors', d.spec.parkingSensors)}
-          ${dRow('Sunroof / panoramic roof', d.spec.sunroof)}${dRow('Alloy wheels', d.spec.alloyWheels)}
+          ${dRow('Seats / upholstery', spec.interiorColour)}${dRow('Number of seats', spec.seats)}
+          ${dRow('Air conditioning', spec.airConditioning)}${dRow('Navigation system', spec.navigation)}
+          ${dRow('Reverse camera', spec.reverseCamera)}${dRow('Parking sensors', spec.parkingSensors)}
+          ${dRow('Sunroof / panoramic roof', spec.sunroof)}${dRow('Alloy wheels', spec.alloyWheels)}
         </table>
       </div>
     </div>
@@ -1202,7 +1208,7 @@ window.addEventListener('pageshow', () => {});
   try { await getMeta(); } catch {}
   try { const h = await api('/api/home'); state.settings = h.settings || {}; applySettings(h); } catch {}
   await route(location.pathname + location.search, true);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=18').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=19').catch(() => {});
 })();
 /* Android app installation (Chrome "Add to Home screen" flow) */
 window.__pwaPrompt = null;

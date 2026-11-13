@@ -33,6 +33,19 @@ const byVeh = {};
 for (const m of mediaRows) (byVeh[m.vehicle_id] = byVeh[m.vehicle_id] || []).push(m);
 
 const NV = 'Not verified';
+/* Parse the dealer-entered specification sheet out of inspection_report.
+ * It is stored there as {"__spec": {...}, "notes": "..."} by the admin
+ * dashboard; plain text is left alone. */
+function parseSpec(raw) {
+  const text = raw == null ? '' : String(raw);
+  if (text.trim().charAt(0) === '{') {
+    try {
+      const o = JSON.parse(text);
+      if (o && typeof o === 'object' && o.__spec && typeof o.__spec === 'object') return o.__spec;
+    } catch { /* not our JSON */ }
+  }
+  return null;
+}
 /* Derive a recommended asking price from the published market band.
  * Every adjustment is stated in the output so the dealer can see exactly how
  * the number was reached and override it. */
@@ -118,6 +131,9 @@ for (const v of vehicles) {
   const isMismatch = (s.flags || []).some((f) => /MISMATCH|UNVERIFIABLE/.test(f));
   const isSourced = (s.flags || []).some((f) => /sourced footage|Third-party|branding|provenance/i.test(f));
   const sp = specs.vehicles[v.slug] || {};
+  /* values the dealer typed in the admin dashboard override the generated file */
+  const dealerSpec = parseSpec(v.inspection_report) || {};
+  const sp2 = Object.assign({}, sp, dealerSpec);
   const draft = {
     id: v.id,
     slug: v.slug,
@@ -130,60 +146,60 @@ for (const v of vehicles) {
       limitations: scan.limitations,
     },
     spec: {
-      make: sp.mk || v.brand || NV,
-      model: sp.md || v.model || NV,
-      year: sp.yr || v.year || NV,
-      exteriorColour: sp.ext || v.exterior_color || NV,
-      interiorColour: sp.int || v.interior_color || NV,
-      bodyType: sp.body || v.body_type || NV,
-      trim: sp.trim || NV,
-      engineNumber: sp.engNo || NV,
-      vin: sp.vin || NV,
-      engineCapacity: sp.cap || NV,
-      engineType: sp.engType || v.engine || NV,
-      fuel: sp.fuel || v.fuel || NV,
-      transmission: sp.trans || v.transmission || NV,
-      mileage: sp.mile || NV,
-      registrationYear: sp.reg || NV,
-      drivetrain: sp.drive || NV,
-      doors: sp.doors || NV,
-      seats: sp.seats || NV,
-      airConditioning: sp.ac || NV,
-      navigation: sp.nav || NV,
-      reverseCamera: sp.cam || NV,
-      parkingSensors: sp.sens || NV,
-      sunroof: sp.roof || NV,
-      alloyWheels: sp.wheels || NV,
-      safetyFeatures: sp.safety || NV,
-      otherEquipment: sp.equip || NV,
+      make: sp2.mk || v.brand || NV,
+      model: sp2.md || v.model || NV,
+      year: sp2.yr || v.year || NV,
+      exteriorColour: sp2.ext || v.exterior_color || NV,
+      interiorColour: sp2.int || v.interior_color || NV,
+      bodyType: sp2.body || v.body_type || NV,
+      trim: sp2.trim || NV,
+      engineNumber: sp2.engNo || NV,
+      vin: sp2.vin || NV,
+      engineCapacity: sp2.cap || NV,
+      engineType: sp2.engType || v.engine || NV,
+      fuel: sp2.fuel || v.fuel || NV,
+      transmission: sp2.trans || v.transmission || NV,
+      mileage: sp2.mile || NV,
+      registrationYear: sp2.reg || NV,
+      drivetrain: sp2.drive || NV,
+      doors: sp2.doors || NV,
+      seats: sp2.seats || NV,
+      airConditioning: sp2.ac || NV,
+      navigation: sp2.nav || NV,
+      reverseCamera: sp2.cam || NV,
+      parkingSensors: sp2.sens || NV,
+      sunroof: sp2.roof || NV,
+      alloyWheels: sp2.wheels || NV,
+      safetyFeatures: sp2.safety || NV,
+      otherEquipment: sp2.equip || NV,
     },
     basic: {
-      make: sp.mk || v.brand || NV,
-      model: sp.md || v.model || NV,
-      year: sp.yr || v.year || NV,
-      bodyType: sp.body || v.body_type || NV,
-      trim: sp.trim || NV,
-      exteriorColour: sp.ext || v.exterior_color || NV,
-      interiorColour: sp.int || v.interior_color || NV,
-      registrationYear: sp.reg || NV,
-      vin: sp.vin || NV,
-      engineNumber: sp.engNo || NV,
-      drivetrain: sp.drive || NV,
+      make: sp2.mk || v.brand || NV,
+      model: sp2.md || v.model || NV,
+      year: sp2.yr || v.year || NV,
+      bodyType: sp2.body || v.body_type || NV,
+      trim: sp2.trim || NV,
+      exteriorColour: sp2.ext || v.exterior_color || NV,
+      interiorColour: sp2.int || v.interior_color || NV,
+      registrationYear: sp2.reg || NV,
+      vin: sp2.vin || NV,
+      engineNumber: sp2.engNo || NV,
+      drivetrain: sp2.drive || NV,
     },
     engine: {
-      capacity: sp.cap || NV,
-      type: sp.engType || v.engine || NV,
-      fuel: sp.fuel || v.fuel || NV,
-      transmission: sp.trans || v.transmission || NV,
-      mileage: sp.mile || NV,
-      horsepower: sp.hp || 'Published output figure for this engine variant - confirmed with the vehicle papers',
+      capacity: sp2.cap || NV,
+      type: sp2.engType || v.engine || NV,
+      fuel: sp2.fuel || v.fuel || NV,
+      transmission: sp2.trans || v.transmission || NV,
+      mileage: sp2.mile || NV,
+      horsepower: sp2.hp || 'Published output figure for this engine variant - confirmed with the vehicle papers',
     },
     condition: {
       overall: v.condition ? `${v.condition} (per listing)` : 'Presented in good order in the supplied footage',
       exterior: s.visual ? 'Presented in good order in the supplied footage; no structural damage visible.' : 'Presented in good order in the supplied listing photographs.',
       interior: s.visual ? 'Interior shown; upholstery and trim present as photographed. Detailed trim condition is confirmed at handover.' : 'Interior presented in the listing photographs and confirmed at handover.',
       engineBay: s.verified.some((x) => /engine/i.test(x)) ? 'Engine bay filmed and appears complete and clean.' : 'Engine bay shown in the listing photographs and confirmed at handover.',
-      tyres: /alloy|tyre|off-road/i.test(sp.wheels || '') ? 'Fitted with the wheels and tyres shown in the footage; tread depth and tyre age are checked and confirmed at handover.' : 'Tyre condition is checked and confirmed at handover.',
+      tyres: /alloy|tyre|off-road/i.test(sp2.wheels || '') ? 'Fitted with the wheels and tyres shown in the footage; tread depth and tyre age are checked and confirmed at handover.' : 'Tyre condition is checked and confirmed at handover.',
       accidentHistory: 'No accident damage is visible in the supplied footage; the registered title, registration and service history are provided with the vehicle papers.',
       mechanicalIssues: 'None established from the footage or the listing record. A full mechanical inspection can be arranged before purchase and its report is supplied in writing.',
       bodywork: 'No obvious crash damage or panel damage visible in the supplied footage.',
@@ -191,10 +207,10 @@ for (const v of vehicles) {
     features: {
       confirmed: s.verified || [],
       listing: Array.isArray(v.features) ? v.features : [],
-      safety: sp.safety ? [sp.safety] : (Array.isArray(v.safety_features) ? v.safety_features : []),
-      interiorEquipment: [sp.int, sp.ac, sp.seats].filter(Boolean),
-      comfortEquipment: [sp.roof, sp.sens].filter(Boolean),
-      technology: [sp.nav, sp.cam, sp.otherEquipment].filter(Boolean),
+      safety: sp2.safety ? [sp2.safety] : (Array.isArray(v.safety_features) ? v.safety_features : []),
+      interiorEquipment: [sp2.int, sp2.ac, sp2.seats].filter(Boolean),
+      comfortEquipment: [sp2.roof, sp2.sens].filter(Boolean),
+      technology: [sp2.nav, sp2.cam, sp2.otherEquipment].filter(Boolean),
     },
     media: {
       videos: vids.length, photos: pics.length,

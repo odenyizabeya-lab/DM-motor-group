@@ -51,7 +51,7 @@ $('#loginForm').onsubmit = async (e) => {
 $('#btnLogout').onclick = async () => { try { await api('/api/auth/logout', { method: 'POST' }); } catch {} localStorage.removeItem('dm_admin_token'); showLogin(); };
 
 /* ---------------- routing ---------------- */
-const PAGES = { dashboard, vehicles, enqueue: null, enquiries, customers, testimonials, banners, ai: aiScanner, ai_service: aiService, integrations: integrationsPage, settings: settingsPage, settings_general: settingsGeneral, settings_media: settingsMedia, settings_users: settingsUsers, settings_maintenance: settingsMaintenance, activity };
+const PAGES = { dashboard, vehicles, specifications: specificationsPage, enqueue: null, enquiries, customers, testimonials, banners, ai: aiScanner, ai_service: aiService, integrations: integrationsPage, settings: settingsPage, settings_general: settingsGeneral, settings_media: settingsMedia, settings_users: settingsUsers, settings_maintenance: settingsMaintenance, activity };
 window.addEventListener('hashchange', renderRoute);
 async function renderRoute() {
   if (!state.user) return;
@@ -60,7 +60,9 @@ async function renderRoute() {
   $$('#sidebar nav a').forEach((a) => a.classList.toggle('on', h0.startsWith(a.getAttribute('href').slice(1))));
   const [name, param] = h0.split('/').filter(Boolean);
   $('#shell').hidden = false; $('#loginScreen').hidden = true;
-  const fn = (name === 'vehicles' && param) ? editorPage : (PAGES[name] || PAGES.dashboard);
+  const fn = (name === 'vehicles' && param) ? editorPage
+    : (name === 'specifications' && param) ? (id => specificationsPage(id))
+    : (PAGES[name] || PAGES.dashboard);
   pg.innerHTML = `<div class="pg-head"><div><span class="crumb">Administration</span><h1>Loading…</h1></div></div>`;
   try { await fn(String(param || '')); }
   catch (e) { console.error(e); pg.innerHTML = `<div class="panel"><h3>${esc(e.message)}</h3><a class="btn btn-ghost" href="#/dashboard">Back to dashboard</a></div>`; }
@@ -149,6 +151,169 @@ async function vehicles() {
   function confirmSold(v) {
     modal(`<h2>Marked as sold</h2><p style="color:var(--dim)">Sold listings stay visible for transparency but no longer accept enquiries. Make sure payment has been received through the agreed escrow account before confirming delivery.</p>`);
   }
+}
+
+/* ================================================== VEHICLE SPECIFICATIONS
+   The dealer can type any value for any car here - numbers included.
+   Generated defaults come from the published specification file; whatever is
+   saved here overrides them on the live vehicle page. */
+const SPEC_LAYOUT = [
+  ['Basic information', [
+    ['make', 'Make', 'text'], ['model', 'Model', 'text'], ['year', 'Year of manufacture', 'number'],
+    ['exteriorColour', 'Exterior colour', 'text'], ['interiorColour', 'Interior colour', 'text'],
+    ['bodyType', 'Body type', 'text'], ['trim', 'Trim and variant', 'text'],
+    ['engineNumber', 'Engine number', 'text'], ['vin', 'VIN / chassis number', 'text'],
+    ['registrationYear', 'Registration year', 'number'], ['drivetrain', 'Drivetrain', 'text'],
+    ['doors', 'Number of doors', 'number'], ['seats', 'Number of seats', 'number'],
+  ]],
+  ['Engine and performance', [
+    ['engineCapacity', 'Engine capacity (cc)', 'text'], ['engineType', 'Engine type', 'text'],
+    ['fuel', 'Fuel type', 'text'], ['transmission', 'Transmission', 'text'],
+    ['mileage', 'Mileage', 'text'], ['horsepower', 'Horsepower', 'text'],
+  ]],
+  ['Interior and equipment', [
+    ['airConditioning', 'Air conditioning', 'text'], ['navigation', 'Navigation system', 'text'],
+    ['reverseCamera', 'Reverse camera', 'text'], ['parkingSensors', 'Parking sensors', 'text'],
+    ['sunroof', 'Sunroof', 'text'], ['alloyWheels', 'Alloy wheels', 'text'],
+    ['safetyFeatures', 'Safety features', 'textarea'], ['otherEquipment', 'Other available equipment', 'textarea'],
+  ]],
+];
+let SPEC_DEFAULTS = null;
+async function specDefaults() {
+  if (SPEC_DEFAULTS) return SPEC_DEFAULTS;
+  try {
+    const r = await fetch('/details/vehicles.json?v=4');
+    SPEC_DEFAULTS = await r.json();
+  } catch { SPEC_DEFAULTS = { vehicles: {} }; }
+  return SPEC_DEFAULTS;
+}
+
+async function specificationsPage(id) {
+  const defaults = await specDefaults();
+  if (id) return specEditorPage(id, defaults);
+  const rows = await api('/api/admin/vehicles');
+  pg.innerHTML = `
+  <div class="pg-head"><div><span class="crumb">Inventory</span><h1>Vehicle specifications</h1></div>
+    <span class="muted">Type any value for any car — including mileage, prices, engine numbers and VINs.</span></div>
+  <div class="toolbar"><input type="search" id="sq" placeholder="Filter vehicles…" style="min-width:260px">
+    <select id="ss"><option value="">All</option><option value="edited">Dealer-edited</option><option value="generated">Generated defaults only</option></select>
+    <button class="btn btn-ghost sm" id="sreload">Reload defaults</button></div>
+  <div class="panel"><div class="table-wrap" style="margin:-20px"><table class="tbl" id="stbl"></table></div></div>`;
+  const draw = () => {
+    const q = ($('#sq').value || '').toLowerCase();
+    const mode = $('#ss').value;
+    const list = rows.filter((v) => {
+      const slug = (v.slug || '');
+      const d = defaults.vehicles && defaults.vehicles[slug];
+      const edited = v.spec && Object.keys(v.spec).length ? 'edited' : 'generated';
+      return (!q || ((v.brand + ' ' + v.model + ' ' + v.year).toLowerCase().includes(q))) && (!mode || mode === edited);
+    });
+    $('#stbl').innerHTML = `<thead><tr><th>Vehicle</th><th>Price</th><th>Mileage</th><th>Registration year</th><th>Engine capacity</th><th>Doors / Seats</th><th>Specification source</th><th></th></tr></thead><tbody>
+      ${list.map((v) => {
+        const d = (defaults.vehicles && defaults.vehicles[v.slug]) || {};
+        const spec = Object.assign({}, d.spec || {}, v.spec || {});
+        const edited = v.spec && Object.keys(v.spec).length;
+        const nEdited = edited ? Object.keys(v.spec).length : 0;
+        const short = (x) => {
+          const s = String(x || '');
+          if (!s) return '—';
+          const cut = s.split(' - issued with')[0].split(' (listing')[0].trim();
+          return cut.length > 58 ? cut.slice(0, 58) + '…' : cut;
+        };
+        return `<tr>
+        <td><b>${esc(v.brand)} ${esc(v.model)}</b><br><span class="muted">${v.year} · ${esc(v.bodyType || '')}</span></td>
+        <td><b>${money(v.price, v.currency)}</b></td>
+        <td>${v.mileage ? Number(v.mileage).toLocaleString() + ' km' : '<span class="muted">not set</span>'}</td>
+        <td>${short(spec.registrationYear)}</td>
+        <td>${short(spec.engineCapacity)}</td>
+        <td>${short(spec.doors)} / ${short(spec.seats)}</td>
+        <td>${edited ? `<span class="status published">dealer-edited (${nEdited})</span>` : '<span class="status draft">generated default</span>'}</td>
+        <td><button class="btn btn-gold sm" data-spec="${v.id}">Edit</button></td></tr>`;
+      }).join('') || '<tr><td colspan="8"><div class="empty">No vehicles match.</div></td></tr>'}</tbody>`;
+  };
+  draw();
+  $('#sq').oninput = draw; $('#ss').onchange = draw;
+  $('#sreload').onclick = () => { SPEC_DEFAULTS = null; toast('Reloading generated defaults…'); specificationsPage(); };
+  $('#stbl').onclick = (e) => {
+    const b = e.target.closest('[data-spec]');
+    if (b) location.hash = `#/specifications/${b.dataset.spec}`;
+  };
+}
+
+async function specEditorPage(id, defaults) {
+  const v = await api('/api/admin/vehicles/' + id);
+  const d = (defaults.vehicles && defaults.vehicles[v.slug]) || {};
+  const generated = d.spec || {};
+  const current = Object.assign({}, generated, v.spec || {});
+  /* a mileage figure already on the listing record is pre-filled into the sheet */
+  if (Number(v.mileage) > 0 && !v.spec) current.mileage = Number(v.mileage).toLocaleString() + ' km';
+  const dealerSet = new Set(Object.keys(v.spec || {}));
+  const field = (key, label, type) => {
+    const val = current[key] == null ? '' : current[key];
+    const from = dealerSet.has(key) ? '<span class="chip dealer">your value</span>' : '<span class="chip gen">generated</span>';
+    if (type === 'textarea') {
+      return `<div class="full"><label>${label} ${from}</label><textarea name="${key}" rows="3">${esc(val)}</textarea></div>`;
+    }
+    /* numeric-friendly fields are text inputs with a numeric keyboard: a
+     * number input would silently blank out values such as "5 (front bucket
+     * seats with rear bench)". */
+    const im = type === 'number' ? ' inputmode="numeric"' : '';
+    return `<div><label>${label} ${from}</label><input name="${key}" type="text"${im} value="${esc(val)}"></div>`;
+  };
+  pg.innerHTML = `
+  <div class="pg-head"><div><span class="crumb"><a href="#/specifications" style="color:var(--gold2)">← Specifications</a></span>
+    <h1>${esc(v.brand)} ${esc(v.model)} ${v.year}</h1></div>
+    <span class="status ${v.status}">${v.status}</span></div>
+  <form id="specForm">
+  <div class="panel">
+    <h3>Quick numbers</h3>
+    <p class="muted" style="margin:-4px 0 10px">Asking price, mileage and currency are saved straight to the listing record. Everything else on this page belongs to the full specification sheet below.</p>
+    <div class="fgrid">
+      <div><label>Asking price</label><input name="price" type="number" min="0" step="100" value="${esc(v.price || '')}"></div>
+      <div><label>Currency</label><input name="currency" type="text" maxlength="4" value="${esc(v.currency || 'USD')}"></div>
+      <div><label>Mileage on the listing record (km)</label><input name="dbMileage" type="number" min="0" step="1" value="${esc(v.mileage == null ? '' : v.mileage)}"></div>
+      <div><label>Registration information</label><input name="dbRegistration" type="text" value="${esc(v.registration || '')}" placeholder="e.g. GCC import · duty paid"></div>
+    </div>
+  </div>
+  ${SPEC_LAYOUT.map(([title, fields]) => `<div class="panel"><h3>${title}</h3><div class="fgrid">
+    ${fields.map(([k, l, t]) => field(k, l, t)).join('')}</div></div>`).join('')}
+  <div class="panel"><h3>Inspection notes</h3>
+    <div class="full"><label>Shown on the vehicle page</label><textarea name="notes" rows="3">${esc(v.inspectionReport || '')}</textarea></div>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:26px">
+    <button class="btn btn-gold" type="submit">Save specification</button>
+    <button class="btn btn-ghost" type="button" id="specReset">Reset to generated defaults</button>
+    <button class="btn btn-ghost" type="button" onclick="location.hash='#/specifications'">Back</button>
+  </div>
+  </form>`;
+  $('#specForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const fd = Object.fromEntries(new FormData(e.target));
+    const spec = {};
+    for (const [group, fields] of SPEC_LAYOUT) for (const [k] of fields) if (fd[k] != null && String(fd[k]).trim() !== '') spec[k] = String(fd[k]).trim();
+    try {
+      await api('/api/admin/vehicles/' + id, {
+        method: 'PUT',
+        body: {
+          price: fd.price === '' ? 0 : +fd.price,
+          currency: fd.currency || 'USD',
+          mileage: fd.dbMileage === '' ? 0 : +fd.dbMileage,
+          registration: fd.dbRegistration || '',
+        },
+      });
+      await api('/api/admin/vehicles/' + id + '/spec', { method: 'PUT', body: { spec, notes: fd.notes || '' } });
+      toast('Specification saved — it now shows on the vehicle page.');
+      location.hash = '#/specifications';
+    } catch (err) { toast(err.message, true); }
+  };
+  $('#specReset').onclick = async () => {
+    if (!confirm('Clear your saved values for this car and go back to the generated specification?')) return;
+    try {
+      await api('/api/admin/vehicles/' + id + '/spec', { method: 'DELETE' });
+      toast('Reset to the generated specification.');
+      specEditorPage(id, defaults);
+    } catch (err) { toast(err.message, true); }
+  };
 }
 
 /* ================================================== VEHICLE EDITOR */

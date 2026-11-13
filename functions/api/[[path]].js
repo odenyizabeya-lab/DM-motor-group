@@ -79,7 +79,7 @@ async function uniqueSlug(env, b) {
   }
 }
 
-function updatedFields(b) {
+function updatedFields(b, currentVehicle) {
   const patch = {};
   const S = (k) => (b[k] != null ? String(b[k]).trim() : null);
   const set = (key, val) => { if (val !== null && val !== undefined) patch[key] = val; };
@@ -102,7 +102,14 @@ function updatedFields(b) {
     ? b.safetyFeatures : String(b.safetyFeatures).split('\n').map((x) => x.trim()).filter(Boolean);
   set('ownership_info', S('ownershipInfo'));
   if (b.inspectionStatus != null) patch.inspection_status = String(b.inspectionStatus);
-  set('inspection_report', S('inspectionReport'));
+  if (b.spec != null && typeof b.spec === 'object') {
+    /* the dealer-entered specification sheet is stored inside the
+     * inspection_report column as JSON (no database migration needed) */
+    const cur = L.parseInspection(currentVehicle && currentVehicle.inspection_report);
+    patch.inspection_report = L.serialiseInspection(L.cleanSpec(b.spec), b.inspectionNotes != null ? String(b.inspectionNotes) : cur.notes);
+  } else {
+    set('inspection_report', S('inspectionReport'));
+  }
   if (b.category != null) patch.category = String(b.category);
   if (b.isFeatured != null) patch.is_featured = !!b.isFeatured;
   return patch;
@@ -630,6 +637,9 @@ route('GET', '/api/admin/vehicles/:id', async ({ env, request, g }) => {
   const rows = await L.rest.get(env, 'vehicles', { id: `eq.${+g.id || 0}`, select: '*' });
   if (!rows || !rows.length) throw L.err(404, 'Not found');
   const [out] = await withMedia(env, rows.slice(0, 1));
+  const parsed = L.parseInspection(rows[0].inspection_report);
+  out.spec = parsed.spec;
+  out.inspectionReport = parsed.notes;
   const media = await L.rest.get(env, 'media', { vehicle_id: `eq.${+g.id}`, select: '*', order: 'position.asc,id.asc' });
   out.media = (media || []).map((m) => ({
     id: m.id, vehicleId: m.vehicle_id, type: m.type, url: m.url,
@@ -646,7 +656,7 @@ route('PUT', '/api/admin/vehicles/:id', async ({ env, request, g, ctx }) => {
   const rows = await L.rest.get(env, 'vehicles', { id: `eq.${+g.id || 0}`, select: '*' });
   const v = rows && rows[0];
   if (!v) throw L.err(404, 'Not found');
-  const patch = updatedFields(b);
+  const patch = updatedFields(b, v);
   if (!Object.keys(patch).length) return L.json({ ok: true });
   await L.rest.update(env, 'vehicles', { id: v.id }, { ...patch, updated_at: new Date().toISOString() }, true);
   if (ctx) ctx.waitUntil(L.logActivity(env, u.email, 'vehicle_updated', `${patch.brand || v.brand} ${patch.model || v.model} (#${v.id})`));
@@ -654,6 +664,44 @@ route('PUT', '/api/admin/vehicles/:id', async ({ env, request, g, ctx }) => {
     ctx.waitUntil(aiCustomer.notifyVehicleChange(env, v.id, { priceFrom: v.price, priceTo: patch.price })
       .catch((e) => console.error('AI price notification failed:', e && e.message)));
   }
+  return L.json({ ok: true });
+});
+
+/* ---------------------------------------------------------------------------
+ * Dealer-entered specification sheet.
+ *   PUT    /api/admin/vehicles/:id/spec  { spec: {...}, notes?: "..." }
+ *   DELETE /api/admin/vehicles/:id/spec  (clears the dealer override and
+ *                                          restores the generated defaults)
+ * -------------------------------------------------------------------------- */
+route('PUT', '/api/admin/vehicles/:id/spec', async ({ env, request, g, ctx }) => {
+  const u = await L.writeStaff(env, request);
+  const b = await readJson(request);
+  const rows = await L.rest.get(env, 'vehicles', { id: `eq.${+g.id || 0}`, select: '*' });
+  const v = rows && rows[0];
+  if (!v) throw L.err(404, 'Not found.');
+  const cur = L.parseInspection(v.inspection_report);
+  const spec = L.cleanSpec(b && b.spec);
+  if (!Object.keys(spec).length) throw L.err(400, 'No specification values were supplied.');
+  const notes = b && b.notes != null ? String(b.notes).slice(0, 8000) : cur.notes;
+  await L.rest.update(env, 'vehicles', { id: v.id }, {
+    inspection_report: L.serialiseInspection(spec, notes),
+    updated_at: new Date().toISOString(),
+  }, true);
+  if (ctx) ctx.waitUntil(L.logActivity(env, u.email, 'vehicle_spec_updated',
+    `${v.brand} ${v.model} (${Object.keys(spec).length} specification fields)`));
+  return L.json({ ok: true, spec, notes });
+});
+
+route('DELETE', '/api/admin/vehicles/:id/spec', async ({ env, request, g, ctx }) => {
+  const u = await L.writeStaff(env, request);
+  const rows = await L.rest.get(env, 'vehicles', { id: `eq.${+g.id || 0}`, select: '*' });
+  const v = rows && rows[0];
+  if (!v) throw L.err(404, 'Not found.');
+  const cur = L.parseInspection(v.inspection_report);
+  await L.rest.update(env, 'vehicles', { id: v.id }, {
+    inspection_report: cur.notes, updated_at: new Date().toISOString(),
+  }, true);
+  if (ctx) ctx.waitUntil(L.logActivity(env, u.email, 'vehicle_spec_reset', `${v.brand} ${v.model}`));
   return L.json({ ok: true });
 });
 

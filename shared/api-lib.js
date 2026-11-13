@@ -379,7 +379,9 @@ function vehicleOut(v, media = []) {
     location: v.location || '', description: v.description || '',
     features: Array.isArray(v.features) ? v.features : [], safetyFeatures: Array.isArray(v.safety_features) ? v.safety_features : [],
     ownershipInfo: v.ownership_info || '', inspectionStatus: v.inspection_status || 'none',
-    inspectionReport: v.inspection_report || '', category: v.category || 'sedan',
+    inspectionReport: parseInspection(v.inspection_report).notes,
+    spec: parseInspection(v.inspection_report).spec,
+    category: v.category || 'sedan',
     isFeatured: !!v.is_featured, views: v.views || 0,
     createdAt: v.created_at, updatedAt: v.updated_at,
     cover: cover ? (cover.thumb_url || cover.url) : '',
@@ -432,13 +434,64 @@ const IMG_EXT_ = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
 const VID_EXT_ = ['mp4', 'webm', 'm4v', 'mov'];
 const VEHICLE_STATUSES_ = ['draft', 'published', 'reserved', 'sold'];
 
+/* ---------------------------------------------------------------------------
+ * Vehicle specification sheet.
+ * The dealer can type every value of a car (numbers included) in the admin
+ * dashboard. It is stored in the vehicles.inspection_report text column as a
+ * small JSON document so that no database migration is required:
+ *   {"__spec": { ...fields... }, "notes": "free text inspection notes"}
+ * Plain text stays valid and is shown as the inspection notes.
+ * -------------------------------------------------------------------------- */
+const SPEC_FIELDS_ = [
+  'make', 'model', 'year', 'exteriorColour', 'interiorColour', 'bodyType', 'trim',
+  'engineNumber', 'vin', 'engineCapacity', 'engineType', 'fuel', 'transmission',
+  'mileage', 'registrationYear', 'drivetrain', 'doors', 'seats', 'airConditioning',
+  'navigation', 'reverseCamera', 'parkingSensors', 'sunroof', 'alloyWheels',
+  'safetyFeatures', 'otherEquipment',
+];
+const SPEC_LIMITS_ = { year: 8, doors: 12, seats: 12 };
+
+function parseInspection(raw) {
+  const text = raw == null ? '' : String(raw);
+  if (text.trim().charAt(0) === '{') {
+    try {
+      const o = JSON.parse(text);
+      if (o && typeof o === 'object' && o.__spec && typeof o.__spec === 'object') {
+        return { spec: o.__spec, notes: typeof o.notes === 'string' ? o.notes : '' };
+      }
+    } catch { /* not our JSON - treat as plain notes */ }
+  }
+  return { spec: null, notes: text };
+}
+function serialiseInspection(spec, notes) {
+  const clean = {};
+  for (const k of SPEC_FIELDS_) {
+    if (spec && spec[k] != null && String(spec[k]).trim() !== '') clean[k] = String(spec[k]).trim().slice(0, 4000);
+  }
+  return JSON.stringify({ __spec: clean, notes: String(notes || '').slice(0, 8000) });
+}
+/* Keep only known fields, as trimmed strings; unknown keys are dropped. */
+function cleanSpec(input) {
+  const out = {};
+  if (!input || typeof input !== 'object') return out;
+  for (const k of SPEC_FIELDS_) {
+    if (input[k] == null) continue;
+    const val = String(input[k]).trim();
+    if (!val) continue;
+    out[k] = val.slice(0, SPEC_LIMITS_[k] || 4000);
+  }
+  return out;
+}
+
 const apiLib = {
   err, json, readJson, rateLimit, slugify, extractStoragePath,
   sb, rest, storageUpload, storageDelete, storagePublic, storageUrl, storageHeaders,
   authUser, requireAuth, staff, writeStaff, loginPayload, sendNotification, logActivity,
   mediaFor, vehicleOut, vehicleDetailOut, geminiGenerate, openaiGenerate, aiGenerate, aiProviderId,
   missingRelationMessage, tableExists, missingTables, invalidateAuthCache,
+  parseInspection, serialiseInspection, cleanSpec,
   ENQ_TYPES: ENQ_TYPES_, IMG_EXT: IMG_EXT_, VID_EXT: VID_EXT_, VEHICLE_STATUSES: VEHICLE_STATUSES_,
+  SPEC_FIELDS: SPEC_FIELDS_,
 };
 export default apiLib;
 export { apiLib };

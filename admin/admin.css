@@ -141,3 +141,8 @@ table.tbl tr:hover td{background:rgba(255,255,255,.015)}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 #toast.error{border-color:var(--red)}
 .empty{padding:44px 18px;text-align:center;color:var(--dim);border:1px dashed var(--line2);border-radius:12px}
+/* vehicle specification editor */
+.chip{display:inline-block;font-size:10px;letter-spacing:.6px;text-transform:uppercase;padding:2px 7px;border-radius:99px;border:1px solid var(--line2);color:var(--faint);vertical-align:middle;margin-left:6px}
+.chip.dealer{border-color:var(--green);color:#8fd8b4}
+.chip.gen{border-color:var(--line2);color:var(--faint)}
+#specForm textarea{min-height:74px;resize:vertical}
