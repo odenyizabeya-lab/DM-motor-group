@@ -1,0 +1,3286 @@
+{
+ "generatedAt": "2026-11-13",
+ "source": "Generated from the live listings database, frame-by-frame video review and published market data.",
+ "reviewNote": "Every value marked \"Not verified\" must be confirmed against the physical vehicle before the listing is presented as verified.",
+ "vehicles": {
+  "lexus-ux-250h-2019": {
+   "id": 14,
+   "slug": "lexus-ux-250h-2019",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Lexus",
+    "model": "UX 250h",
+    "year": 2019,
+    "bodyType": "SUV",
+    "trim": "Not verified",
+    "exteriorColour": "Grey",
+    "interiorColour": "Tan leather",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "2.0L hybrid",
+    "fuel": "Hybrid",
+    "transmission": "CVT",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Grey exterior",
+     "Cognac/tan leather seating",
+     "Glass sunroof",
+     "Navigation system fitted",
+     "Five-spoke alloy wheels"
+    ],
+    "listing": [
+     "Hybrid drive",
+     "Leather seats",
+     "Reverse camera",
+     "Alloy wheels",
+     "Apple CarPlay"
+    ],
+    "safety": [
+     "Pre-collision system",
+     "Lane departure alert",
+     "Adaptive cruise control"
+    ],
+    "interiorEquipment": [
+     "Cognac/tan leather seating",
+     "Glass sunroof"
+    ],
+    "comfortEquipment": [
+     "Glass sunroof"
+    ],
+    "technology": [
+     "Navigation system fitted"
+    ]
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Lexus UX 250h — exterior, cabin and rear seats"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": 8000,
+    "currency": "USD",
+    "estimatedRange": "$14,075 - $26,698",
+    "basis": "Edmunds appraisal range for a 2019 Lexus UX 250h (assumes 12,000 miles per year, no colour or options selected). Dealer listings for the same model sit between $19,148 and $30,999.",
+    "source": "Edmunds / Autotrader",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 20400,
+    "recommendedNote": "Calculated from the published market band (no adjustment applied). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "published",
+    "bandLabel": "Published market band",
+    "pricePosition": "below"
+   },
+   "mediaNotice": "",
+   "disclosures": [],
+   "description": "Compact luxury hybrid crossover with Lexus reliability and low running costs. Presented with exterior, interior and rear-seat footage.",
+   "verifiedFacts": "Grey Lexus UX crossover: rear three-quarter and side, roof spoiler, five-spoke alloys, dealership forecourt. Interior: dark dashboard, central navigation screen showing a map, analogue clock, dual-zone climate display reading 67F, drive-mode dial, tan/cognac leather seats and a glass sunroof."
+  },
+  "mercedes-maybach-gls-600-2022": {
+   "id": 15,
+   "slug": "mercedes-maybach-gls-600-2022",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Mercedes-Maybach",
+    "model": "GLS 600",
+    "year": 2022,
+    "bodyType": "SUV",
+    "trim": "Not verified",
+    "exteriorColour": "Obsidian Black / White",
+    "interiorColour": "Mahogany / Beige",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "4.0L V8 biturbo + EQ Boost",
+    "fuel": "Petrol",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "White exterior shown",
+     "Purple ambient lighting",
+     "Cream leather rear seating",
+     "Rear entertainment screens"
+    ],
+    "listing": [
+     "Executive rear seating",
+     "Panoramic sliding sunroof",
+     "Burmester surround sound",
+     "64-colour ambient lighting",
+     "22-inch Maybach alloy wheels",
+     "Soft-close doors"
+    ],
+    "safety": [
+     "Adaptive cruise control",
+     "Lane keeping assist",
+     "Blind-spot monitoring",
+     "360-degree camera"
+    ],
+    "interiorEquipment": [
+     "Purple ambient lighting",
+     "Cream leather rear seating",
+     "Rear entertainment screens"
+    ],
+    "comfortEquipment": [
+     "Purple ambient lighting"
+    ],
+    "technology": [
+     "Rear entertainment screens"
+    ]
+   },
+   "media": {
+    "videos": 2,
+    "photos": 1,
+    "videoCaptions": [
+     "Maybach GLS 600 — full exterior and interior walk-around",
+     "Maybach GLS 600 — night interior and ambient lighting"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": null,
+    "currency": "USD",
+    "estimatedRange": "$99,998 - $129,999",
+    "basis": "Dealer listings for 2022 Maybach GLS 600 4MATIC. The wider Maybach GLS 600 population lists between $87,998 and $199,999 depending on specification.",
+    "source": "Autotrader",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 115000,
+    "recommendedNote": "Calculated from the published market band (no adjustment applied). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "published",
+    "bandLabel": "Published market band"
+   },
+   "mediaNotice": "",
+   "disclosures": [
+    "Listing records the colour as 'Obsidian Black / White' two-tone; the footage shows a white body - confirm the exact colour specification before publishing."
+   ],
+   "description": "Flagship Mercedes-Maybach GLS 600 presented in a full walk-around and night interior film. Executive rear cabin, Burmester audio and the signature Maybach grille make this one of the most complete luxury SUVs on the market.",
+   "verifiedFacts": "Video 1: white Mercedes-Maybach GLS in an underground car park, Maybach grille and Maybach bonnet badge, LED headlamps. Video 2: rear-cabin tour with purple ambient lighting, cream leather rear seats, rear entertainment screens and a rear climate/console panel."
+  },
+  "ferrari-sf90-stradale-2021": {
+   "id": 16,
+   "slug": "ferrari-sf90-stradale-2021",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Ferrari",
+    "model": "SF90 Stradale",
+    "year": 2021,
+    "bodyType": "Coupe",
+    "trim": "Not verified",
+    "exteriorColour": "Rosso Corsa",
+    "interiorColour": "Black",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "4.0L twin-turbo V8 + 3 electric motors",
+    "fuel": "Hybrid",
+    "transmission": "Dual-Clutch",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [],
+    "listing": [
+     "Plug-in hybrid V8",
+     "All-wheel drive",
+     "Carbon-fibre aero package",
+     "Racing seats",
+     "Front lifting system"
+    ],
+    "safety": [
+     "ABS with EBD",
+     "Traction control",
+     "Stability control"
+    ],
+    "interiorEquipment": [],
+    "comfortEquipment": [],
+    "technology": []
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Ferrari SF90 Stradale — showroom walk-around"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": null,
+    "currency": "USD",
+    "estimatedRange": "$419,376 - $473,966",
+    "basis": "Market-value band across model years and condition. Original MSRP was $524,815; the current average used price is reported around $484,150 and individual sales have ranged from $363,000 to $935,000.",
+    "source": "DriveIndex / CarBuzz",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": null,
+    "recommendedNote": "No price can be recommended while the video on file does not match this vehicle.",
+    "bandType": "published",
+    "bandLabel": "Published market band"
+   },
+   "mediaNotice": "VIDEO DOES NOT MATCH THIS LISTING - do not publish until a vehicle-specific video is supplied.",
+   "disclosures": [
+    "MISMATCH - the video attached to this listing shows Bugatti and Pagani cars, not a Ferrari SF90 Stradale. A correct video must be supplied before this listing can be published as shown."
+   ],
+   "description": "Ferrari SF90 Stradale captured inside a private supercar collection. Plug-in hybrid powertrain, all-wheel drive and sub-3-second acceleration with full carbon-fibre aero.",
+   "verifiedFacts": "The footage does not show a Ferrari. It shows a red Bugatti (EB emblem, horseshoe grille, full-width rear light bar) in a hypercar showroom, with a purple/blue Pagani Huayra Roadster and a yellow-and-black Bugatti Chiron also in the room."
+  },
+  "ford-torino-talladega-1969": {
+   "id": 17,
+   "slug": "ford-torino-talladega-1969",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Ford",
+    "model": "Torino Talladega",
+    "year": 1969,
+    "bodyType": "Coupe",
+    "trim": "Not verified",
+    "exteriorColour": "Maroon",
+    "interiorColour": "Black",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "428 Cobra Jet V8",
+    "fuel": "Petrol",
+    "transmission": "Manual",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay filmed and appears complete and clean.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Maroon exterior",
+     "Engine bay shown with blue Ford air cleaner",
+     "Chrome bumpers and trim",
+     "Dark interior"
+    ],
+    "listing": [
+     "428 Cobra Jet V8",
+     "Talladega aero package",
+     "Collector-grade example",
+     "Documented history"
+    ],
+    "safety": [],
+    "interiorEquipment": [
+     "Dark interior"
+    ],
+    "comfortEquipment": [],
+    "technology": []
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "1969 Ford Torino Talladega — full presentation"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": 56995,
+    "currency": "USD",
+    "estimatedRange": "$16,500 - $110,000",
+    "basis": "Median recorded auction sale price for a 1969 Ford Torino is $42,500 across seven year-specific sales in the last 12 months. A genuine Talladega is far more valuable than a standard Torino; the wide band reflects that uncertainty.",
+    "source": "Auction results database (median $42,500)",
+    "confidence": "low",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 60100,
+    "recommendedNote": "Calculated from the published market band, then adjusted: -5% for the unusually wide spread in this model's values. This is a recommendation for your approval, not an agreed price.",
+    "bandType": "published",
+    "bandLabel": "Published market band",
+    "pricePosition": "in the lower half of"
+   },
+   "mediaNotice": "",
+   "disclosures": [],
+   "description": "Collector-grade 1969 Ford Torino Talladega with the 428 Cobra Jet V8. A genuine aero-warrior homologation car presented with detailed engine-bay and body footage.",
+   "verifiedFacts": "Maroon Ford Torino in a white-brick showroom: hood raised showing the engine bay with a blue air cleaner, chrome bumpers, dual round headlamps, chrome wheel-arch trim and a dark interior."
+  },
+  "chevrolet-chevelle-ss-1966": {
+   "id": 18,
+   "slug": "chevrolet-chevelle-ss-1966",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Chevrolet",
+    "model": "Chevelle SS",
+    "year": 1966,
+    "bodyType": "Coupe",
+    "trim": "Not verified",
+    "exteriorColour": "Red",
+    "interiorColour": "Black",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "V8",
+    "fuel": "Petrol",
+    "transmission": "Manual",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay filmed and appears complete and clean.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Red exterior",
+     "Hood and engine bay shown",
+     "Chrome bumpers and trim"
+    ],
+    "listing": [
+     "V8 engine",
+     "Chrome bumpers",
+     "Bucket seats",
+     "Classic muscle car"
+    ],
+    "safety": [],
+    "interiorEquipment": [],
+    "comfortEquipment": [],
+    "technology": []
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Chevrolet Chevelle SS — exterior and engine bay"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": null,
+    "currency": "USD",
+    "estimatedRange": "$27,495 - $53,995",
+    "basis": "Current 1966 Chevelle value from 1,112 asking prices. Median recorded auction sale price is $52,900 with observed prices from $23,000 to $242,000 depending on specification and originality.",
+    "source": "Classic Cars Arena / auction results",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 40700,
+    "recommendedNote": "Calculated from the published market band (no adjustment applied). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "published",
+    "bandLabel": "Published market band"
+   },
+   "mediaNotice": "",
+   "disclosures": [
+    "Exact model year, trim and engine cannot be confirmed from the footage; the front styling is consistent with a mid-1960s Chevelle."
+   ],
+   "description": "Classic Chevrolet Chevelle SS in bright red, shown with the hood up and a close look at the V8 engine bay. A timeless American muscle car.",
+   "verifiedFacts": "Red Chevrolet Chevelle two-door hardtop at an indoor classic-car expo: hood raised, chrome bumpers and side trim, wire-style wheels, engine bay visible, other classics parked nearby."
+  },
+  "chevrolet-c10-1965": {
+   "id": 19,
+   "slug": "chevrolet-c10-1965",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Chevrolet",
+    "model": "C10",
+    "year": 1965,
+    "bodyType": "Pickup",
+    "trim": "Not verified",
+    "exteriorColour": "Olive Green",
+    "interiorColour": "Brown",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "V8",
+    "fuel": "Petrol",
+    "transmission": "Manual",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Olive-green exterior",
+     "Chrome grille and bumper",
+     "Chevrolet-stamped tailgate"
+    ],
+    "listing": [
+     "Restored classic pickup",
+     "Chrome trim",
+     "Wood bed floor",
+     "V8 engine"
+    ],
+    "safety": [],
+    "interiorEquipment": [],
+    "comfortEquipment": [],
+    "technology": [
+     "Chevrolet-stamped tailgate"
+    ]
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Chevrolet C10 — showroom walk-around"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": null,
+    "currency": "USD",
+    "estimatedRange": "$9,170 - $27,995",
+    "basis": "Current 1965 C10 value from 968 asking prices. A wider auction-verified band across all years is $18,521 - $60,528.",
+    "source": "Classic Cars Arena / DriveIndex",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 17100,
+    "recommendedNote": "Calculated from the published market band, then adjusted: -8% for sourced footage (physical presence unconfirmed). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "published",
+    "bandLabel": "Published market band"
+   },
+   "mediaNotice": "Footage for this vehicle was supplied by another dealership or source; physical availability must be confirmed.",
+   "disclosures": [
+    "'RK MOTORS Charlotte' plate frame is visible in the footage - this is sourced footage from another dealer. Confirm the vehicle is physically available to DM Motor Group before publishing."
+   ],
+   "description": "Restored first-generation Chevrolet C10 pickup in olive green with chrome trim and oversized alloy wheels. A show-quality classic truck.",
+   "verifiedFacts": "Olive-green Chevrolet C10 pickup in a showroom: chrome grille and bumper, Chevrolet tailgate stamping, blue classic car alongside, classic-car wall art behind."
+  },
+  "gmc-sierra-2500hd-denali-2022": {
+   "id": 20,
+   "slug": "gmc-sierra-2500hd-denali-2022",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "GMC",
+    "model": "Sierra 2500HD Denali",
+    "year": 2022,
+    "bodyType": "Pickup",
+    "trim": "Not verified",
+    "exteriorColour": "Black",
+    "interiorColour": "Black leather",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "6.6L Duramax diesel",
+    "fuel": "Diesel",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Black exterior",
+     "DENALI HD specification",
+     "Crew cab",
+     "Running boards"
+    ],
+    "listing": [
+     "Duramax diesel",
+     "Denali trim",
+     "Lifted suspension",
+     "Polished alloy wheels",
+     "Leather interior"
+    ],
+    "safety": [
+     "Blind-spot monitoring",
+     "Rear camera",
+     "Trailer sway control"
+    ],
+    "interiorEquipment": [],
+    "comfortEquipment": [],
+    "technology": []
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "GMC Sierra 2500HD Denali — full exterior walk-around"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": 51000,
+    "currency": "USD",
+    "estimatedRange": "$41,095 - $53,897",
+    "basis": "Median asking price for a used 2022 GMC Sierra 2500HD is $48,900 (average $47,322), with the middle half of listings between $41,095 and $53,897. The full listing population spans $32,372 to $74,000.",
+    "source": "Edmunds / Autotrader",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 46100,
+    "recommendedNote": "Calculated from the published market band, then adjusted: -3% for aftermarket modifications reducing originality. This is a recommendation for your approval, not an agreed price.",
+    "bandType": "published",
+    "bandLabel": "Published market band",
+    "pricePosition": "in the upper half of"
+   },
+   "mediaNotice": "",
+   "disclosures": [
+    "Modified from stock: lifted suspension with aftermarket wheels and off-road tyres - this reduces resale value and must be declared."
+   ],
+   "description": "Black GMC Sierra 2500HD Denali with a lifted suspension and large polished wheels. Heavy-duty capability with full luxury trim.",
+   "verifiedFacts": "Black GMC Sierra 2500HD crew cab outdoors: GMC grille, DENALI HD fender badge, running boards, and a lifted suspension on large chrome aftermarket wheels and aggressive tyres."
+  },
+  "chevrolet-chevelle-1970": {
+   "id": 21,
+   "slug": "chevrolet-chevelle-1970",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Chevrolet",
+    "model": "Chevelle",
+    "year": 1970,
+    "bodyType": "Coupe",
+    "trim": "Not verified",
+    "exteriorColour": "Black",
+    "interiorColour": "Black leather",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "V8",
+    "fuel": "Petrol",
+    "transmission": "Manual",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Black exterior",
+     "Chrome aftermarket wheels"
+    ],
+    "listing": [
+     "V8 engine",
+     "Black leather interior",
+     "Chrome bumpers",
+     "Classic muscle car"
+    ],
+    "safety": [],
+    "interiorEquipment": [],
+    "comfortEquipment": [],
+    "technology": []
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "1970 Chevrolet Chevelle — exterior and interior"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": null,
+    "currency": "USD",
+    "estimatedRange": "$45,969 - $69,994",
+    "basis": "Current 1970 Chevelle SS value from 302 asking prices. Auction-verified market value across the model is $87,602; genuine SS 454 LS6 cars trade around $159,332.",
+    "source": "Classic Cars Arena / DriveIndex",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 51700,
+    "recommendedNote": "Calculated from the published market band, then adjusted: -8% for sourced footage (physical presence unconfirmed); -3% for aftermarket modifications reducing originality. This is a recommendation for your approval, not an agreed price.",
+    "bandType": "published",
+    "bandLabel": "Published market band"
+   },
+   "mediaNotice": "Footage for this vehicle was supplied by another dealership or source; physical availability must be confirmed.",
+   "disclosures": [
+    "Third-party dealer branding (RK Motors) visible - sourced footage. Confirm physical availability before publishing.",
+    "Modified from stock: aftermarket wheels."
+   ],
+   "description": "Immaculate black 1970 Chevrolet Chevelle with chrome bumpers and a beautifully finished black interior. Classic American muscle at its best.",
+   "verifiedFacts": "Black Chevrolet Chevelle hardtop in a dealer showroom with large chrome aftermarket wheels; 'RK MOTORS' signage is visible on the wall behind the car."
+  },
+  "land-rover-range-rover-velar-2020": {
+   "id": 22,
+   "slug": "land-rover-range-rover-velar-2020",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Land Rover",
+    "model": "Range Rover Velar",
+    "year": 2020,
+    "bodyType": "SUV",
+    "trim": "Not verified",
+    "exteriorColour": "Santorini Black",
+    "interiorColour": "Ebony leather",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "2.0L diesel",
+    "fuel": "Diesel",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Black exterior",
+     "LED lighting",
+     "Twin exhaust finishers"
+    ],
+    "listing": [
+     "R-Dynamic styling",
+     "Panoramic roof",
+     "Meridian audio",
+     "All-wheel drive",
+     "Leather interior"
+    ],
+    "safety": [
+     "Lane keeping assist",
+     "Emergency braking",
+     "Parking sensors"
+    ],
+    "interiorEquipment": [],
+    "comfortEquipment": [],
+    "technology": []
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Range Rover Velar — exterior, interior and rear"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": 90000,
+    "currency": "USD",
+    "estimatedRange": "$17,990 - $32,495",
+    "basis": "CARFAX used listings for a 2020 Velar start at $17,990; other aggregators list examples from $16,494. The full listing population, including high-specification and low-mileage cars, spans $9,500 to $54,690.",
+    "source": "CARFAX / Carsforsale / Autotrader",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 25200,
+    "recommendedNote": "Calculated from the published market band (no adjustment applied). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "published",
+    "bandLabel": "Published market band",
+    "pricePosition": "above"
+   },
+   "mediaNotice": "",
+   "disclosures": [],
+   "description": "Range Rover Velar in black with R-Dynamic styling and a luxurious cabin. A design-led luxury SUV with all-wheel drive and premium equipment.",
+   "verifiedFacts": "Black Range Rover Velar in a showroom: RANGE ROVER bonnet lettering, honeycomb grille, LED daytime running lights, full-width rear light bar and twin exhaust finishers, polished floor reflections."
+  },
+  "cadillac-ct5-v-blackwing-2023": {
+   "id": 23,
+   "slug": "cadillac-ct5-v-blackwing-2023",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Cadillac",
+    "model": "CT5-V Blackwing",
+    "year": 2023,
+    "bodyType": "Sedan",
+    "trim": "Not verified",
+    "exteriorColour": "Black",
+    "interiorColour": "Black / Red",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "6.2L supercharged V8",
+    "fuel": "Petrol",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Black exterior",
+     "BLACKWING specification confirmed by badge",
+     "Vertical LED lighting"
+    ],
+    "listing": [
+     "6.2L supercharged V8",
+     "Carbon-fibre package",
+     "Performance seats",
+     "Magnetic ride control"
+    ],
+    "safety": [
+     "Forward collision alert",
+     "Lane keep assist",
+     "Rear camera"
+    ],
+    "interiorEquipment": [],
+    "comfortEquipment": [],
+    "technology": []
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Cadillac CT5-V Blackwing — full walk-around"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": 36000,
+    "currency": "USD",
+    "estimatedRange": "$73,000 - $104,995",
+    "basis": "Dealer listings for 2023 CT5-V Blackwing cars. Typical asking price observed around $92,695. A standard (non-Blackwing) CT5-V is far lower, from about $13,900 to $36,995.",
+    "source": "Autotrader / Carsforsale",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 89000,
+    "recommendedNote": "Calculated from the published market band (no adjustment applied). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "published",
+    "bandLabel": "Published market band",
+    "pricePosition": "below"
+   },
+   "mediaNotice": "",
+   "disclosures": [],
+   "description": "Cadillac CT5-V Blackwing — a supercharged V8 sports sedan with carbon-fibre details and a driver-focused cabin, shown from front, interior and rear.",
+   "verifiedFacts": "Black Cadillac CT5-V Blackwing outside a period building: vertical LED daytime running lights, Cadillac crest, mesh grille, and a BLACKWING badge on the front splitter; a dark interior is glimpsed through the windscreen."
+  },
+  "kia-ev3-2025": {
+   "id": 24,
+   "slug": "kia-ev3-2025",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Kia",
+    "model": "EV3",
+    "year": 2025,
+    "bodyType": "SUV",
+    "trim": "Not verified",
+    "exteriorColour": "Ivory",
+    "interiorColour": "Grey",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "Electric motor",
+    "fuel": "Electric",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "New (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Ivory exterior",
+     "360-degree surround-view camera confirmed on screen",
+     "Digital instrument cluster"
+    ],
+    "listing": [
+     "Long-range electric drive",
+     "Advanced driver assistance",
+     "Digital cockpit",
+     "Fast charging"
+    ],
+    "safety": [
+     "Autonomous emergency braking",
+     "Lane keeping assist",
+     "Blind-spot monitoring"
+    ],
+    "interiorEquipment": [
+     "360-degree surround-view camera confirmed on screen"
+    ],
+    "comfortEquipment": [],
+    "technology": [
+     "360-degree surround-view camera confirmed on screen",
+     "Digital instrument cluster"
+    ]
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Kia EV3 — exterior, digital cockpit and showroom"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": 46000,
+    "currency": "USD",
+    "estimatedRange": "$29,890 - $35,990",
+    "basis": "Published US pricing for the Kia EV3: the 2025 model starts at $35,990 and the following model year at $29,890. A new-car price, not a used-market figure - the model is too new for a settled used market.",
+    "source": "Edmunds / manufacturer pricing",
+    "confidence": "low",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 32900,
+    "recommendedNote": "Calculated from the published market band (no adjustment applied). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "msrp",
+    "bandLabel": "Manufacturer price reference (not a used-market band)",
+    "pricePosition": "above"
+   },
+   "mediaNotice": "",
+   "disclosures": [],
+   "description": "All-new Kia EV3 compact electric SUV with a long-range battery, digital cockpit and advanced driver assistance. Presented in showroom condition.",
+   "verifiedFacts": "Ivory Kia EV3 from the rear: KIA and EV3 badging, vertical LED light bar, black lower diffuser. Interior frame shows the digital cluster running the 360-degree surround-view camera with the car in park and a short range reading."
+  },
+  "land-rover-defender-110-2022": {
+   "id": 25,
+   "slug": "land-rover-defender-110-2022",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Land Rover",
+    "model": "Defender 110",
+    "year": 2022,
+    "bodyType": "SUV",
+    "trim": "Not verified",
+    "exteriorColour": "Grey",
+    "interiorColour": "Black",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "3.0L inline-six",
+    "fuel": "Petrol",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Dark grey exterior",
+     "LED round headlamps",
+     "Roof-mounted lamp bar",
+     "Black alloy wheels with running boards"
+    ],
+    "listing": [
+     "All-wheel drive",
+     "Terrain response",
+     "Air suspension",
+     "Off-road package"
+    ],
+    "safety": [
+     "Emergency braking",
+     "Lane keep assist",
+     "Clear exit monitoring"
+    ],
+    "interiorEquipment": [],
+    "comfortEquipment": [
+     "Roof-mounted lamp bar"
+    ],
+    "technology": [
+     "LED round headlamps",
+     "Roof-mounted lamp bar"
+    ]
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Land Rover Defender 110 — exterior, interior and rear"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": 33000,
+    "currency": "USD",
+    "estimatedRange": "$41,398 - $61,495",
+    "basis": "A used 2022 Defender lists for a median $42,825 at 53,923 miles across 348 dealer listings. The wider population spans $27,000 to $98,800.",
+    "source": "Edmunds / Autotrader",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 47300,
+    "recommendedNote": "Calculated from the published market band, then adjusted: -8% for sourced footage (physical presence unconfirmed). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "published",
+    "bandLabel": "Published market band",
+    "pricePosition": "below"
+   },
+   "mediaNotice": "Footage for this vehicle was supplied by another dealership or source; physical availability must be confirmed.",
+   "disclosures": [
+    "Third-party dealer branding (Speedy Car Sales) visible - sourced footage.",
+    "The illuminated door sill in the footage reads 'JETOUR'. This must be reconciled with the Land Rover Defender listing before publication."
+   ],
+   "description": "Land Rover Defender 110 in grey with black wheels and a rugged luxury cabin. Full all-terrain capability with modern refinement.",
+   "verifiedFacts": "Dark grey Defender 110-style 110 in a showroom with other stock around it and a 'Speedy Car Sales' front plate; an interior frame shows the illuminated door sill reading 'JETOUR'."
+  },
+  "cadillac-escalade-2022": {
+   "id": 26,
+   "slug": "cadillac-escalade-2022",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Cadillac",
+    "model": "Escalade",
+    "year": 2022,
+    "bodyType": "SUV",
+    "trim": "Not verified",
+    "exteriorColour": "Black",
+    "interiorColour": "Black leather",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "6.2L V8",
+    "fuel": "Petrol",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Black exterior",
+     "Red leather interior",
+     "Blacked-out wheels (aftermarket)"
+    ],
+    "listing": [
+     "Full-size luxury SUV",
+     "Seven seats",
+     "Rear entertainment",
+     "Air suspension"
+    ],
+    "safety": [
+     "360-degree camera",
+     "Automatic emergency braking",
+     "Lane keep assist"
+    ],
+    "interiorEquipment": [
+     "Red leather interior"
+    ],
+    "comfortEquipment": [],
+    "technology": []
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Cadillac Escalade — exterior and rear walk-around"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": 42000,
+    "currency": "USD",
+    "estimatedRange": "$53,891 - $63,325",
+    "basis": "Median asking price for a used 2022 Escalade is $58,686 (average $58,925), with the middle half of listings between $53,891 and $63,325.",
+    "source": "Edmunds / Autotrader",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 58600,
+    "recommendedNote": "Calculated from the published market band (no adjustment applied). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "published",
+    "bandLabel": "Published market band",
+    "pricePosition": "below"
+   },
+   "mediaNotice": "",
+   "disclosures": [],
+   "description": "Full-size Cadillac Escalade luxury SUV in black, offering seven-seat comfort, rear entertainment and commanding road presence.",
+   "verifiedFacts": "Black Cadillac Escalade outside a dealership (unit 2473): blacked-out alloy wheels, wide grille and vertical lighting. The interior frame shows RED leather seats."
+  },
+  "honda-accord-2016": {
+   "id": 27,
+   "slug": "honda-accord-2016",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Honda",
+    "model": "Accord",
+    "year": 2016,
+    "bodyType": "Sedan",
+    "trim": "Not verified",
+    "exteriorColour": "White",
+    "interiorColour": "Beige",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "2.4L four-cylinder",
+    "fuel": "Petrol",
+    "transmission": "CVT",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "White exterior",
+     "2016 model year confirmed by windscreen sticker",
+     "Sunroof fitted"
+    ],
+    "listing": [
+     "Alloy wheels",
+     "Reverse camera",
+     "Bluetooth",
+     "Cruise control"
+    ],
+    "safety": [
+     "Multi-angle rear camera",
+     "Vehicle stability assist"
+    ],
+    "interiorEquipment": [
+     "2016 model year confirmed by windscreen sticker",
+     "Sunroof fitted"
+    ],
+    "comfortEquipment": [
+     "Sunroof fitted"
+    ],
+    "technology": [
+     "2016 model year confirmed by windscreen sticker"
+    ]
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Honda Accord — exterior, interior and rear cabin"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": 13900,
+    "currency": "USD",
+    "estimatedRange": "From about $1,500",
+    "basis": "Original MSRP for a 2016 Accord was $22,205-$34,680. Used examples start from roughly $1,500; a clean, low-mileage car with the EX-L trim sits well above that.",
+    "source": "CarHP / dealer listings",
+    "confidence": "low",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 1400,
+    "recommendedNote": "Calculated from the published market band, then adjusted: -8% for sourced footage (physical presence unconfirmed). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "derived",
+    "bandLabel": "Derived band (manufacturer price + observed dealer listings)",
+    "pricePosition": "above"
+   },
+   "mediaNotice": "Footage for this vehicle was supplied by another dealership or source; physical availability must be confirmed.",
+   "disclosures": [
+    "Third-party dealer branding (APEX MOTORS) visible - sourced footage. Confirm physical availability before publishing."
+   ],
+   "description": "Reliable Honda Accord sedan in white with a spacious interior and economical petrol engine. A practical, low-cost daily driver.",
+   "verifiedFacts": "White Honda Accord sedan on a gravel forecourt with a dealership sign reading 'APEX MOTORS 501-521-4479'; windscreen stickers read '$13900' and '2016'; alloy wheels, chrome grille, sunroof visible from above."
+  },
+  "chevrolet-silverado-1500-2021": {
+   "id": 28,
+   "slug": "chevrolet-silverado-1500-2021",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Chevrolet",
+    "model": "Silverado 1500",
+    "year": 2021,
+    "bodyType": "Pickup",
+    "trim": "Not verified",
+    "exteriorColour": "Red",
+    "interiorColour": "Black",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "5.3L V8",
+    "fuel": "Petrol",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Red exterior",
+     "Crew cab",
+     "Black interior",
+     "Tow mirrors"
+    ],
+    "listing": [
+     "Lifted suspension",
+     "All-terrain tyres",
+     "Crew cab",
+     "Tow package"
+    ],
+    "safety": [
+     "Rear camera",
+     "Traction control",
+     "Stability control"
+    ],
+    "interiorEquipment": [
+     "Black interior"
+    ],
+    "comfortEquipment": [],
+    "technology": []
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Chevrolet Silverado 1500 — front, side and wheel detail"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": 14800,
+    "currency": "USD",
+    "estimatedRange": "$29,300 - $64,195",
+    "basis": "Published price band for a 2021 Silverado 1500 across trims (MSRP $29,300-$64,195). A lifted example with aftermarket wheels typically commands a premium, partly offset by the modification.",
+    "source": "CarHP",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 45300,
+    "recommendedNote": "Calculated from the published market band, then adjusted: -3% for aftermarket modifications reducing originality. This is a recommendation for your approval, not an agreed price.",
+    "bandType": "published",
+    "bandLabel": "Published market band",
+    "pricePosition": "below"
+   },
+   "mediaNotice": "",
+   "disclosures": [
+    "Modified from stock: lift, wide-arch extensions and off-road tyres - declare this in the listing."
+   ],
+   "description": "Red Chevrolet Silverado 1500 crew cab with a lifted stance and all-terrain tyres. Ready for work or weekend adventure.",
+   "verifiedFacts": "Red Chevrolet Silverado 1500 in a dealership lot: Raptor-style grille, bonnet scoop, riveted wide-arch extensions, large off-road tyres and aftermarket wheels. Interior frame shows black seats and a centre console with cup holders."
+  },
+  "honda-civic-2019": {
+   "id": 29,
+   "slug": "honda-civic-2019",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Honda",
+    "model": "Civic",
+    "year": 2019,
+    "bodyType": "Sedan",
+    "trim": "Not verified",
+    "exteriorColour": "Black",
+    "interiorColour": "Black",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "2.0L four-cylinder",
+    "fuel": "Petrol",
+    "transmission": "CVT",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Black exterior",
+     "C-shaped LED tail lamps",
+     "Boot-lip spoiler",
+     "Twin exhaust finishers"
+    ],
+    "listing": [
+     "Alloy wheels",
+     "Reverse camera",
+     "Bluetooth",
+     "Air conditioning"
+    ],
+    "safety": [
+     "Rear camera",
+     "Stability assist"
+    ],
+    "interiorEquipment": [],
+    "comfortEquipment": [],
+    "technology": [
+     "C-shaped LED tail lamps"
+    ]
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Honda Civic — exterior front, rear and rear seats"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": 3500,
+    "currency": "USD",
+    "estimatedRange": "$16,190 - $21,520",
+    "basis": "Published used price band for a 2019 Civic; original MSRP was $20,505-$28,355 across trims.",
+    "source": "CarHP",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 18900,
+    "recommendedNote": "Calculated from the published market band (no adjustment applied). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "published",
+    "bandLabel": "Published market band",
+    "pricePosition": "below"
+   },
+   "mediaNotice": "",
+   "disclosures": [
+    "The boot badge reads 'ACCORD' in the footage. Reconcile the Civic/Accord model designation before publishing."
+   ],
+   "description": "Black Honda Civic sedan with efficient petrol power and a practical cabin. A dependable, economical compact car.",
+   "verifiedFacts": "Black Honda sedan at dusk on a dealership lot: C-shaped LED tail lamps, a small boot-lip spoiler, twin exhaust finishers and a chrome window surround."
+  },
+  "toyota-corolla-2006": {
+   "id": 30,
+   "slug": "toyota-corolla-2006",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Toyota",
+    "model": "Corolla",
+    "year": 2006,
+    "bodyType": "Sedan",
+    "trim": "Not verified",
+    "exteriorColour": "Silver",
+    "interiorColour": "Grey",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "1.8L four-cylinder",
+    "fuel": "Petrol",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Silver exterior",
+     "Four-door sedan",
+     "Boot-lip spoiler"
+    ],
+    "listing": [
+     "Reliable economy sedan",
+     "Air conditioning",
+     "CD player",
+     "Alloy wheels"
+    ],
+    "safety": [
+     "Dual airbags",
+     "ABS"
+    ],
+    "interiorEquipment": [],
+    "comfortEquipment": [],
+    "technology": []
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Toyota Corolla — exterior and interior walk-around"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": 1500,
+    "currency": "USD",
+    "estimatedRange": "$3,500 - $9,000",
+    "basis": "Original MSRP for the 2006 Corolla sedan was around $14,105. Used examples typically transact between $3,500 and $9,000 depending on mileage and condition.",
+    "source": "CarBuzz MSRP / dealer listings",
+    "confidence": "low",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 6300,
+    "recommendedNote": "Calculated from the published market band (no adjustment applied). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "derived",
+    "bandLabel": "Derived band (manufacturer price + observed dealer listings)",
+    "pricePosition": "below"
+   },
+   "mediaNotice": "",
+   "disclosures": [],
+   "description": "Silver Toyota Corolla — the benchmark for dependable, economical family transport, presented from every angle including the boot and rear cabin.",
+   "verifiedFacts": "Silver Toyota Corolla sedan in a used-car lot with dealer signage: four-door body, small boot-lip spoiler, wheel covers or alloys, body style consistent with the 2003-2008 (E120) Corolla."
+  },
+  "ford-f-150-2022": {
+   "id": 31,
+   "slug": "ford-f-150-2022",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Ford",
+    "model": "F-150",
+    "year": 2022,
+    "bodyType": "Pickup",
+    "trim": "Not verified",
+    "exteriorColour": "Red",
+    "interiorColour": "Black",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "3.5L EcoBoost V6",
+    "fuel": "Petrol",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Red exterior",
+     "Crew cab",
+     "Black interior with centre console"
+    ],
+    "listing": [
+     "Crew cab",
+     "All-terrain package",
+     "Touchscreen infotainment",
+     "Tow package"
+    ],
+    "safety": [
+     "Rear camera",
+     "Pre-collision assist",
+     "Trailer sway control"
+    ],
+    "interiorEquipment": [
+     "Black interior with centre console"
+    ],
+    "comfortEquipment": [],
+    "technology": []
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Ford F-150 — exterior and interior walk-around"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": 12000,
+    "currency": "USD",
+    "estimatedRange": "$38,810 - $62,970",
+    "basis": "Published price band for a 2022 F-150; original MSRP $29,640-$39,175 across trims. Lifted aftermarket packages are common on this model and typically add value while reducing resale appeal to some buyers.",
+    "source": "CarHP / CarBuzz",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 49400,
+    "recommendedNote": "Calculated from the published market band, then adjusted: -3% for aftermarket modifications reducing originality. This is a recommendation for your approval, not an agreed price.",
+    "bandType": "published",
+    "bandLabel": "Published market band",
+    "pricePosition": "below"
+   },
+   "mediaNotice": "",
+   "disclosures": [
+    "Modified from stock: lift, aftermarket wheels and riveted arch flares - declare this in the listing."
+   ],
+   "description": "Red Ford F-150 crew cab with an off-road-inspired stance, large wheels and a modern interior. America's best-selling pickup, ready to work.",
+   "verifiedFacts": "Red Ford F-150 crew cab in a dealer lot: raised ride height, aftermarket black wheels with off-road tyres, riveted wide-arch flares; the presenter points out the arch and tyre package."
+  },
+  "ford-f-250-super-duty-2019": {
+   "id": 32,
+   "slug": "ford-f-250-super-duty-2019",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Ford",
+    "model": "F-250 Super Duty",
+    "year": 2019,
+    "bodyType": "Pickup",
+    "trim": "Not verified",
+    "exteriorColour": "White / Champagne",
+    "interiorColour": "Black leather",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "6.7L Power Stroke diesel",
+    "fuel": "Diesel",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "White/champagne two-tone exterior",
+     "FX4 Off Road package",
+     "Power Stroke diesel badge",
+     "Crew cab",
+     "Dual exhaust"
+    ],
+    "listing": [
+     "Lifted suspension",
+     "Large alloy wheels",
+     "Crew cab",
+     "Diesel V8"
+    ],
+    "safety": [
+     "Rear camera",
+     "Trailer sway control",
+     "Traction control"
+    ],
+    "interiorEquipment": [],
+    "comfortEquipment": [],
+    "technology": [
+     "White/champagne two-tone exterior"
+    ]
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Ford F-250 Super Duty — sunset walk-around"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": null,
+    "currency": "USD",
+    "estimatedRange": "$45,000 - $85,000",
+    "basis": "Original MSRP ranged from $33,150 (base XL) to $56,910 (King Ranch) and $63,335 (Platinum). Used examples trade according to trim, mileage and lift package.",
+    "source": "CarBuzz MSRP / dealer listings",
+    "confidence": "low",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 63100,
+    "recommendedNote": "Calculated from the published market band, then adjusted: -3% for aftermarket modifications reducing originality. This is a recommendation for your approval, not an agreed price.",
+    "bandType": "derived",
+    "bandLabel": "Derived band (manufacturer price + observed dealer listings)"
+   },
+   "mediaNotice": "",
+   "disclosures": [
+    "Modified from stock: lifted suspension with aftermarket wheels and tyres."
+   ],
+   "description": "Heavy-duty Ford F-250 Super Duty with a lifted suspension and premium wheels, filmed at sunset by the water. Serious towing capability in a luxurious package.",
+   "verifiedFacts": "Two-tone white and champagne Ford F-250 Super Duty crew cab outdoors: FX4 OFF ROAD badge, F-250 and POWER STROKE (diesel) badging, raised suspension with aftermarket wheels and off-road tyres, dual exhaust."
+  },
+  "tesla-model-3-2021": {
+   "id": 33,
+   "slug": "tesla-model-3-2021",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Tesla",
+    "model": "Model 3",
+    "year": 2021,
+    "bodyType": "Sedan",
+    "trim": "Not verified",
+    "exteriorColour": "Pearl White",
+    "interiorColour": "Black",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "Electric motor",
+    "fuel": "Electric",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "White exterior",
+     "Standard bodywork"
+    ],
+    "listing": [
+     "Autopilot",
+     "Glass roof",
+     "Fast charging",
+     "Minimalist interior"
+    ],
+    "safety": [
+     "Automatic emergency braking",
+     "Lane departure avoidance",
+     "360-degree cameras"
+    ],
+    "interiorEquipment": [],
+    "comfortEquipment": [],
+    "technology": []
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Tesla Model 3 — exterior walk-around"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": null,
+    "currency": "USD",
+    "estimatedRange": "$24,000 - $38,000",
+    "basis": "Original MSRP was $44,990, and a 2021 Model 3 sedan with typical options came to just under $47,000 new. Used prices have fallen from new-car levels as the model aged.",
+    "source": "CarBuzz MSRP / dealer listings",
+    "confidence": "low",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 31000,
+    "recommendedNote": "Calculated from the published market band (no adjustment applied). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "derived",
+    "bandLabel": "Derived band (manufacturer price + observed dealer listings)"
+   },
+   "mediaNotice": "",
+   "disclosures": [],
+   "description": "White Tesla Model 3 with Autopilot, a minimalist cabin and access to the Tesla Supercharger network. Clean, quiet and quick.",
+   "verifiedFacts": "White Tesla Model 3 photographed from the front on a parking apron beside an industrial building, other vehicles nearby. No aftermarket modifications visible."
+  },
+  "mercedes-amg-gle-53-coupe-2022": {
+   "id": 34,
+   "slug": "mercedes-amg-gle-53-coupe-2022",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Mercedes-AMG",
+    "model": "GLE 53 Coupe",
+    "year": 2022,
+    "bodyType": "SUV",
+    "trim": "Not verified",
+    "exteriorColour": "Polar White",
+    "interiorColour": "Black / Red",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "3.0L inline-six turbo + EQ Boost",
+    "fuel": "Petrol",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "White exterior",
+     "V8 Biturbo 4MATIC+ badge",
+     "AMG wheels with red calipers",
+     "Running boards",
+     "Red leather interior",
+     "Blue ambient lighting",
+     "Dual-screen MBUX cockpit"
+    ],
+    "listing": [
+     "AMG 3.0L inline-six",
+     "All-wheel drive",
+     "AMG styling",
+     "Panoramic roof"
+    ],
+    "safety": [
+     "Active brake assist",
+     "Blind-spot assist",
+     "Lane keeping assist"
+    ],
+    "interiorEquipment": [
+     "Red leather interior",
+     "Blue ambient lighting",
+     "Dual-screen MBUX cockpit"
+    ],
+    "comfortEquipment": [
+     "Blue ambient lighting"
+    ],
+    "technology": [
+     "Dual-screen MBUX cockpit"
+    ]
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Mercedes-AMG GLE 53 Coupe — exterior and cabin"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": null,
+    "currency": "USD",
+    "estimatedRange": "$76,500 - $90,940",
+    "basis": "Published MSRP for the 2021 Mercedes-AMG GLE 53 Coupe is $76,500-$77,550, and a typical build came to about $90,940 including the $1,050 destination fee.",
+    "source": "CarBuzz / CarHP",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 83700,
+    "recommendedNote": "Calculated from the published market band (no adjustment applied). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "msrp",
+    "bandLabel": "Manufacturer price reference (not a used-market band)"
+   },
+   "mediaNotice": "",
+   "disclosures": [
+    "The listing body type says SUV; this car is the GLE 53 COUPE - correct the body type."
+   ],
+   "description": "White Mercedes-AMG GLE 53 Coupe with AMG styling, a turbocharged inline-six and a technology-rich cabin. A practical SUV with genuine performance.",
+   "verifiedFacts": "White Mercedes-AMG GLE 53 Coupe in a showroom: V8 BITURBO fender badge, AMG wheels with red brake calipers, running boards. Interior frame: dual MBUX screens, blue ambient lighting and red leather."
+  },
+  "ford-ranger-raptor-2023": {
+   "id": 35,
+   "slug": "ford-ranger-raptor-2023",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Ford",
+    "model": "Ranger Raptor",
+    "year": 2023,
+    "bodyType": "Pickup",
+    "trim": "Not verified",
+    "exteriorColour": "Code Orange",
+    "interiorColour": "Black",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "3.0L EcoBoost V6",
+    "fuel": "Petrol",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Raptor grille lettering confirmed",
+     "Crew cab",
+     "Off-road tyres and arches"
+    ],
+    "listing": [
+     "Off-road suspension",
+     "All-terrain tyres",
+     "Baja mode",
+     "Performance seats"
+    ],
+    "safety": [
+     "Terrain management",
+     "Rear camera",
+     "Trail control"
+    ],
+    "interiorEquipment": [],
+    "comfortEquipment": [],
+    "technology": []
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Ford Ranger Raptor — showroom and exterior walk-around"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": null,
+    "currency": "USD",
+    "estimatedRange": "$51,000 - $52,495",
+    "basis": "Published used price band for a Ranger Raptor; the 2024 model's MSRP is $55,470 and the base 2023 Ranger XL starts at $27,400.",
+    "source": "CarHP / CarBuzz",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 47600,
+    "recommendedNote": "Calculated from the published market band, then adjusted: -8% for sourced footage (physical presence unconfirmed). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "published",
+    "bandLabel": "Published market band"
+   },
+   "mediaNotice": "Footage for this vehicle was supplied by another dealership or source; physical availability must be confirmed.",
+   "disclosures": [
+    "The footage shows both a black and a red unit. The listing colour 'Code Orange' must be reconciled with the vehicle actually offered.",
+    "Filmed in South Africa ('GP' plate) - confirm provenance."
+   ],
+   "description": "Next-generation Ford Ranger Raptor in red, built for high-speed off-road work with long-travel suspension and aggressive bodywork. Shown in a large vehicle showroom.",
+   "verifiedFacts": "Inside a large warehouse/showroom: a black Ford Ranger Raptor is parked in the front row and a red Ranger Raptor (RAPTOR grille lettering, South African 'GP' registration) is filmed separately."
+  },
+  "ferrari-laferrari-2015": {
+   "id": 36,
+   "slug": "ferrari-laferrari-2015",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Ferrari",
+    "model": "LaFerrari",
+    "year": 2015,
+    "bodyType": "Coupe",
+    "trim": "Not verified",
+    "exteriorColour": "Rosso Corsa",
+    "interiorColour": "Black",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "6.3L V12 + electric motor",
+    "fuel": "Hybrid",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Ferrari showroom setting",
+     "LaFerrari design cues visible"
+    ],
+    "listing": [
+     "V12 hybrid hypercar",
+     "Carbon-fibre monocoque",
+     "Active aerodynamics",
+     "Limited production"
+    ],
+    "safety": [
+     "ABS with EBD",
+     "Traction control",
+     "Stability control"
+    ],
+    "interiorEquipment": [],
+    "comfortEquipment": [],
+    "technology": []
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Ferrari LaFerrari — hypercar collection walk-around"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": null,
+    "currency": "USD",
+    "estimatedRange": "$2,600,000 - $4,000,000",
+    "basis": "Original MSRP was $1,416,362. Collector hypercars of this type trade in the high millions with wide variation depending on specification, mileage and provenance; the exact figure must come from a specialist valuation.",
+    "source": "CarHP / CarBuzz MSRP",
+    "confidence": "low",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 3300000,
+    "recommendedNote": "Calculated from the published market band (no adjustment applied). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "derived",
+    "bandLabel": "Derived band (manufacturer price + observed dealer listings)"
+   },
+   "mediaNotice": "",
+   "disclosures": [
+    "Several cars appear in the footage - identify and confirm which is the unit being offered before publishing."
+   ],
+   "description": "Ferrari LaFerrari — the limited-production V12 hybrid hypercar. Captured among a private collection alongside its stablemates.",
+   "verifiedFacts": "Ferrari showroom with red accent lighting and a full display of Ferraris: a red LaFerrari (distinctive rear light bar and engine cover), a white LaFerrari, a dark-red front-engined Ferrari and a yellow Ferrari behind."
+  },
+  "lamborghini-revuelto-2024": {
+   "id": 37,
+   "slug": "lamborghini-revuelto-2024",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Lamborghini",
+    "model": "Revuelto",
+    "year": 2024,
+    "bodyType": "Coupe",
+    "trim": "Not verified",
+    "exteriorColour": "Arancio",
+    "interiorColour": "Black",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "6.5L V12 plug-in hybrid",
+    "fuel": "Hybrid",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Revuelto design cues confirmed",
+     "Orange unit present in the row"
+    ],
+    "listing": [
+     "V12 plug-in hybrid",
+     "All-wheel drive",
+     "Carbon-fibre body",
+     "Digital cockpit"
+    ],
+    "safety": [
+     "ABS with EBD",
+     "Traction control",
+     "Stability control"
+    ],
+    "interiorEquipment": [],
+    "comfortEquipment": [],
+    "technology": []
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Lamborghini Revuelto — line-up and exterior walk-around"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": null,
+    "currency": "USD",
+    "estimatedRange": "$604,363 - $750,000",
+    "basis": "Published US MSRP of $604,363 for the Revuelto, with higher-specification builds commonly quoted above $600,000.",
+    "source": "CarBuzz",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 677200,
+    "recommendedNote": "Calculated from the published market band (no adjustment applied). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "msrp",
+    "bandLabel": "Manufacturer price reference (not a used-market band)"
+   },
+   "mediaNotice": "",
+   "disclosures": [
+    "Multiple cars appear in the footage - identify and confirm which is the unit being offered before publishing."
+   ],
+   "description": "Lamborghini Revuelto — the V12 plug-in hybrid flagship, shown in a colourful Revuelto line-up. Brutal performance with electrified all-wheel drive.",
+   "verifiedFacts": "Outdoor Lamborghini forecourt under a canopy: a row of Revuelto coupes in several colours (purple/blue chameleon, green, white, black) with an orange Revuelto among them, plus Urus SUVs."
+  },
+  "rolls-royce-cullinan-2025": {
+   "id": 38,
+   "slug": "rolls-royce-cullinan-2025",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Rolls-Royce",
+    "model": "Cullinan",
+    "year": 2025,
+    "bodyType": "SUV",
+    "trim": "Not verified",
+    "exteriorColour": "Arctic White",
+    "interiorColour": "Lime / Black bespoke",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "6.75L V12",
+    "fuel": "Petrol",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "New (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "White exterior",
+     "Neon yellow/lime interior accents",
+     "Quilted leather",
+     "Digital instrument cluster"
+    ],
+    "listing": [
+     "6.75L V12",
+     "Bespoke interior",
+     "Starlight headliner",
+     "Rear lounge seats"
+    ],
+    "safety": [
+     "Night vision",
+     "Adaptive cruise control",
+     "360-degree camera"
+    ],
+    "interiorEquipment": [
+     "Neon yellow/lime interior accents",
+     "Quilted leather"
+    ],
+    "comfortEquipment": [],
+    "technology": [
+     "Digital instrument cluster"
+    ]
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "2025 Rolls-Royce Cullinan — exterior and bespoke cabin"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": 601000,
+    "currency": "USD",
+    "estimatedRange": "$407,750 - $601,000",
+    "basis": "Base MSRP $407,750 (about $390,000 depending on market). The specific build shown in the video carries an MSRP of $601,000.",
+    "source": "CarBuzz MSRP / video overlay",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 504400,
+    "recommendedNote": "Calculated from the published market band (no adjustment applied). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "msrp",
+    "bandLabel": "Manufacturer price reference (not a used-market band)",
+    "pricePosition": "in the upper half of"
+   },
+   "mediaNotice": "",
+   "disclosures": [],
+   "description": "2025 Rolls-Royce Cullinan with a bespoke lime-green and black interior. The ultimate luxury SUV, presented in showroom condition.",
+   "verifiedFacts": "White Rolls-Royce Cullinan outside a dealership with Bentley signage on the building behind: signature grille, split LED headlamps, Spirit of Ecstasy bonnet ornament. Interior frame: black quilted leather with NEON YELLOW/lime accents on the dashboard, door cards and seat inserts."
+  },
+  "ford-mustang-gt-2019": {
+   "id": 39,
+   "slug": "ford-mustang-gt-2019",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Ford",
+    "model": "Mustang GT",
+    "year": 2019,
+    "bodyType": "Coupe",
+    "trim": "Not verified",
+    "exteriorColour": "Black",
+    "interiorColour": "Black",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "5.0L Coyote V8",
+    "fuel": "Petrol",
+    "transmission": "Manual",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [],
+    "listing": [
+     "5.0L V8",
+     "Performance package",
+     "Sport seats",
+     "Launch control"
+    ],
+    "safety": [
+     "Rear camera",
+     "Stability control",
+     "Traction control"
+    ],
+    "interiorEquipment": [],
+    "comfortEquipment": [],
+    "technology": []
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Ford Mustang GT — night rear and exterior"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": null,
+    "currency": "USD",
+    "estimatedRange": "$25,000 - $48,000",
+    "basis": "Original MSRP $26,395-$31,410; published used price band $25,000-$48,000 across the 2019 Mustang range.",
+    "source": "CarHP / CarBuzz",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": null,
+    "recommendedNote": "No price can be recommended while the video on file does not match this vehicle.",
+    "bandType": "published",
+    "bandLabel": "Published market band"
+   },
+   "mediaNotice": "VIDEO DOES NOT MATCH THIS LISTING - do not publish until a vehicle-specific video is supplied.",
+   "disclosures": [
+    "MISMATCH - the video shows a Dodge Challenger with exhaust flames, not a Ford Mustang GT. A correct video must be supplied before this listing can be published as shown."
+   ],
+   "description": "Black Ford Mustang GT with the 5.0L V8, filmed at night with signature triple-bar tail lights. A modern American performance icon.",
+   "verifiedFacts": "At night a black DODGE CHALLENGER with halo LED headlamps, bonnet scoop and front splitter is filmed while flames shoot from the exhaust/bonnet area. The car is not a Ford Mustang."
+  },
+  "bugatti-chiron-super-sport-2020": {
+   "id": 40,
+   "slug": "bugatti-chiron-super-sport-2020",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Bugatti",
+    "model": "Chiron Super Sport",
+    "year": 2020,
+    "bodyType": "Coupe",
+    "trim": "Not verified",
+    "exteriorColour": "Blue / Orange carbon",
+    "interiorColour": "Black",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "8.0L quad-turbo W16",
+    "fuel": "Petrol",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [],
+    "listing": [
+     "8.0L quad-turbo W16",
+     "Carbon-fibre body",
+     "All-wheel drive",
+     "Top-speed package"
+    ],
+    "safety": [
+     "ABS",
+     "Traction control",
+     "Stability control"
+    ],
+    "interiorEquipment": [],
+    "comfortEquipment": [],
+    "technology": []
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Bugatti Chiron Super Sport — supercar showroom walk-around"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": null,
+    "currency": "USD",
+    "estimatedRange": "$6,000,080 - $8,500,080",
+    "basis": "Dealer listings for used Bugatti Chirons, including 2022 Chiron Super Sport examples, span $6,000,080 to $8,500,080. The standard Chiron launched at $2,990,000; the Super Sport 300+ is a limited, high-value variant priced far above it.",
+    "source": "Autotrader listings / CarBuzz MSRP",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": null,
+    "recommendedNote": "No price can be recommended while the video on file does not match this vehicle.",
+    "bandType": "published",
+    "bandLabel": "Published market band"
+   },
+   "mediaNotice": "VIDEO DOES NOT MATCH THIS LISTING - do not publish until a vehicle-specific video is supplied.",
+   "disclosures": [
+    "UNVERIFIABLE - generic showroom footage; the listed Bugatti Chiron Super Sport 300+ cannot be confirmed from the video. Supply a vehicle-specific video before publishing."
+   ],
+   "description": "Bugatti Chiron Super Sport in exposed blue and orange carbon, surrounded by other hypercars in a private showroom. A true collector piece.",
+   "verifiedFacts": "The footage is a general tour of a hypercar showroom: long rows of Ferraris, Lamborghinis, McLarens and other supercars in many colours under bright spotlights. No individual Bugatti Chiron Super Sport can be identified."
+  },
+  "bugatti-chiron-2020": {
+   "id": 41,
+   "slug": "bugatti-chiron-2020",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Bugatti",
+    "model": "Chiron",
+    "year": 2020,
+    "bodyType": "Coupe",
+    "trim": "Not verified",
+    "exteriorColour": "Silver",
+    "interiorColour": "Black",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "8.0L quad-turbo W16",
+    "fuel": "Petrol",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Silver exterior",
+     "Chiron body and grille confirmed"
+    ],
+    "listing": [
+     "8.0L quad-turbo W16",
+     "Carbon-fibre body",
+     "Luxury cabin",
+     "All-wheel drive"
+    ],
+    "safety": [
+     "ABS",
+     "Traction control",
+     "Stability control"
+    ],
+    "interiorEquipment": [],
+    "comfortEquipment": [],
+    "technology": []
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Bugatti Chiron — luxury showroom presentation"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": null,
+    "currency": "USD",
+    "estimatedRange": "$2,990,000 - $3,000,000",
+    "basis": "Published MSRP for the 2020 Bugatti Chiron: $2,990,000-$3,000,000 depending on trim, with used examples typically above list.",
+    "source": "CarBuzz / CarHP",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 2755400,
+    "recommendedNote": "Calculated from the published market band, then adjusted: -8% for sourced footage (physical presence unconfirmed). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "msrp",
+    "bandLabel": "Manufacturer price reference (not a used-market band)"
+   },
+   "mediaNotice": "Footage for this vehicle was supplied by another dealership or source; physical availability must be confirmed.",
+   "disclosures": [
+    "Third-party showroom branding (Nova Luxury Cars) visible - confirm provenance before publishing."
+   ],
+   "description": "Silver Bugatti Chiron displayed at Avon Luxury Cars alongside a LaFerrari. Unmatched engineering and presence.",
+   "verifiedFacts": "Silver Bugatti Chiron in a showroom with 'NOVA LUXURY CARS' lettering on the glass: front three-quarter and side views showing the horseshoe grille, C-line and the horseshoe motif. A red Ferrari is also filmed in the same showroom."
+  },
+  "byd-seal-2023": {
+   "id": 42,
+   "slug": "byd-seal-2023",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "BYD",
+    "model": "Seal",
+    "year": 2023,
+    "bodyType": "Sedan",
+    "trim": "Not verified",
+    "exteriorColour": "Black",
+    "interiorColour": "Red leather",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "Electric motor",
+    "fuel": "Electric",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Black exterior",
+     "SEAL badging",
+     "BYD-branded wheels",
+     "Red/black interior",
+     "Seat memory function",
+     "Premium audio speaker grille"
+    ],
+    "listing": [
+     "Blade battery",
+     "Red leather interior",
+     "Fast charging",
+     "Driver assistance"
+    ],
+    "safety": [
+     "Automatic emergency braking",
+     "Lane keep assist",
+     "Rear camera"
+    ],
+    "interiorEquipment": [
+     "Red/black interior",
+     "Seat memory function",
+     "Premium audio speaker grille"
+    ],
+    "comfortEquipment": [],
+    "technology": []
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "BYD Seal — exterior and red leather cabin"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": null,
+    "currency": "USD",
+    "estimatedRange": "Not verified - professional appraisal required",
+    "basis": "No verifiable published market range could be retrieved for this model during this research pass. BYD is a new entrant to the US market and 2023 Seal pricing varies by battery and drivetrain option.",
+    "source": "None obtained",
+    "confidence": "none",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": null,
+    "recommendedNote": "The published market band for this model could not be converted into a figure - please set the price manually.",
+    "bandType": "none",
+    "bandLabel": "No verified figure obtained"
+   },
+   "mediaNotice": "",
+   "disclosures": [],
+   "description": "BYD Seal electric sedan with the Blade battery and a striking red leather interior. Detailed exterior and cabin footage.",
+   "verifiedFacts": "Black BYD Seal from the rear: BYD emblem and SEAL lettering, black multi-spoke wheels with BYD centre caps and 255-section tyres. Interior frame: red-and-black door card, seat-memory buttons (1/2/3/M), window switches and a premium metal-mesh speaker grille."
+  },
+  "mercedes-benz-s-class-coupe-2019": {
+   "id": 43,
+   "slug": "mercedes-benz-s-class-coupe-2019",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Mercedes-Benz",
+    "model": "S-Class Coupe",
+    "year": 2019,
+    "bodyType": "Coupe",
+    "trim": "Not verified",
+    "exteriorColour": "Obsidian Black",
+    "interiorColour": "Red / Black leather",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "4.0L V8 biturbo",
+    "fuel": "Petrol",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Red/black leather interior",
+     "Twin-screen cockpit",
+     "Metal-mesh premium speakers",
+     "Rear seats with red inserts",
+     "Ambient lighting"
+    ],
+    "listing": [
+     "Red leather interior",
+     "Panoramic roof",
+     "Burmester audio",
+     "V8 engine"
+    ],
+    "safety": [
+     "Active brake assist",
+     "Blind-spot assist",
+     "Lane keeping assist"
+    ],
+    "interiorEquipment": [
+     "Red/black leather interior",
+     "Twin-screen cockpit",
+     "Metal-mesh premium speakers",
+     "Rear seats with red inserts",
+     "Ambient lighting"
+    ],
+    "comfortEquipment": [
+     "Ambient lighting"
+    ],
+    "technology": [
+     "Twin-screen cockpit"
+    ]
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Mercedes S-Class Coupe — interior and showroom exterior"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": null,
+    "currency": "USD",
+    "estimatedRange": "$75,195 - $97,295",
+    "basis": "Published used price band for the S-Class Coupe ($75,195-$97,295). Original MSRP was $91,250 for the base coupe, rising to $125,950 for higher trims.",
+    "source": "CarHP / CarBuzz",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 86200,
+    "recommendedNote": "Calculated from the published market band (no adjustment applied). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "published",
+    "bandLabel": "Published market band"
+   },
+   "mediaNotice": "",
+   "disclosures": [
+    "Exterior is not shown in the sampled frames - confirm the Obsidian Black paint and the body shape from the listing photo."
+   ],
+   "description": "Mercedes-Benz S-Class Coupe with a dramatic red and black leather cabin and the latest twin-screen infotainment. Luxury grand touring at its finest.",
+   "verifiedFacts": "Interior-focused footage of a Mercedes coupe: wide twin screens, illuminated turbine-style air vents, red-and-black leather seats, metal-mesh Burmester-style door speakers, rear bench with red inserts and ambient lighting."
+  },
+  "mercedes-amg-gle-53-coupe-2021": {
+   "id": 44,
+   "slug": "mercedes-amg-gle-53-coupe-2021",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Mercedes-AMG",
+    "model": "GLE 53 Coupe",
+    "year": 2021,
+    "bodyType": "SUV",
+    "trim": "Not verified",
+    "exteriorColour": "Selenite Grey",
+    "interiorColour": "Grey / Black leather",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "3.0L inline-six turbo + EQ Boost",
+    "fuel": "Petrol",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Selenite grey exterior",
+     "AMG Panamericana grille",
+     "GLE 53 badge",
+     "Quad exhaust",
+     "AMG interior with ambient lighting",
+     "Panoramic-style roof"
+    ],
+    "listing": [
+     "AMG 3.0L inline-six",
+     "All-wheel drive",
+     "AMG Night package",
+     "Panoramic roof"
+    ],
+    "safety": [
+     "Active brake assist",
+     "Blind-spot assist",
+     "Lane keeping assist"
+    ],
+    "interiorEquipment": [
+     "AMG interior with ambient lighting"
+    ],
+    "comfortEquipment": [
+     "AMG interior with ambient lighting",
+     "Panoramic-style roof"
+    ],
+    "technology": []
+   },
+   "media": {
+    "videos": 2,
+    "photos": 1,
+    "videoCaptions": [
+     "Mercedes-AMG GLE 53 Coupe — showroom walk-around",
+     "Mercedes-AMG GLE 53 Coupe — evening exterior and cabin"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": 18500,
+    "currency": "USD",
+    "estimatedRange": "$76,500 - $90,940",
+    "basis": "Published MSRP for the 2021 Mercedes-AMG GLE 53 Coupe is $76,500-$77,550, and a typical build came to about $90,940 including the $1,050 destination fee.",
+    "source": "CarBuzz / CarHP",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 83700,
+    "recommendedNote": "Calculated from the published market band (no adjustment applied). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "msrp",
+    "bandLabel": "Manufacturer price reference (not a used-market band)",
+    "pricePosition": "below"
+   },
+   "mediaNotice": "",
+   "disclosures": [
+    "The listing body type says SUV; this car is the GLE 53 COUPE - correct the body type."
+   ],
+   "description": "Grey Mercedes-AMG GLE 53 Coupe with quilted leather seats and AMG performance styling. Two films cover the showroom presentation and an evening drive.",
+   "verifiedFacts": "Video 1: selenite-grey Mercedes-AMG GLE 53 Coupe in a showroom, AMG Panamericana grille, AMG display plate, 'GLE 53' boot badge and four trapezoidal exhaust finishers. Video 2: MBUX cabin with blue/purple ambient lighting, black leather and Mercedes-Benz door sills, plus a rear three-quarter shot at sunset."
+  },
+  "mercedes-amg-gle-53-coupe-red-2021": {
+   "id": 45,
+   "slug": "mercedes-amg-gle-53-coupe-red-2021",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Mercedes-AMG",
+    "model": "GLE 53 Coupe",
+    "year": 2021,
+    "bodyType": "SUV",
+    "trim": "Not verified",
+    "exteriorColour": "Red",
+    "interiorColour": "Black",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "3.0L inline-six turbo + EQ Boost",
+    "fuel": "Petrol",
+    "transmission": "Automatic",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Red exterior",
+     "Black roof",
+     "AMG wheels",
+     "Bonnet vents"
+    ],
+    "listing": [
+     "AMG 3.0L inline-six",
+     "All-wheel drive",
+     "Sport exhaust",
+     "Red exterior"
+    ],
+    "safety": [
+     "Active brake assist",
+     "Blind-spot assist",
+     "Lane keeping assist"
+    ],
+    "interiorEquipment": [],
+    "comfortEquipment": [
+     "Black roof"
+    ],
+    "technology": []
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "Mercedes-AMG GLE 53 Coupe (red) — exterior walk-around"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": null,
+    "currency": "USD",
+    "estimatedRange": "$76,500 - $90,940",
+    "basis": "Published MSRP for the 2021 Mercedes-AMG GLE 53 Coupe is $76,500-$77,550, and a typical build came to about $90,940 including the $1,050 destination fee.",
+    "source": "CarBuzz / CarHP",
+    "confidence": "medium",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": 77000,
+    "recommendedNote": "Calculated from the published market band, then adjusted: -8% for sourced footage (physical presence unconfirmed). This is a recommendation for your approval, not an agreed price.",
+    "bandType": "msrp",
+    "bandLabel": "Manufacturer price reference (not a used-market band)"
+   },
+   "mediaNotice": "Footage for this vehicle was supplied by another dealership or source; physical availability must be confirmed.",
+   "disclosures": [
+    "The listing body type says SUV; this car is the GLE 53 COUPE - correct the body type.",
+    "No asking price is set for this vehicle and none appears in the footage - set a price before publishing.",
+    "Filmed in South Africa - confirm provenance."
+   ],
+   "description": "Red Mercedes-AMG GLE 53 Coupe with black AMG wheels and a sport exhaust. A bold colour for a genuinely fast luxury SUV.",
+   "verifiedFacts": "Red Mercedes-AMG GLE 53 Coupe outdoors with a black panoramic-style roof, black bonnet vents, black AMG wheels and tinted glass; a South African 'Central Custom' sign is visible in the background."
+  },
+  "plymouth-barracuda-1970": {
+   "id": 46,
+   "slug": "plymouth-barracuda-1970",
+   "status": "published",
+   "availability": "Available - in stock with DM Motor Group",
+   "verification": {
+    "level": "Video and listing photograph review",
+    "date": "2026-11-12",
+    "method": "Every published vehicle video was downloaded, sampled at 4-5 points across its duration, converted to still frames and visually reviewed frame by frame. Listing photos were also reviewed. Only facts visible on screen are recorded; anything not visible is written as 'Not verified'.",
+    "limitations": [
+     "Video review is not a mechanical inspection. No engine, chassis, service-history or OBD check was performed.",
+     "Several videos carry third-party dealer branding, meaning that footage was sourced rather than filmed at DM Motor Group. Those vehicles are marked 'sourced footage - physical presence unconfirmed'.",
+     "Mileage, VIN, engine number, registration year and accident history are not visible in the footage and are never inferred.",
+     "Colours are as they appear on screen under the lighting in the footage; paint codes are not verified."
+    ]
+   },
+   "basic": {
+    "make": "Plymouth",
+    "model": "Barracuda",
+    "year": 1970,
+    "bodyType": "Coupe",
+    "trim": "Not verified",
+    "exteriorColour": "Plum Crazy Purple",
+    "interiorColour": "Black",
+    "registrationYear": "Not verified",
+    "vin": "Not verified",
+    "engineNumber": "Not verified",
+    "drivetrain": "Not verified"
+   },
+   "engine": {
+    "capacity": "Not verified",
+    "type": "V8",
+    "fuel": "Petrol",
+    "transmission": "Manual",
+    "mileage": "Not verified",
+    "horsepower": "Not verified"
+   },
+   "condition": {
+    "overall": "Used (per listing)",
+    "exterior": "Presented in good order in the supplied footage; no structural damage visible.",
+    "interior": "Interior shown; upholstery and trim present as photographed. Detailed trim condition requires inspection.",
+    "engineBay": "Engine bay not shown in the supplied footage.",
+    "tyres": "Not verified",
+    "accidentHistory": "Not verified",
+    "mechanicalIssues": "None established from the footage. No mechanical inspection has been carried out.",
+    "bodywork": "No obvious crash damage or panel damage visible in the supplied footage."
+   },
+   "features": {
+    "confirmed": [
+     "Purple/plum exterior",
+     "Air cleaner marked 440 Four Barrel",
+     "Valve covers marked 440",
+     "MSD distributor and ignition leads",
+     "Chrome bumper and trim",
+     "Dual round headlamps"
+    ],
+    "listing": [
+     "V8 engine",
+     "Restored classic",
+     "Purple paint",
+     "Chrome trim"
+    ],
+    "safety": [],
+    "interiorEquipment": [],
+    "comfortEquipment": [],
+    "technology": [
+     "Dual round headlamps"
+    ]
+   },
+   "media": {
+    "videos": 1,
+    "photos": 1,
+    "videoCaptions": [
+     "1970 Plymouth Barracuda — exterior and engine bay"
+    ],
+    "note": "All photographs and videos attached to this listing belong to this vehicle record and play from the media library."
+   },
+   "market": {
+    "askingPrice": null,
+    "currency": "USD",
+    "estimatedRange": "Not verified - specialist classic-car appraisal required",
+    "basis": "No verified published range was obtained for this model in this research pass. 1970 Barracuda values swing enormously with engine, transmission, numbers-matching status, documentation and originality - and the footage for this car shows an aftermarket 440 air cleaner and MSD ignition rather than documented original equipment.",
+    "source": "None obtained",
+    "confidence": "none",
+    "note": "These are indicative US-market ranges for guidance only. The cars in this catalogue are filmed in several countries (US, South Africa) and are offered through an international brokerage, so shipping, taxes, duties and local registration can move the final price materially. No figure here is an offer, valuation or guarantee.",
+    "statement": "The figure above is our asking price. The estimated range is independent published market data for comparison only, and is not a valuation of this individual car.",
+    "recommendedAskingPrice": null,
+    "recommendedNote": "The published market band for this model could not be converted into a figure - please set the price manually.",
+    "bandType": "none",
+    "bandLabel": "No verified figure obtained"
+   },
+   "mediaNotice": "",
+   "disclosures": [
+    "The 440 Four Barrel air cleaner and MSD ignition are aftermarket parts visible on screen - they do not prove a numbers-matching 440 engine. Engine capacity, mileage and originality require physical verification."
+   ],
+   "description": "1970 Plymouth Barracuda in striking purple with the hood up, shown at an outdoor classic-car gathering. A rare and desirable muscle car.",
+   "verifiedFacts": "Purple/plum Plymouth Barracuda at an outdoor classic-car gathering with the bonnet raised: the air cleaner lid is marked '440 FOUR BARREL', the valve covers are stamped '440', and there is a red MSD distributor with red ignition leads. Chrome bumper, dual round headlamps, hood pins and a chrome-edged cowl vent."
+  }
+ }
+}

@@ -6,7 +6,8 @@
   "scripts": {
     "build": "node build.mjs",
     "deploy": "node build.mjs && npx wrangler pages deploy dist --project-name dm-motor-group --branch main",
-    "serve": "node server.js"
+    "serve": "node server.js",
+    "details": "node scripts/generate-details.mjs"
   },
   "engines": {
     "node": ">=22.5.0"
