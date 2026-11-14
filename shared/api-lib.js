@@ -369,6 +369,8 @@ async function mediaFor(env, vehicleIds) {
 function vehicleOut(v, media = []) {
   const images = media.filter((m) => m.type === 'image');
   const videos = media.filter((m) => m.type === 'video');
+  const vs = [...videos].sort((a, b) => (a.position || 0) - (b.position || 0) || (a.id || 0) - (b.id || 0));
+  const mainVideo = vs[0] || null;
   const cover = (v.cover_media_id && images.find((m) => m.id === v.cover_media_id)) || images[0] || null;
   return {
     id: v.id, slug: v.slug, status: v.status, brand: v.brand, model: v.model, year: v.year,
@@ -387,6 +389,10 @@ function vehicleOut(v, media = []) {
     cover: cover ? (cover.thumb_url || cover.url) : '',
     coverFull: cover ? cover.url : '',
     coverMediaId: v.cover_media_id || null,
+    /* the showroom is video-only: the first video in playback order is the
+     * vehicle's main media */
+    mainVideo: mainVideo ? mainVideo.url : '',
+    mainVideoCaption: mainVideo ? (mainVideo.caption || '') : '',
     photoCount: images.length, videoCount: videos.length,
   };
 }

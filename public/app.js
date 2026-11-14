@@ -52,7 +52,7 @@ function renderTray() {
   const list = cmpList(); const tray = $('#cmpTray');
   if (!list.length || window.innerWidth <= 860) { tray.hidden = true; return; } // mobile keeps bottom nav clean
   tray.hidden = false;
-  $('#cmpItems').innerHTML = list.map((x) => `<span style="position:relative"><img src="${esc(x.cover)}" alt=""><button class="rm" data-slug="${esc(x.slug)}" title="Remove">✕</button></span>`).join('');
+  $('#cmpItems').innerHTML = list.map((x) => `<span style="position:relative"><span class="cmp-tile">${esc((x.title || '').split(' ').slice(0, 2).join(' '))}</span><button class="rm" data-slug="${esc(x.slug)}" title="Remove">✕</button></span>`).join('');
   $('#cmpItems').onclick = (e) => {
     const slug = e.target.dataset && e.target.dataset.slug;
     if (slug) cmpSave(cmpList().filter((x) => x.slug !== slug));
@@ -78,16 +78,60 @@ function markNav() {
 }
 
 /* ---------------- vehicle card ---------------- */
+/* ---------------- video-only media ----------------
+ * The showroom shows real vehicle videos only: no static photographs, no
+ * image galleries, no slideshows. Previews load lazily and only start when
+ * they scroll into view, which keeps the page fast and the layout stable. */
+const VIDEO_UNAVAILABLE = 'Vehicle video currently unavailable';
+let __vidObserver = null;
+function vidPreview(url, { cls = '', label = '', autoplay = true } = {}) {
+  if (!url) return `<div class="vid-none">${VIDEO_UNAVAILABLE}</div>`;
+  return `<video class="vidprev ${cls}" src="${esc(url)}" muted playsinline loop preload="none"${autoplay ? ' data-autoplay="1"' : ''} disablepictureinpicture controlslist="nodownload noplaybackrate" aria-label="${esc(label || 'Vehicle video')}"></video>`;
+}
+function startPreview(v) {
+  if (!v || v.dataset.failed) return;
+  /* play() starts the download even with preload="none" - changing the preload
+   * attribute at runtime cancels the pending request, which is why the
+   * previews used to stay still. */
+  const p = v.play();
+  if (p && p.catch) p.catch(() => { /* autoplay may be refused - the user can press play */ });
+}
+function watchPreviews(root = document) {
+  const els = [...root.querySelectorAll('video[data-autoplay]')];
+  if (!els.length) return;
+  els.forEach((v) => {
+    if (v.dataset.bound) return;
+    v.dataset.bound = '1';
+    v.addEventListener('error', () => {
+      v.dataset.failed = '1';
+      const msg = document.createElement('div');
+      msg.className = 'vid-none';
+      msg.textContent = VIDEO_UNAVAILABLE;
+      if (v.parentElement) v.parentElement.appendChild(msg);
+      v.style.display = 'none';
+    });
+    if (!('IntersectionObserver' in window)) { startPreview(v); return; }
+    if (!__vidObserver) {
+      __vidObserver = new IntersectionObserver((entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) startPreview(e.target);
+          else { try { e.target.pause(); } catch (e2) { /* ignore */ } }
+        }
+      }, { threshold: 0.2, rootMargin: '150px' });
+    }
+    __vidObserver.observe(v);
+  });
+}
 function vCard(v, opts = {}) {
   const fav = state.favourites.has(v.id);
   const inCmp = cmpList().some((x) => x.slug === v.slug);
   const drives = v.status === 'reserved' ? `<span class="flag res">Reserved</span>` : v.status === 'sold' ? `<span class="flag sold">Sold</span>` : '';
   return `<article class="vcard reveal" data-vid="${v.id}">
-    <div class="ph">
+    <div class="ph vidph">
       ${drives || ''}
       ${v.isFeatured ? '<span class="flags"><span class="flag gold">★ Featured</span></span>' : '<span class="flags"></span>'}
       <a class="cover" href="/vehicles/${esc(v.slug)}" aria-label="${esc(v.brand + ' ' + v.model)}"></a>
-      <img src="${esc(v.cover || v.coverFull)}" alt="${esc(v.brand + ' ' + v.model + ' ' + v.year + ' for sale')}" loading="lazy" decoding="async" width="640" height="400">
+      ${vidPreview(v.mainVideo, { cls: 'cardvid', label: `${v.brand} ${v.model} ${v.year} video` })}
       <div class="acts">
         <button class="mini-btn ${fav ? 'on' : ''}" data-act="fav" title="Save to favourites">${fav ? '♥' : '♡'}</button>
         <button class="mini-btn ${inCmp ? 'on2' : ''}" data-act="cmp" title="Compare">⇄</button>
@@ -217,11 +261,11 @@ window.closeModal = () => { $('#modal').hidden = true; $('#modal').innerHTML = '
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeLightbox(); $('#searchOverlay').hidden = true; document.body.style.overflow = ''; } });
 
 /* ---------------- custom video player (full-length, adaptive seek, full controls) ---------------- */
-function videoPlayer(url, poster, { caption = '' } = {}) {
+function videoPlayer(url, poster, { caption = '', autoPlay = false, loop = false, muted = true, onEnded = null, onError = null } = {}) {
   const el = document.createElement('div');
   el.className = 'player paused';
   el.innerHTML = `
-    <video playsinline preload="metadata" ${poster ? `poster="${esc(poster)}"` : ''} src="${esc(url)}"></video>
+    <video playsinline preload="metadata" ${loop ? 'loop ' : ''} ${poster ? `poster="${esc(poster)}"` : ''} src="${esc(url)}"></video>
     <div class="voverlay"><button class="vbig" aria-label="Play">▶</button></div>
     <div class="vbar">
       <div class="seek"><div class="track"><div class="buf"></div><div class="prog"></div><div class="knob"></div></div></div>
@@ -238,6 +282,8 @@ function videoPlayer(url, poster, { caption = '' } = {}) {
   const v = el.querySelector('video');
   const [big, pv, seek, prog, knob, buf, tEl, mu, vol, fs] = ['.vbig', '.pv', '.seek', '.prog', '.knob', '.buf', '.vtime', '.mu', '.vol', '.fs'].map((s) => el.querySelector(s));
   const fmt = (t) => `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+  v.muted = muted;
+  mu.textContent = muted ? '🔇' : '🔊';
   const setUi = () => {
     el.classList.toggle('paused', v.paused);
     pv.textContent = v.paused ? '▶' : '❚❚'; big.textContent = v.paused ? '▶' : '';
@@ -248,9 +294,20 @@ function videoPlayer(url, poster, { caption = '' } = {}) {
     const tryBuf = v.buffered.length ? v.buffered.end(v.buffered.length - 1) : 0;
     buf.style.width = d ? (tryBuf / d * 100) + '%' : '0%';
   };
-  big.onclick = pv.onclick = () => { v.paused ? (v.muted = false, v.play()) : v.pause(); };
+  big.onclick = pv.onclick = () => { v.paused ? (v.play(), v.muted = false, mu.textContent = '🔊') : v.pause(); };
   v.onplay = v.onpause = v.ontimeupdate = v.onloadedmetadata = v.onprogress = setUi;
-  v.onended = () => { el.classList.add('paused'); setUi(); };
+  v.onended = () => {
+    el.classList.add('paused'); setUi();
+    if (onEnded) { try { onEnded(); } catch (e) { console.error(e); } }
+  };
+  v.onerror = () => {
+    el.classList.add('failed');
+    const msg = document.createElement('div');
+    msg.className = 'vid-none';
+    msg.textContent = VIDEO_UNAVAILABLE;
+    el.appendChild(msg);
+    if (onError) { try { onError(); } catch (e) { console.error(e); } }
+  };
   let scrub = (e) => {
     const r = seek.getBoundingClientRect(); const p = Math.min(Math.max((e.touches ? e.touches[0].clientX : e.clientX) - r.left, 0) / r.width, 1);
     if (v.duration) v.currentTime = v.duration * p;
@@ -262,13 +319,16 @@ function videoPlayer(url, poster, { caption = '' } = {}) {
   fs.onclick = () => { el.requestFullscreen ? el.requestFullscreen() : v.webkitEnterFullscreen && v.webkitEnterFullscreen(); };
   el.addEventListener('dblclick', () => fs.click());
   el.addEventListener('click', (e) => { if (!e.target.closest('.vbar') && !e.target.closest('.vbig')) big.click(); });
+  if (autoPlay) {
+    const p = v.play();
+    if (p && p.catch) p.catch(() => { /* the play button is there if autoplay is refused */ });
+  }
   return el;
 }
 function videoCard(video) {
-  const thumb = video.thumbUrl || '';
-  const ph = thumb ? `<img src="${esc(thumb)}" alt="${esc(video.title)} video thumbnail" loading="lazy">` : `<div class="vph">${esc(video.title)}</div>`;
   return `<div class="vidcard" data-vid="${video.id}" data-slug="${esc(video.slug)}">
-    ${ph}<div class="play"><i>▶</i></div><div class="cap">${esc(video.caption || video.title)}</div>
+    ${vidPreview(video.url, { cls: 'cardvid', label: `${video.title || 'Vehicle'} video` })}
+    <div class="play"><i>▶</i></div><div class="cap">${esc(video.caption || video.title)}</div>
   </div>`;
 }
 function playVideoModal(video) {
@@ -362,6 +422,7 @@ async function route(path, initial = false) {
     app.innerHTML = `<div class="empty" style="margin-top:40px"><b>Page not found</b>Check the address, or return to the showroom.<a class="btn btn-gold" href="/">Homepage</a></div>`;
   }
   hdrCount();
+  watchPreviews(app);
   if (!initial) history.pushState({}, '', path);
 }
 document.addEventListener('click', (e) => {
@@ -788,25 +849,15 @@ async function viewVehicle(m) {
     const v = await api(`/api/vehicles/${m[1]}`);
     title(`${v.brand} ${v.model} ${v.year} — DM Motor Group`);
     metaDesc(v.description ? v.description.slice(0, 180) : `View the ${v.brand} ${v.model} ${v.year} at DM Motor Group.`);
-    const images = (v.media || []).filter((x) => x.type === 'image');
     const videos = (v.media || []).filter((x) => x.type === 'video');
     const inCmp = cmpList().some((x) => x.slug === v.slug);
     const avail = v.status === 'published' ? ['Available now', ''] : v.status === 'reserved' ? ['Reserved — deposit under agreement', 'r'] : ['Sold — archived listing', 's'];
     app.innerHTML = `
     <div class="crumb"><a href="/">Home</a> → <a href="/vehicles">Showroom</a> → ${esc(v.brand)} ${esc(v.model)} ${v.year}</div>
     <div class="detail-top">
-      <div class="gallery" id="gallery">
-        <div class="gallery-main" id="galleryMain">
-          <img id="galleryImg" src="${esc((images[0] || {}).url || '')}" alt="${esc(v.brand + ' ' + v.model + ' ' + v.year + ' ' + ((images[0] || {}).caption || ''))}" width="1600" height="1000" fetchpriority="high">
-          <span class="gcount" id="gcount">1 / ${images.length + videos.length}${videos.length ? ' · includes ' + videos.length + ' video(s)' : ''}</span>
-          ${images.length + videos.length > 1 ? `<button class="lb-nav" style="left:12px" data-n="-1">‹</button><button class="lb-nav" style="right:12px" data-n="1">›</button>` : ''}
-        </div>
-        <div class="gthumbs" id="gthumbs">
-          ${[...images.map((x) => ({ ...x })), ...videos.map((x) => ({ ...x }))].map((x, i) => `
-            <button class="${i === 0 ? 'on' : ''}" data-i="${i}" title="${esc(x.caption)}">
-              <img src="${esc(x.thumbUrl || x.url)}" alt="" loading="lazy"><span class="tag">${esc(x.type === 'video' ? '▶ video' : (x.category || ''))}</span>
-            </button>`).join('')}
-        </div>
+      <div class="videoshow" id="videoshow">
+        <div class="videoMain" id="videoMain">${videos.length ? '' : `<div class="vid-none">${VIDEO_UNAVAILABLE}</div>`}</div>
+        ${videos.length > 1 ? `<div class="videoList" id="videoList">${videos.map((x, i) => `<button class="vchip${i === 0 ? ' on' : ''}" data-vi="${i}">▶ Video ${i + 1}${x.caption ? ' · ' + esc(x.caption) : ''}</button>`).join('')}</div>` : ''}
       </div>
       <div class="detail-info">
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
@@ -885,39 +936,33 @@ async function viewVehicle(m) {
       </div>
     </section>` : ''}
 
-    ${videos.length ? `<section class="section" id="vehicleVideos">${secHead('Video presentations', 'full-length · watch with sound')}
-      <div class="media-grid-vids">${videos.map((vid) => `
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div class="vidbox" data-vid-id="${vid.id}" data-vid-url="${esc(vid.url)}" data-vid-thumb="${esc(vid.thumbUrl || '')}" data-vid-cap="${esc(vid.caption)}" style="aspect-ratio:16/9"></div>
-        </div>`).join('')}</div>
-    </section>` : ''}
-
     ${v.similar?.length ? `<section class="section">${secHead('Similar vehicles you may like', '', '/vehicles?category=' + v.category)}
       <div class="grid">${v.similar.map((x) => vCard(x)).join('')}</div></section>` : ''}`;
 
-    /* gallery logic */
+    /* video playlist: the vehicle's videos are the only media on this page */
     cacheVehicles(v.similar || []);
-    const all = [...images.map((x) => ({ ...x })), ...videos.map((x) => ({ ...x }))];
-    let gi = 0;
-    const showImg = (i) => {
-      const it = all[i]; gi = (i + all.length) % all.length; const vi = gi % all.length;
-      const im = $('#galleryImg');
-      if (it.type === 'video') { $('#galleryMain .vidbox')?.remove(); im.style.display = 'none'; const box = document.createElement('div'); box.className = 'vidbox'; box.style.cssText = 'position:absolute;inset:0'; $('#galleryMain').insertBefore(box, im); box.appendChild(videoPlayer(it.url, it.thumbUrl || '', {})); }
-      else { $('#galleryMain .vidbox')?.remove(); im.style.display = ''; im.src = it.url; }
-      $$('#gthumbs button').forEach((b, j) => b.classList.toggle('on', j === gi));
-      $('#gcount').textContent = `${gi + 1} / ${all.length}${videos.length ? ' · includes ' + videos.length + ' video(s)' : ''}`;
+    const mountVideo = (i) => {
+      const vid = videos[i];
+      if (!vid) return;
+      const box = $('#videoMain');
+      if (!box) return;
+      box.innerHTML = '';
+      box.appendChild(videoPlayer(vid.url, '', {
+        caption: vid.caption || '',
+        autoPlay: true, muted: true, loop: videos.length === 1,
+        onEnded: () => {
+          if (i + 1 < videos.length) { mountVideo(i + 1); return; }
+          const vEl = box.querySelector('video');
+          if (vEl) { vEl.currentTime = 0; const p = vEl.play(); if (p && p.catch) p.catch(() => {}); }
+        },
+      }));
+      $$('#videoList .vchip').forEach((b, j) => b.classList.toggle('on', j === i));
     };
-    cacheMediaGalleries(all);
+    if (videos.length) mountVideo(0);
+    const vlist = $('#videoList');
+    if (vlist) vlist.onclick = (e) => { const b = e.target.closest('.vchip'); if (b) mountVideo(+b.dataset.vi); };
     bindCards(app);
     renderVehicleDetails(v.slug, v);
-    $('#gthumbs').onclick = (e) => { const b = e.target.closest('button'); if (b) showImg(+b.dataset.i); };
-    $$('#galleryMain .lb-nav').forEach((b) => b.onclick = () => showImg(gi + Number(b.dataset.n)));
-    $('#galleryMain').onclick = (e) => {
-      if (e.target.closest('.vidbox') || e.target.closest('.lb-nav')) return;
-      const it = all[gi];
-      if (it.type === 'video') return;
-      openLightbox(all.filter((x) => x.type === 'image').map((x) => ({ ...x })), all.filter((x) => x.type === 'image').indexOf(it));
-    };
     /* CTAs */
     $$('#app [data-enq]').forEach((b) => b.onclick = () => enquiryModal({ vehicleId: v.id, vehicleTitle: `${v.brand} ${v.model} ${v.year}`, type: b.dataset.enq }));
     $('#btnEnqMain') && ($('#btnEnqMain').onclick = () => enquiryModal({ vehicleId: v.id, vehicleTitle: `${v.brand} ${v.model} ${v.year}`, type: 'question' }));
@@ -930,11 +975,6 @@ async function viewVehicle(m) {
       try { if (navigator.share) await navigator.share({ title: text, text, url }); else { await navigator.clipboard.writeText(url); toast('Link copied — share it anywhere.'); } } catch {}
     };
     $('#copyVin') && ($('#copyVin').onclick = async () => { await navigator.clipboard.writeText(v.vin); toast('VIN copied.'); });
-    /* rendered video boxes inside detail */
-    $$('#app .vidbox[data-vid-id]').forEach((box) => {
-      box.appendChild(videoPlayer(box.dataset.vidUrl, box.dataset.vidThumb, { caption: box.dataset.vidCap }));
-      box.style.cssText = 'position:relative;border-radius:14px;overflow:hidden';
-    });
     $$('.spec-2col').forEach((el) => {
       if (window.innerWidth < 760) { el.style.gridTemplateColumns = '1fr'; el.style.gap = '18px'; }
     });
@@ -965,6 +1005,7 @@ async function viewVideos() {
     cacheVehiclesFromVideos(r.items);
     grid.innerHTML = r.items.map(videoCard).join('');
     bindVidCards(grid); /* fresh cards need their click handlers re-attached */
+    watchPreviews(grid);
     window.scrollTo({ top: 0 });
   });
   bindVidCards(grid);
@@ -988,7 +1029,7 @@ function cmpTable(vs) {
   const row = (label, get, cls = '') => `<tr><th>${label}</th>${vs.map((v) => `<td class="${cls}">${get(v)}</td>`).join('')}</tr>`;
   const has = (v, f) => v.features?.includes(f) ? '<span class="feat-check">✓</span>' : '<span class="feat-none">—</span>';
   return `<div class="cmp-table-wrap"><table class="cmp">
-    <thead><tr><th></th>${vs.map((v) => `<th><div class="cmp-hero"><img src="${esc(v.cover)}" alt=""><b><a href="/vehicles/${esc(v.slug)}" style="color:var(--gold2)">${esc(v.brand)} ${esc(v.model)}</a></b><span style="color:var(--ink-faint);font-size:13px">${v.year} · ${esc(v.bodyType || '')}</span><button class="btn btn-ghost sm rm-cmp" data-slug="${esc(v.slug)}">Remove</button></div></th>`).join('')}</tr></thead>
+    <thead><tr><th></th>${vs.map((v) => `<th><div class="cmp-hero"><span class="cmp-tile">${esc(v.brand + ' ' + v.model)}</span><b><a href="/vehicles/${esc(v.slug)}" style="color:var(--gold2)">${esc(v.brand)} ${esc(v.model)}</a></b><span style="color:var(--ink-faint);font-size:13px">${v.year} · ${esc(v.bodyType || '')}</span><button class="btn btn-ghost sm rm-cmp" data-slug="${esc(v.slug)}">Remove</button></div></th>`).join('')}</tr></thead>
     <tbody>
       ${row('Selling price', (v) => `<b class="price">${priceText(v.price, v.currency)}</b>`)}
       ${row('Year', (v) => v.year)}
@@ -1208,7 +1249,7 @@ window.addEventListener('pageshow', () => {});
   try { await getMeta(); } catch {}
   try { const h = await api('/api/home'); state.settings = h.settings || {}; applySettings(h); } catch {}
   await route(location.pathname + location.search, true);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=19').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=25').catch(() => {});
 })();
 /* Android app installation (Chrome "Add to Home screen" flow) */
 window.__pwaPrompt = null;
@@ -1217,8 +1258,11 @@ window.addEventListener('beforeinstallprompt', (e) => {
   if ($('.install-android')) return;
   const b = document.createElement('button');
   b.className = 'install-android';
-  b.innerHTML = '📲 Install the DM Motors Android app';
-  b.onclick = async () => { window.__pwaPrompt.prompt(); await window.__pwaPrompt.userChoice; b.remove(); };
+  b.innerHTML = '📲 Install the DM Motors Android app <span class="x" aria-hidden="true">✕</span>';
+  b.onclick = async (e) => {
+    if (e.target.classList.contains('x')) { b.remove(); return; }
+    window.__pwaPrompt.prompt(); await window.__pwaPrompt.userChoice; b.remove();
+  };
   document.body.appendChild(b);
-  setTimeout(() => b.remove(), 30000);
+  setTimeout(() => b.remove(), 15000);
 });

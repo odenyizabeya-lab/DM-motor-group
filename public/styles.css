@@ -205,8 +205,9 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:.2px}
 .empty .btn{margin-top:16px}
 
 /* vehicle detail */
-.detail-top{display:grid;grid-template-columns:1.55fr 1fr;gap:30px;align-items:start}
-@media(max-width:980px){.detail-top{grid-template-columns:1fr}}
+.detail-top{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:30px;align-items:start}
+.detail-top>*{min-width:0}
+@media(max-width:980px){.detail-top{grid-template-columns:minmax(0,1fr)}}
 .crumb{color:var(--ink-faint);font-size:13px;margin-bottom:14px;letter-spacing:.3px}
 .crumb a:hover{color:var(--gold2)}
 .gallery{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
@@ -226,8 +227,10 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:.2px}
 .avail{display:inline-flex;align-items:center;gap:7px;font-size:13px;padding:6px 12px;border-radius:99px;border:1px solid var(--line2);color:var(--ink-dim)}
 .avail i{width:8px;height:8px;border-radius:50%;background:var(--green);font-style:normal}
 .avail.r i{background:var(--gold)} .avail.s i{background:var(--red)}
-.cta-stack{display:grid;gap:10px;margin:22px 0}
-.cta-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cta-stack{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin:22px 0}
+.cta-stack .btn{white-space:normal;text-align:center}
+.cta-2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.cta-2 .btn{white-space:normal;text-align:center;min-width:0}
 .keyfacts{display:grid;grid-template-columns:1fr 1fr;gap:9px 16px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;margin-top:6px}
 .keyfacts div{font-size:13.5px;color:var(--ink-dim);display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--line);padding:5px 0}
 .keyfacts div:last-child,.keyfacts div:nth-last-child(2):nth-child(odd){border:0}
@@ -386,7 +389,15 @@ table.cmp td{text-align:left}
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .wa-float{position:fixed;right:22px;bottom:calc(24px + var(--safe-b));z-index:85;width:54px;height:54px;border-radius:50%;background:#22b358;display:grid;place-items:center;font-size:24px;box-shadow:0 12px 30px -8px rgba(0,0,0,.6);color:#fff}
 @media(max-width:860px){.wa-float{bottom:calc(90px + var(--safe-b));right:14px;width:48px;height:48px}}
-.install-android{position:fixed;left:50%;bottom:calc(78px + var(--safe-b));transform:translateX(-50%);z-index:96;background:linear-gradient(135deg,var(--gold),#b8913f);color:#171105;font-weight:600;font-size:14px;padding:13px 20px;border-radius:99px;box-shadow:var(--shadow);letter-spacing:.3px}
+.install-android{position:fixed;left:50%;bottom:calc(78px + var(--safe-b));transform:translateX(-50%);z-index:96;background:linear-gradient(135deg,var(--gold),#b8913f);color:#171105;font-weight:600;font-size:14px;padding:13px 20px;border-radius:99px;box-shadow:var(--shadow);letter-spacing:.3px;max-width:calc(100% - 24px);text-align:center;line-height:1.35}
+@media(max-width:520px){.install-android{font-size:12.5px;padding:10px 14px;bottom:calc(72px + var(--safe-b))}}
+#bottomNav a{min-width:0;flex:1 1 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#bottomNav{overflow:hidden}
+/* the document must never be wider than the screen: a fixed bar that cannot
+ * fit used to stretch the page and let it scroll sideways */
+html{overflow-x:hidden}
+@supports (overflow:clip){html{overflow-x:clip}}
+body{overflow-x:clip}
 
 /* ---------------- complete vehicle details form ---------------- */
 #detailsBody{margin-top:14px}
@@ -406,7 +417,8 @@ table.cmp td{text-align:left}
 .d-table td:first-child{color:var(--ink-faint);width:44%;white-space:normal}
 .chip{display:inline-block;background:rgba(61,157,107,.12);border:1px solid rgba(61,157,107,.4);color:#bfe7cf;border-radius:6px;padding:1px 9px;font-size:13px}
 .chip-nv{background:rgba(255,255,255,.03);border-color:var(--line2);color:var(--ink-faint);font-style:italic}
-.d-cols{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.d-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:26px}
+.d-cols>*{min-width:0}
 .d-cols ul{margin:0;padding-left:18px}
 .d-cols li{font-size:14px;color:var(--ink-dim);line-height:1.6;margin-bottom:4px}
 .d-muted{color:var(--ink-dim);font-size:13.5px;line-height:1.6;margin:10px 0 0}
@@ -431,8 +443,60 @@ table.cmp td{text-align:left}
 .d-disclose li{font-size:13.5px;color:var(--ink-dim);line-height:1.6;margin-bottom:5px}
 .d-cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
 .d-foot{font-size:12px;color:var(--ink-faint);line-height:1.65;border-top:1px solid var(--line);padding-top:14px;margin-top:4px}
-@media(max-width:860px){.d-meta,.d-cols,.d-price,.d-media{grid-template-columns:1fr}.d-table td:first-child{width:46%}.d-sec{padding:15px 14px}}
+@media(max-width:860px){.d-meta,.d-cols,.d-price,.d-media{grid-template-columns:minmax(0,1fr)}.d-table td:first-child{width:46%}.d-sec{padding:15px 14px}.spec-2col{grid-template-columns:minmax(0,1fr) !important;gap:22px !important}.keyfacts{grid-template-columns:minmax(0,1fr)}}
 .d-rec{margin-top:12px;background:rgba(201,164,92,.08);border:1px solid rgba(201,164,92,.35);border-radius:12px;padding:13px 16px}
 .d-rec span{display:block;font-size:11px;letter-spacing:.9px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px}
 .d-rec b{display:block;font-size:19px;color:var(--gold2)}
 .d-rec small{display:block;font-size:12.5px;color:var(--ink-dim);margin-top:6px;line-height:1.55}
+
+/* ======================================================================
+   VIDEO-ONLY SHOWROOM + STABLE LAYOUT
+   - no automatic zooming, scaling or bouncing
+   - no scroll-triggered movement (reveal animation removed)
+   - iOS: form fields are 16px so focusing one cannot zoom the page
+   - videos keep a fixed box so nothing shifts while they load or play
+   ====================================================================== */
+html{scroll-behavior:auto;-webkit-text-size-adjust:100%}
+body{overflow-x:hidden}
+input,select,textarea{font-size:16px}
+main#app{min-height:calc(100vh - 64px);min-height:calc(100dvh - 64px)}
+.reveal{animation:none;opacity:1;transform:none}
+
+video{display:block;max-width:100%;background:#000}
+.vidprev{width:100%;height:100%;object-fit:cover;background:#05070a}
+.vid-none{display:grid;place-items:center;width:100%;height:100%;min-height:120px;padding:18px;text-align:center;background:linear-gradient(135deg,#1b2027,#0b0d10);color:var(--ink-faint);font-size:13.5px;line-height:1.5}
+.vcard .ph > .vidprev{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.vcard .ph > .vid-none{position:absolute;inset:0}
+.vidcard .vidprev{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.vidcard .vid-none{position:absolute;inset:0}
+
+/* vehicle page: the video player replaces the old image gallery */
+.videoshow{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:4px}
+.videoMain{position:relative;background:#05070a;aspect-ratio:16/10.2;display:flex;align-items:center;justify-content:center}
+.videoMain .player{position:absolute;inset:0;width:100%;height:100%;max-height:none;border:0;border-radius:0}
+.videoMain .player video{width:100%;height:100%;max-height:none;object-fit:contain}
+.videoMain > .vid-none{position:absolute;inset:0}
+.videoList{display:flex;gap:8px;padding:12px;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--line)}
+.videoList::-webkit-scrollbar{display:none}
+.vchip{flex:none;max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:9px 14px;border-radius:99px;border:1px solid var(--line2);background:var(--panel2);color:var(--ink-dim);font-size:12.5px;cursor:pointer}
+.vchip:hover{border-color:var(--gold);color:var(--gold2)}
+.vchip.on{border-color:var(--gold);color:var(--gold2);background:rgba(201,164,92,.12)}
+
+/* comparison tiles carry no photograph */
+.cmp-tile{display:grid;place-items:center;min-height:72px;padding:10px;border-radius:10px;background:linear-gradient(135deg,#1b2027,#0b0d10);border:1px solid var(--line);color:var(--ink-dim);font-size:12.5px;text-align:center;line-height:1.4}
+
+/* no hover scaling anywhere */
+.vidcard:hover .play i{transform:none}
+.vcard:hover .ph .vidprev{transform:none}
+.hero{height:min(78dvh,660px)}
+
+.install-android .x{display:inline-block;margin-left:8px;padding:0 4px;border-radius:6px;background:rgba(0,0,0,.25);font-weight:700}
+@media(max-width:600px){
+  .videoMain{aspect-ratio:3/4}
+}
+@media(min-width:601px) and (max-width:980px){
+  .videoMain{aspect-ratio:16/10.2}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}

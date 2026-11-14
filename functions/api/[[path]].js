@@ -721,6 +721,19 @@ route('POST', '/api/admin/vehicles/:id/status', async ({ env, request, g, ctx })
   const u = await L.writeStaff(env, request);
   const b = await readJson(request);
   if (!L.VEHICLE_STATUSES.includes(b.status)) throw L.err(400, 'Invalid status.');
+  /* A vehicle cannot be published without a video that actually plays. */
+  if (b.status === 'published') {
+    const vids = await L.rest.get(env, 'media', { vehicle_id: `eq.${+g.id || 0}`, type: 'eq.video', select: 'id,url,caption' }, 'position.asc');
+    if (!vids || !vids.length) {
+      throw L.err(409, 'This vehicle cannot be published yet: it has no video. Upload a vehicle video first - the showroom is video-only.');
+    }
+    for (const vid of vids) {
+      const check = await probeVideo(vid.url);
+      if (!check.ok) {
+        throw L.err(409, `This vehicle cannot be published yet: the video "${vid.caption || 'video ' + vid.id}" is not playable (${check.reason}).`);
+      }
+    }
+  }
   const before = (await L.rest.get(env, 'vehicles', { id: `eq.${+g.id || 0}`, select: 'id,status' }).catch(() => []))[0];
   await L.rest.update(env, 'vehicles', { id: +g.id || 0 }, { status: b.status, updated_at: new Date().toISOString() }, true);
   if (ctx) ctx.waitUntil(L.logActivity(env, u.email, 'vehicle_status', `#${g.id} → ${b.status}`));
@@ -799,6 +812,94 @@ route('PUT', '/api/admin/upload', async ({ env, request, url, ctx }) => {
 
   if (ctx) ctx.waitUntil(L.logActivity(env, u.email, 'banner_uploaded', objectPath));
   return L.json({ ok: true, url: publicUrl });
+});
+
+/* ---------------------------------------------------------------------------
+ * Video playability probe.
+ * A vehicle may only be published when its video can actually be played: the
+ * file is fetched with a range request and its container signature checked.
+ * -------------------------------------------------------------------------- */
+async function probeVideo(url) {
+  if (!url || typeof url !== 'string') return { ok: false, reason: 'No video file is attached.' };
+  try {
+    const r = await fetch(url, { headers: { Range: 'bytes=0-1023' } });
+    const ct = (r.headers.get('content-type') || '').toLowerCase();
+    if (r.status !== 200 && r.status !== 206) {
+      return { ok: false, reason: `The video file could not be fetched (HTTP ${r.status}).` };
+    }
+    if (ct && !ct.startsWith('video/')) {
+      return { ok: false, reason: `The file is served as "${ct}" instead of a video.` };
+    }
+    const buf = new Uint8Array(await r.arrayBuffer());
+    const tag = buf.length > 8 ? String.fromCharCode(buf[4], buf[5], buf[6], buf[7]) : '';
+    if (tag !== 'ftyp') {
+      return { ok: false, reason: 'The file is not a valid MP4 / MOV video container.' };
+    }
+    return { ok: true, status: r.status, contentType: ct, bytes: buf.length };
+  } catch (e) {
+    return { ok: false, reason: 'The video file could not be reached.' };
+  }
+}
+
+route('GET', '/api/admin/media/:id/check', async ({ env, request, g }) => {
+  await L.staff(env, request);
+  const rows = await L.rest.get(env, 'media', { id: `eq.${+g.id || 0}`, select: '*' });
+  const row = rows && rows[0];
+  if (!row) throw L.err(404, 'Not found.');
+  if (row.type !== 'video') return L.json({ ok: false, reason: 'This file is not a video.' });
+  const res = await probeVideo(row.url);
+  return L.json({ ok: res.ok, reason: res.reason || '', status: res.status || 0, contentType: res.contentType || '' });
+});
+
+/* Set the video that plays first on the vehicle page. */
+route('POST', '/api/admin/media/:id/main', async ({ env, request, g, ctx }) => {
+  const u = await L.writeStaff(env, request);
+  const rows = await L.rest.get(env, 'media', { id: `eq.${+g.id || 0}`, select: '*' });
+  const row = rows && rows[0];
+  if (!row) throw L.err(404, 'Not found.');
+  if (row.type !== 'video') throw L.err(400, 'Only a video can be the main video.');
+  const vid = row.vehicle_id;
+  const sibs = await L.rest.get(env, 'media', { vehicle_id: `eq.${vid}`, type: 'eq.video', select: 'id,position' }, 'position.asc');
+  const ids = [row.id, ...(sibs || []).filter((m) => m.id !== row.id).map((m) => m.id)];
+  for (let i = 0; i < ids.length; i++) {
+    await L.rest.update(env, 'media', { id: ids[i] }, { position: i }, true);
+  }
+  await L.rest.update(env, 'vehicles', { id: vid }, { cover_media_id: row.id, cover: row.url, cover_full: row.url }, true);
+  if (ctx) ctx.waitUntil(L.logActivity(env, u.email, 'vehicle_main_video', `#${vid} media ${row.id}`));
+  return L.json({ ok: true, order: ids });
+});
+
+/* Replace the file of an existing video without losing its caption, order or
+ * place in the playlist. */
+route('PUT', '/api/admin/media/:id/file', async ({ env, request, url, g, ctx }) => {
+  const u = await L.writeStaff(env, request);
+  const rows = await L.rest.get(env, 'media', { id: `eq.${+g.id || 0}`, select: '*' });
+  const row = rows && rows[0];
+  if (!row) throw L.err(404, 'Not found.');
+  if (row.type !== 'video') throw L.err(400, 'Only a video file can be replaced here.');
+  const s = url.searchParams;
+  const origName = String(s.get('filename') || 'video.mp4');
+  const ext = (origName.toLowerCase().match(/\.([a-z0-9]+)$/i) || [])[1] || 'mp4';
+  if (!L.VID_EXT.includes(ext)) throw L.err(400, `Allowed video formats: ${L.VID_EXT.map((x) => '.' + x).join(', ')}`);
+  const MIME_BY_EXT = { mp4: 'video/mp4', webm: 'video/webm', m4v: 'video/x-m4v', mov: 'video/quicktime' };
+  const contentType = MIME_BY_EXT[ext] || 'application/octet-stream';
+  const limitRows = await L.rest.get(env, 'settings', { key: 'media_max_video_mb', select: 'key,value' }).catch(() => []);
+  const limitMb = Math.min(Math.max(Number((limitRows || [])[0] && limitRows[0].value) || 95, 1), 100);
+  const declaredSize = +(request.headers.get('content-length') || 0);
+  if (declaredSize > limitMb * 1024 * 1024) throw L.err(413, `Maximum ${limitMb} MB for video uploads.`);
+  const objectPath = `v${row.vehicle_id}/${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+  const publicUrl = await L.storageUpload(env, 'vehicle-media', objectPath, request.body, contentType, true);
+  const oldUrl = row.url;
+  await L.rest.update(env, 'media', { id: row.id }, { url: publicUrl, thumb_url: '' }, true);
+  if (row.cover_media_id === row.id || (await L.rest.get(env, 'vehicles', { id: `eq.${row.vehicle_id}`, select: 'cover_media_id' })).some((x) => x.cover_media_id === row.id)) {
+    await L.rest.update(env, 'vehicles', { id: row.vehicle_id }, { cover: publicUrl, cover_full: publicUrl }, true);
+  }
+  if (ctx) ctx.waitUntil(Promise.all([
+    L.storageDelete(env, [oldUrl]),
+    L.logActivity(env, u.email, 'video_replaced', `media ${row.id} (${Math.round(declaredSize / 104857.6) / 10}MB)`),
+  ]));
+  const check = await probeVideo(publicUrl);
+  return L.json({ ok: true, url: publicUrl, playable: check.ok, reason: check.reason || '' });
 });
 
 route('PUT', '/api/admin/media/:id/thumb', async ({ env, request, g }) => {

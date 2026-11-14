@@ -8,6 +8,7 @@ const pg = $('#pg');
 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const money = (n, c = 'USD') => `${c === 'USD' ? '$' : esc(c) + ' '}${Number(n || 0).toLocaleString()}`;
 let state = { user: null, vehicle: null, settings: {}, videoThumbs: {} };
+let pendingReplace = 0;   /* media id whose video file is being replaced */
 
 async function api(path, { method = 'GET', body, raw } = {}) {
   const headers = { 'X-Requested-With': 'DMAdmin' };
@@ -120,6 +121,7 @@ async function vehicles() {
         <td><span class="status ${v.status}">${v.status}</span></td>
         <td><button class="star-toggle ${v.isFeatured ? 'on' : ''}" data-a="feat" title="Feature on homepage">${v.isFeatured ? '★' : '☆'}</button></td>
         <td class="muted">${v.photoCount} p · ${v.videoCount} v</td>
+        <td class="muted">${v.videoCount ? '<span class="vstatus ok">video ready</span>' : '<span class="vstatus bad">NO VIDEO</span>'}</td>
         <td class="muted">${esc(v.updated_at)}</td>
         <td><div class="starrow">
           <button data-href="#/vehicles/${v.id}">Edit</button>
@@ -437,58 +439,99 @@ async function editorPage(id) {
 function mediaManager(v) {
   const imgs = (v.media || []).filter((m) => m.type === 'image');
   const vids = (v.media || []).filter((m) => m.type === 'video');
-  const item = (m, i, list) => `
-    <div class="mitem" data-id="${m.id}">
-      <div class="th" title="Click to preview">${m.type === 'image' ? `<img src="${esc(m.thumbUrl || m.url)}" alt="">` : `<img src="${esc(m.thumbUrl)}" alt=""><div class="vph" style="position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:26px">▶</div>`}
-        <span class="vtag">${m.type === 'video' ? 'VIDEO · full length' : esc(m.category)}</span><span class="ord">#${list.indexOf(m) + 1}</span>
-        ${v.coverMediaId === m.id ? '<span class="cover-flag">COVER PHOTO</span>' : ''}</div>
+  const sorted = [...vids, ...imgs].sort((a, b) => a.position - b.position);
+  const videoItem = (m, i) => `
+    <div class="mitem vitem" data-id="${m.id}" data-type="video">
+      <div class="th vth" title="Click to play this video">
+        <video src="${esc(m.url)}" muted playsinline loop preload="metadata" controlslist="nodownload noplaybackrate"></video>
+        <span class="vtag">VIDEO ${i === 0 ? '· MAIN' : '· ' + (i + 1)}</span>
+        <span class="ord">#${i + 1}</span>
+        <span class="vstatus" data-vstatus="${m.id}">checking…</span>
+      </div>
       <div class="mctrl">
         <input type="text" data-mid="${m.id}" data-mf="caption" value="${esc(m.caption)}" placeholder="Caption">
-        ${m.type === 'image' ? `<select data-mid="${m.id}" data-mf="category">${['exterior', 'interior', 'engine', 'dashboard', 'boot', 'wheel', 'damage'].map((c) => `<option ${m.category === c ? 'selected' : ''}>${c}</option>`).join('')}</select>` : ''}
         <div class="rowbtns">
           <button data-a="up" title="Move earlier">▲</button><button data-a="down" title="Move later">▼</button>
-          <button data-a="cover" title="Set as main cover">Cover</button><button data-a="del" class="del">✕</button>
+          <button data-a="main" title="Play this video first"${i === 0 ? ' disabled' : ''}>Main</button>
+          <button data-a="check" title="Check that this video plays">Test</button>
+          <button data-a="replace" title="Replace this video file">Replace</button>
+          <button data-a="del" class="del">✕</button>
         </div>
       </div>
     </div>`;
-  return `
-    <div class="dropzone" id="dzImg">📷 Click or drop photographs here (JPG/PNG/WebP — as many as you need)
-      <div class="muted">The first exterior photograph works best as the cover. Thumbnails are generated automatically.</div></div>
-    <div class="toolbar"><button class="btn btn-gold" id="pickImgsBtn">＋ Add photographs</button>
-      <button class="btn btn-ghost" id="pickVidBtn">🎬 Add full-length video (MP4/WebM — original file preserved complete)</button>
-      <span class="muted">${imgs.length} photographs · ${vids.length} videos</span></div>
-    <div class="media-grid" id="mgrid">
-      ${[...imgs, ...vids].sort((a, b) => a.position - b.position).map((m) => item(m, 0, [...imgs, ...vids])).join('')}
+  const imageItem = (m) => `
+    <div class="mitem archived" data-id="${m.id}" data-type="image">
+      <div class="th"><span class="vph">archived photo</span><span class="vtag">NOT SHOWN ON THE SITE</span></div>
+      <div class="mctrl"><div class="rowbtns"><button data-a="del" class="del">Delete</button></div></div>
     </div>`;
+  return `
+    <div class="toolbar"><button class="btn btn-gold" id="pickVidBtn">🎬 Upload vehicle video (MP4/WebM/MOV — full length, original quality)</button>
+      <input type="file" id="pickVidReplace" accept="video/*" hidden>
+      <span class="muted">${vids.length} video(s) · the first video is the one that plays on the vehicle page</span></div>
+    <div class="media-grid" id="mgrid">
+      ${vids.map((m, i) => videoItem(m, i)).join('')}
+      ${imgs.map((m) => imageItem(m)).join('')}
+    </div>
+    ${imgs.length ? `<div class="muted" style="margin-top:10px">${imgs.length} photograph(s) are kept in the media library but are no longer displayed anywhere on the site - the showroom is video-only. Delete them here if you no longer need them.</div>` : ''}`;
 }
 function bindMediaManager(v) {
   if (!v) return;
   const grid = $('#mgrid');
-  const refresh = async () => { const nv = await api(`/api/admin/vehicles/${v.id}`); state.vehicle = v = nv; grid.innerHTML = new DOMParser().parseFromString(mediaManager(nv), 'text/html').querySelector('#mgrid').innerHTML; wire(); };
-  const order = () => $$('#mgrid .mitem').map((el) => +el.dataset.id);
+  const refresh = async () => { const nv = await api(`/api/admin/vehicles/${v.id}`); state.vehicle = v = nv; grid.innerHTML = new DOMParser().parseFromString(mediaManager(nv), 'text/html').querySelector('#mgrid').innerHTML; wire(); checkAll(); };
+  const order = () => $$('#mgrid .mitem[data-type=video]').map((el) => +el.dataset.id);
+  /* every video is checked so the administrator can see whether it uploaded
+   * correctly and whether it actually plays */
+  const checkAll = async () => {
+    for (const el of $$('#mgrid .mitem[data-type=video]')) {
+      const id = el.dataset.id;
+      const badge = el.querySelector('[data-vstatus]');
+      if (!badge) continue;
+      badge.textContent = 'checking…';
+      try {
+        const r = await api(`/api/admin/media/${id}/check`);
+        badge.textContent = r.ok ? 'plays OK' : 'NOT PLAYABLE';
+        badge.className = 'vstatus ' + (r.ok ? 'ok' : 'bad');
+        badge.title = r.ok ? ('HTTP ' + r.status + ' ' + r.contentType) : r.reason;
+      } catch (e) {
+        badge.textContent = 'check failed';
+        badge.className = 'vstatus bad';
+      }
+    }
+  };
   const wire = () => {
     $$('#mgrid .mitem button').forEach((b) => b.onclick = async () => {
-      const id = +b.closest('.mitem').dataset.id; const a = b.dataset.a; const mid = state.vehicle.media.findIndex((m) => m.id === id);
+      const id = +b.closest('.mitem').dataset.id; const a = b.dataset.a;
       try {
         if (a === 'up' || a === 'down') {
           const ids = order(); const i = ids.indexOf(id); const j = a === 'up' ? i - 1 : i + 1;
           if (j < 0 || j >= ids.length) return;
           [ids[i], ids[j]] = [ids[j], ids[i]];
           await api(`/api/admin/vehicles/${v.id}/reorder`, { method: 'POST', body: { ids } });
+          toast('Playback order updated.');
           refresh();
         }
-        if (a === 'cover') { await api(`/api/admin/media/${id}/cover`, { method: 'POST' }); toast('Cover photograph updated — homepage and cards will use it.'); refresh(); }
+        if (a === 'main') { await api(`/api/admin/media/${id}/main`, { method: 'POST' }); toast('This video now plays first on the vehicle page.'); refresh(); }
+        if (a === 'check') {
+          const r = await api(`/api/admin/media/${id}/check`);
+          toast(r.ok ? `Video plays correctly (${r.contentType}).` : `Video problem: ${r.reason}`, !r.ok);
+        }
+        if (a === 'replace') { pendingReplace = id; $('#pickVidReplace').click(); return; }
         if (a === 'del' && confirm('Remove this media file permanently?')) { await api(`/api/admin/media/${id}`, { method: 'DELETE' }); toast('Removed.'); refresh(); }
       } catch (err) { toast(err.message, true); }
     });
     $$('#mgrid [data-mid]').forEach((el) => el.onchange = async () => {
       const body = { [el.dataset.mf]: el.value };
-      try { await api(`/api/admin/media/${el.dataset.mid}`, { method: 'PUT', body }); toast('Media details saved.'); } catch (err) { toast(err.message, true); }
+      try { await api(`/api/admin/media/${el.dataset.mid}`, { method: 'PUT', body }); toast('Caption saved.'); } catch (err) { toast(err.message, true); }
     });
-    const th = $('#mgrid .th img');
-    $$('#mgrid .th').forEach((t) => t.onclick = (e) => { if (e.target.closest('button')) return; const it = state.vehicle.media.find((m) => m.id === +t.closest('.mitem').dataset.id); window.open(it.url, '_blank'); });
+    /* click a video to play it in place */
+    $$('#mgrid .vth').forEach((t) => t.onclick = (e) => {
+      if (e.target.closest('button')) return;
+      const vid = t.querySelector('video'); if (!vid) return;
+      if (vid.paused) { vid.muted = true; vid.play().catch(() => {}); } else vid.pause();
+    });
   };
   wire();
+  checkAll();
   const uploadOne = async (file, type) => {
     const status = document.createElement('div');
     status.className = 'muted uploading'; status.textContent = `Uploading ${file.name} (${Math.round(file.size / 10485760) / 10} MB)…`;
@@ -508,13 +551,24 @@ function bindMediaManager(v) {
   };
   const startImgs = async (files) => { for (const f of files) await uploadOne(f, 'image'); };
   const startVid = async (file) => { await uploadOne(file, 'video'); };
-  $('#pickImgsBtn').onclick = () => $('#pickImgs').click();
-  $('#pickVidBtn').onclick = () => $('#pickVid').click();
-  $('#dzImg').onclick = () => $('#pickImgs').click();
-  $('#pickImgs').onchange = (e) => { startImgs([...e.target.files]); e.target.value = ''; };
-  $('#pickVid').onchange = (e) => { const f = e.target.files[0]; if (f) startVid(f); e.target.value = ''; };
+  $('#pickImgsBtn') && ($('#pickImgsBtn').onclick = () => $('#pickImgs').click());
+  $('#pickVidBtn') && ($('#pickVidBtn').onclick = () => $('#pickVid').click());
+  $('#pickImgs') && ($('#pickImgs').onchange = (e) => { startImgs([...e.target.files]); e.target.value = ''; });
+  $('#pickVid') && ($('#pickVid').onchange = (e) => { const f = e.target.files[0]; if (f) startVid(f); e.target.value = ''; });
   const dz = $('#dzImg');
-  ['dragover', 'dragleave', 'drop'].forEach((ev) => dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.toggle('drag', ev === 'dragover'); if (ev === 'drop') startImgs([...e.dataTransfer.files].filter((f) => f.type.startsWith('image/'))); }));
+  if (dz) ['dragover', 'dragleave', 'drop'].forEach((ev) => dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.toggle('drag', ev === 'dragover'); if (ev === 'drop') startImgs([...e.dataTransfer.files].filter((f) => f.type.startsWith('image/'))); }));
+  /* replacing the file of an existing video keeps its caption and position */
+  const rp = $('#pickVidReplace');
+  if (rp) rp.onchange = async (e) => {
+    const file = e.target.files[0]; e.target.value = '';
+    if (!file || !pendingReplace) return;
+    try {
+      const r = await api(`/api/admin/media/${pendingReplace}/file?filename=${encodeURIComponent(file.name)}`, { method: 'PUT', raw: { type: file.type || 'video/mp4', data: file } });
+      pendingReplace = 0;
+      toast(r.playable ? 'Video replaced and verified as playable.' : `Video replaced, but it did not verify: ${r.reason}`, !r.playable);
+      refresh();
+    } catch (err) { toast(err.message, true); }
+  };
 }
 function shrinkImage(file) {
   return new Promise((resolve, reject) => {
