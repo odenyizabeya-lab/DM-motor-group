@@ -1388,6 +1388,28 @@ function newReference() {
   return `DMG-${stamp}-${rand}`;
 }
 
+/* Payment emails. They never block a payment: if no provider key is
+ * configured the buyer still sees everything on screen and the staff still
+ * see it in the dashboard. */
+async function paymentEmail(env, to, subject, text) {
+  const recipient = String(to || '').trim();
+  if (!recipient || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)) return { sent: false, reason: 'no valid recipient' };
+  try {
+    const rendered = emailService.renderEmail({
+      businessName: 'DM Motor Group', teamName: 'Customer Relations Team', subject, text,
+    });
+    const sent = await emailService.sendEmail(env, L.rest, { to: recipient, subject, text, html: rendered.html });
+    return { sent: true, provider: sent && sent.provider };
+  } catch (e) {
+    return { sent: false, reason: String((e && e.message) || e).slice(0, 200) };
+  }
+}
+async function dealershipEmail(env) {
+  const rows = await L.rest.get(env, 'settings', { key: 'in.(email_sales,email)', select: 'key,value' }).catch(() => []);
+  for (const r of rows || []) if (r.value && /@/.test(r.value)) return r.value;
+  return '';
+}
+
 route('POST', '/api/payments', async ({ env, request, ip, ctx }) => {
   const b = await readJson(request);
   const vehicleId = +b.vehicleId || 0;
@@ -1438,6 +1460,20 @@ route('POST', '/api/payments', async ({ env, request, ip, ctx }) => {
     amount, currency, status: ORDER_STATUS_FOR_PAYMENT.awaiting_payment, notes,
   });
   if (ctx) ctx.waitUntil(L.logActivity(env, 'customer', 'payment_created', `${reference} - ${vehicle.brand} ${vehicle.model}`));
+  if (ctx) ctx.waitUntil(paymentEmail(env, email,
+    `Your bank transfer details for the ${vehicle.brand} ${vehicle.model}`,
+    `Dear ${name},\n\nThank you. Here are the bank transfer details for the ${vehicle.brand} ${vehicle.model} ${vehicle.year}.\n\n`
+    + `Amount to transfer: ${currency} ${amount.toLocaleString()}\n`
+    + `Bank: ${chosen.bankName}${chosen.branch ? ' - ' + chosen.branch : ''}\n`
+    + `Account name: ${chosen.accountName}\n`
+    + `Account number: ${chosen.accountNumber}\n`
+    + (chosen.iban ? `IBAN: ${chosen.iban}\n` : '')
+    + (chosen.swift ? `SWIFT / BIC: ${chosen.swift}\n` : '')
+    + `Your transaction reference: ${reference}\n\n`
+    + (chosen.instructions ? chosen.instructions + '\n\n' : '')
+    + `Please quote the reference with your transfer and upload the receipt on the vehicle page.\n\n`
+    + `We never confirm a payment automatically: our accounts team checks the money in our bank account and then confirms your order.\n\n`
+    + `Kind regards,\nDM Motor Group`));
   return L.json({
     ok: true, reference, id: row.id, amount, currency,
     account: publicBankAccount(chosen),
@@ -1481,6 +1517,24 @@ route('POST', '/api/payments/:id/receipt', async ({ env, request, g, url, ctx })
     notes: JSON.stringify({ payment: next }),
   }, true);
   if (ctx) ctx.waitUntil(L.logActivity(env, 'customer', 'payment_receipt_uploaded', pay.reference));
+  if (ctx) ctx.waitUntil((async () => {
+    const dealer = await dealershipEmail(env);
+    if (dealer) {
+      await paymentEmail(env, dealer,
+        `Payment receipt uploaded - ${pay.reference}`,
+        `A customer uploaded a transfer receipt for reference ${pay.reference}.\n\n`
+        + `Vehicle: ${row.vehicle_id}\nAmount expected: ${row.currency} ${Number(row.amount || 0).toLocaleString()}\n`
+        + `Customer: ${(pay.customer && pay.customer.name) || ''} ${(pay.customer && pay.customer.email) || ''}\n`
+        + `Bank account used: ${pay.bankName} ${pay.accountNumber}\n\n`
+        + `Please verify the money in the bank account and confirm or reject the payment in the admin dashboard.`);
+    }
+    await paymentEmail(env, pay.customer && pay.customer.email,
+      `We received your payment receipt - ${pay.reference}`,
+      `Dear ${(pay.customer && pay.customer.name) || 'customer'},\n\n`
+      + `Thank you - we have received your transfer receipt for reference ${pay.reference}.\n`
+      + `Our accounts team will verify the payment in our bank account and confirm your order, usually within one working day.\n`
+      + `You can check the status any time with your reference ${pay.reference}.\n\nKind regards,\nDM Motor Group`);
+  })());
   return L.json({ ok: true, reference: pay.reference, status: 'payment_submitted', statusLabel: PAY_LABEL.payment_submitted });
 });
 
@@ -1581,6 +1635,17 @@ route('PUT', '/api/admin/payments/:id', async ({ env, request, g, ctx }) => {
   }, true);
   if (ctx) ctx.waitUntil(L.logActivity(env, u.email, 'payment_status_changed',
     `${pay.reference || ('order #' + row.id)}: ${row.status} -> ${b.status}`));
+  if (ctx) ctx.waitUntil(paymentEmail(env, pay.customer && pay.customer.email,
+    b.status === 'confirmed' ? 'Payment confirmed - ' + (pay.reference || '')
+      : b.status === 'rejected' ? 'Payment not confirmed - ' + (pay.reference || '')
+      : 'Payment update - ' + (pay.reference || ''),
+    `Dear ${(pay.customer && pay.customer.name) || 'customer'},\n\n`
+    + (b.status === 'confirmed'
+      ? `We have verified your transfer of ${row.currency} ${Number(row.amount || 0).toLocaleString()} and your payment is confirmed.${next.reviewNote ? ' ' + next.reviewNote : ''}\nOur team will contact you about delivery and paperwork.`
+      : b.status === 'rejected'
+        ? `We were not able to verify your transfer.${next.reviewNote ? ' ' + next.reviewNote : ''}\nPlease contact the dealership so we can help.`
+        : `Your payment is now: ${PAY_LABEL[b.status]}.${next.reviewNote ? ' ' + next.reviewNote : ''}`)
+    + `\n\nReference: ${pay.reference || ''}\n\nKind regards,\nDM Motor Group`));
   return L.json({ ok: true, status: b.status, statusLabel: PAY_LABEL[b.status] });
 });
 
