@@ -1484,6 +1484,32 @@ route('POST', '/api/payments/:id/receipt', async ({ env, request, g, url, ctx })
   return L.json({ ok: true, reference: pay.reference, status: 'payment_submitted', statusLabel: PAY_LABEL.payment_submitted });
 });
 
+/* A buyer can look up their own payment with the transaction reference.
+ * The reference carries its own random token, and the lookup is rate limited
+ * so it cannot be used to probe the system. (Registered before the :id route
+ * so that "lookup" is not read as an order id.) */
+route('GET', '/api/payments/lookup', async ({ env, request, q, ip }) => {
+  const reference = String(q('reference') || '').trim().toUpperCase();
+  if (!/^DMG-\d{8}-[A-Z0-9]{6,12}$/.test(reference)) {
+    throw L.err(400, 'That does not look like a transaction reference.');
+  }
+  if (!L.rateLimit(`paylookup:${ip || 'x'}:${reference}`, 8, 10 * 60e3)) {
+    throw L.err(429, 'Too many lookups. Please wait a few minutes and try again.');
+  }
+  const rows = await L.rest.get(env, 'orders', { type: 'eq.purchase', select: '*' }).catch(() => []);
+  const row = (rows || []).find((r) => {
+    try { return (JSON.parse(r.notes || '{}').payment || {}).reference === reference; } catch { return false; }
+  });
+  if (!row) throw L.err(404, 'We could not find a payment with that reference.');
+  const pay = readPayment(row);
+  return L.json({
+    ok: true, reference, status: pay.status, statusLabel: pay.statusLabel,
+    amount: Number(row.amount || 0), currency: row.currency,
+    submittedAt: pay.payment.submittedAt || '', reviewedAt: pay.payment.reviewedAt || '',
+    reviewNote: pay.payment.reviewedAt ? pay.payment.reviewNote : '',
+  });
+});
+
 route('GET', '/api/payments/:id', async ({ env, request, g, q }) => {
   const reference = String(q('reference') || '').trim();
   const rows = await L.rest.get(env, 'orders', { id: `eq.${+g.id || 0}`, type: 'eq.purchase', select: '*' }).catch(() => []);

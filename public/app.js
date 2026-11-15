@@ -849,8 +849,17 @@ async function bankTransferModal(vehicle) {
   const v = vehicle;
   const price = Number(v.price || 0);
   const cur = v.currency || 'USD';
-  modal(`<h2>Pay by bank transfer</h2>    <p style="color:var(--ink-dim)">Pay for <b>${esc(v.brand)} ${esc(v.model)} ${v.year}</b> by transferring to one of our company bank accounts. You will receive a unique transaction reference and can upload your transfer receipt here.</p>
-    <div id="btStep1">
+  modal(`<h2>Pay by bank transfer</h2>
+    <p style="color:var(--ink-dim)">Pay for <b>${esc(v.brand)} ${esc(v.model)} ${v.year}</b> by transferring to one of our company bank accounts. You will receive a unique transaction reference and can upload your transfer receipt here.</p>
+    <div id="btLookup" style="margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:12px 14px">
+      <label style="font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-faint);display:block;margin-bottom:6px">Already sent a transfer? Check its status</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="btLookupRef" type="text" placeholder="e.g. DMG-20261115-447D53B9" style="flex:1;min-width:200px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;color:var(--ink);font-size:16px">
+        <button class="btn btn-ghost" id="btLookupBtn">Check status</button>
+      </div>
+      <div id="btLookupOut" style="margin-top:10px"></div>
+    </div>
+    <div id="btStep1" style="margin-top:16px">
       <div class="fgrid" style="margin-top:12px">
         <div><label>Your name *</label><input id="btName" type="text" autocomplete="name"></div>
         <div><label>Email *</label><input id="btEmail" type="email" autocomplete="email"></div>
@@ -865,6 +874,27 @@ async function bankTransferModal(vehicle) {
     <div class="note" style="margin-top:16px"><b>How it works.</b> We never confirm a payment automatically. Our accounts team checks the money in our bank account by hand and then confirms your order - usually within one working day. Keep your transaction reference for your records.</div>`, 'wide');
 
   const step1 = $('#btStep1'), step2 = $('#btStep2');
+
+  /* a buyer can always come back and check what happened to their transfer */
+  $('#btLookupBtn').onclick = async () => {
+    const ref = $('#btLookupRef').value.trim();
+    const out = $('#btLookupOut');
+    if (!ref) { out.innerHTML = '<span class="muted">Please enter the transaction reference we gave you.</span>'; return; }
+    out.innerHTML = '<span class="muted">Looking up…</span>';
+    try {
+      const r = await fetch('/api/payments/lookup?reference=' + encodeURIComponent(ref));
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) { out.innerHTML = `<span class="muted">${esc(j.error || 'We could not find that reference.')}</span>`; return; }
+      const tone = j.status === 'confirmed' ? 'var(--green)' : j.status === 'rejected' ? 'var(--red)' : 'var(--gold2)';
+      out.innerHTML = `<div style="border:1px solid var(--line2);border-radius:10px;padding:12px">
+        <div style="font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-faint)">Reference ${esc(j.reference)}</div>
+        <div style="font-size:16px;font-weight:700;color:${tone};margin-top:4px">${esc(j.statusLabel)}</div>
+        <div style="font-size:13px;color:var(--ink-dim);margin-top:6px">Amount: ${esc(j.currency)} ${Number(j.amount).toLocaleString()}</div>
+        ${j.submittedAt ? `<div style="font-size:13px;color:var(--ink-faint)">Receipt submitted ${esc(String(j.submittedAt).slice(0, 10))}</div>` : ''}
+        ${j.reviewNote ? `<div style="font-size:13px;color:var(--ink-dim);margin-top:6px">${esc(j.reviewNote)}</div>` : ''}
+      </div>`;
+    } catch (e) { out.innerHTML = '<span class="muted">We could not check that reference right now. Please contact the dealership.</span>'; }
+  };
   let accounts = [], currencies = [cur];
   try {
     const r = await (await fetch('/api/payment-methods/bank-accounts')).json();
@@ -1380,7 +1410,7 @@ window.addEventListener('pageshow', () => {});
   try { await getMeta(); } catch {}
   try { const h = await api('/api/home'); state.settings = h.settings || {}; applySettings(h); } catch {}
   await route(location.pathname + location.search, true);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=28').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=29').catch(() => {});
 })();
 /* Android app installation (Chrome "Add to Home screen" flow) */
 window.__pwaPrompt = null;

@@ -448,7 +448,7 @@ async function paymentsPage() {
     $('#payTbl').innerHTML = `<thead><tr><th>Reference</th><th>Customer</th><th>Vehicle</th><th>Amount</th><th>Bank account</th><th>Receipt</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>
       ${rows.map((p) => `<tr>
         <td><code>${esc(p.reference)}</code></td>
-        <td><b>${esc(p.customer.name || '—')}</b><br><span class="muted">${esc(p.customer.email || '')}${p.customer.phone ? '<br>' + esc(p.customer.phone) : ''}</span></td>
+        <td><b>${esc(p.customer.name || '—')}</b><br><span class="muted">${esc(p.customer.email || '')}${p.customer.email ? `<br><a href="mailto:${esc(p.customer.email)}?subject=${encodeURIComponent('Your payment ' + p.reference)}">Email customer</a>` : ''}${p.customer.phone ? `<br><a href="tel:${esc(p.customer.phone)}">${esc(p.customer.phone)}</a>` : ''}</span></td>
         <td>${p.vehicle.year ? esc(p.vehicle.year) + ' ' : ''}<b>${esc(p.vehicle.brand)} ${esc(p.vehicle.model)}</b></td>
         <td><b>${esc(p.currency)} ${Number(p.amount).toLocaleString()}</b></td>
         <td class="muted">${esc(p.bankName)}<br>${esc(p.accountName)}<br><code>${esc(p.accountNumber)}</code></td>
@@ -490,6 +490,19 @@ async function paymentsPage() {
       }
       await api(`/api/admin/payments/${id}`, { method: 'PUT', body: { status: st, reviewNote: note || '' } });
       toast('Payment updated.');
+      /* a confirmed payment should also hold the vehicle for that buyer */
+      if (st === 'confirmed') {
+        const p = list.find((x) => String(x.id) === String(id));
+        if (p && p.vehicle && p.vehicle.id) {
+          const reserve = confirm(`Payment confirmed.\n\nReserve the vehicle "${p.vehicle.brand} ${p.vehicle.model}" for this buyer so it is not sold twice?`);
+          if (reserve) {
+            try {
+              await api(`/api/admin/vehicles/${p.vehicle.id}/status`, { method: 'POST', body: { status: 'reserved' } });
+              toast('Payment confirmed and the vehicle is now reserved.');
+            } catch (err) { toast('Payment confirmed, but the vehicle could not be reserved: ' + err.message, true); }
+          }
+        }
+      }
       paymentsPage();
     } catch (err) { toast(err.message, true); }
   };
