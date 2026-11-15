@@ -1334,7 +1334,11 @@ route('GET', '/api/payment-methods/bank-accounts', async ({ env, q }) => {
   const currency = String(q('currency') || '').toUpperCase();
   const all = await readBankAccounts(env, true);
   const accounts = currency ? all.filter((a) => a.currency === currency) : all;
-  return L.json({ accounts: accounts.map(publicBankAccount), currencies: [...new Set(all.map((a) => a.currency))] });
+  return L.json({
+    accounts: accounts.map(publicBankAccount),
+    currencies: [...new Set([...BA_CURRENCIES, ...all.map((a) => a.currency)])],
+    activeCurrencies: [...new Set(all.map((a) => a.currency))],
+  });
 });
 
 /* ============================================================== PAYMENTS
