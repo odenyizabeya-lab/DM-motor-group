@@ -1547,7 +1547,7 @@ route('GET', '/api/payments/lookup', async ({ env, request, q, ip }) => {
   if (!/^DMG-\d{8}-[A-Z0-9]{6,12}$/.test(reference)) {
     throw L.err(400, 'That does not look like a transaction reference.');
   }
-  if (!L.rateLimit(`paylookup:${ip || 'x'}:${reference}`, 8, 10 * 60e3)) {
+  if (!L.rateLimit(`paylookup:${ip || 'x'}:${reference}`, 20, 10 * 60e3)) {
     throw L.err(429, 'Too many lookups. Please wait a few minutes and try again.');
   }
   const rows = await L.rest.get(env, 'orders', { type: 'eq.purchase', select: '*' }).catch(() => []);

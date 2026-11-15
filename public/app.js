@@ -881,8 +881,10 @@ async function bankTransferModal(vehicle) {
     const out = $('#btLookupOut');
     if (!ref) { out.innerHTML = '<span class="muted">Please enter the transaction reference we gave you.</span>'; return; }
     out.innerHTML = '<span class="muted">Looking up…</span>';
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 12000);
     try {
-      const r = await fetch('/api/payments/lookup?reference=' + encodeURIComponent(ref));
+      const r = await fetch('/api/payments/lookup?reference=' + encodeURIComponent(ref), { signal: ctrl.signal });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) { out.innerHTML = `<span class="muted">${esc(j.error || 'We could not find that reference.')}</span>`; return; }
       const tone = j.status === 'confirmed' ? 'var(--green)' : j.status === 'rejected' ? 'var(--red)' : 'var(--gold2)';
@@ -893,7 +895,9 @@ async function bankTransferModal(vehicle) {
         ${j.submittedAt ? `<div style="font-size:13px;color:var(--ink-faint)">Receipt submitted ${esc(String(j.submittedAt).slice(0, 10))}</div>` : ''}
         ${j.reviewNote ? `<div style="font-size:13px;color:var(--ink-dim);margin-top:6px">${esc(j.reviewNote)}</div>` : ''}
       </div>`;
-    } catch (e) { out.innerHTML = '<span class="muted">We could not check that reference right now. Please contact the dealership.</span>'; }
+    } catch (e) {
+      out.innerHTML = '<span class="muted">We could not reach the server just now. Please try again in a moment, or contact the dealership with your reference.</span>';
+    } finally { clearTimeout(timer); }
   };
   let accounts = [], currencies = [cur];
   try {
@@ -1410,7 +1414,7 @@ window.addEventListener('pageshow', () => {});
   try { await getMeta(); } catch {}
   try { const h = await api('/api/home'); state.settings = h.settings || {}; applySettings(h); } catch {}
   await route(location.pathname + location.search, true);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=29').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=30').catch(() => {});
 })();
 /* Android app installation (Chrome "Add to Home screen" flow) */
 window.__pwaPrompt = null;
