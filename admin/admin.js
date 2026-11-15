@@ -52,7 +52,7 @@ $('#loginForm').onsubmit = async (e) => {
 $('#btnLogout').onclick = async () => { try { await api('/api/auth/logout', { method: 'POST' }); } catch {} localStorage.removeItem('dm_admin_token'); showLogin(); };
 
 /* ---------------- routing ---------------- */
-const PAGES = { dashboard, vehicles, specifications: specificationsPage, enqueue: null, enquiries, customers, testimonials, banners, ai: aiScanner, ai_service: aiService, integrations: integrationsPage, settings: settingsPage, settings_general: settingsGeneral, settings_media: settingsMedia, settings_users: settingsUsers, settings_maintenance: settingsMaintenance, activity };
+const PAGES = { dashboard, vehicles, specifications: specificationsPage, enqueue: null, enquiries, customers, testimonials, banners, ai: aiScanner, ai_service: aiService, integrations: integrationsPage, bank_accounts: bankAccountsPage, payments: paymentsPage, settings: settingsPage, settings_general: settingsGeneral, settings_media: settingsMedia, settings_users: settingsUsers, settings_maintenance: settingsMaintenance, activity };
 window.addEventListener('hashchange', renderRoute);
 async function renderRoute() {
   if (!state.user) return;
@@ -314,6 +314,183 @@ async function specEditorPage(id, defaults) {
       await api('/api/admin/vehicles/' + id + '/spec', { method: 'DELETE' });
       toast('Reset to the generated specification.');
       specEditorPage(id, defaults);
+    } catch (err) { toast(err.message, true); }
+  };
+}
+
+/* ================================================== BANK ACCOUNTS
+   The dealership's receiving accounts for manual bank transfers. Everything
+   here is managed by the administrator - no developer needed. */
+const BA_FIELD_DEFS = [
+  ['bankName', 'Bank name', 'text', 'e.g. Zenith Bank'],
+  ['accountName', 'Account holder name', 'text', 'e.g. DM Motor Group Ltd'],
+  ['accountNumber', 'Account number', 'text', 'e.g. 0123456789'],
+  ['accountType', 'Account type', 'select', ''],
+  ['currency', 'Currency', 'select', ''],
+  ['country', 'Country', 'text', 'e.g. Nigeria'],
+  ['branch', 'Bank branch (optional)', 'text', 'e.g. Lagos Island'],
+  ['swift', 'SWIFT / BIC code (optional)', 'text', 'e.g. ZBNINGLA'],
+  ['iban', 'IBAN (optional)', 'text', 'e.g. GB29NWBK60161331926819'],
+  ['label', 'Short label for staff (optional)', 'text', 'e.g. Main NGN account'],
+  ['instructions', 'Payment instructions shown to customers (optional)', 'textarea', 'e.g. Send NGN only and quote the reference.'],
+];
+let BA_TYPES_CACHE = ['current', 'savings', 'checking', 'business', 'domiciliary', 'foreign currency'];
+let BA_CURRENCY_CACHE = ['USD', 'GBP', 'EUR', 'NGN'];
+let BA_EDIT_ID = 0;
+
+async function bankAccountsPage() {
+  const data = await api('/api/admin/bank-accounts');
+  BA_TYPES_CACHE = data.types || BA_TYPES_CACHE;
+  BA_CURRENCY_CACHE = data.currencies || BA_CURRENCY_CACHE;
+  const accounts = data.accounts || [];
+
+  const field = (f, a) => {
+    const [key, label, type, ph] = f;
+    const val = a ? (a[key] == null ? '' : a[key]) : '';
+    if (type === 'select') {
+      const opts = key === 'currency' ? BA_CURRENCY_CACHE : BA_TYPES_CACHE;
+      return `<div><label>${label}</label><select name="${key}">${opts.map((o) => `<option ${String(val).toUpperCase() === String(o).toUpperCase() ? 'selected' : ''}>${o}</option>`).join('')}</select></div>`;
+    }
+    if (type === 'textarea') return `<div class="full"><label>${label}</label><textarea name="${key}" rows="3" placeholder="${esc(ph)}">${esc(val)}</textarea></div>`;
+    return `<div><label>${label}</label><input name="${key}" type="text" value="${esc(val)}" placeholder="${esc(ph)}"></div>`;
+  };
+
+  const editing = accounts.find((a) => a.id === BA_EDIT_ID);
+  pg.innerHTML = `
+  <div class="pg-head"><div><span class="crumb">Payments</span><h1>Payment Methods &amp; Bank Accounts</h1></div>
+    <button class="btn btn-gold" id="baNew">${editing ? 'Cancel editing' : '＋ Add bank account'}</button></div>
+  <p class="muted" style="margin:-8px 0 16px">Customers who choose <b>Manual Bank Transfer</b> at checkout are shown the <b>active</b> accounts only, filtered by the currency they are paying in. Add as many accounts as you need - one per country or currency.</p>
+
+  <div class="panel" id="baFormPanel" ${editing ? '' : 'hidden'}>
+    <h3>${editing ? 'Edit bank account' : 'Add a bank account'}</h3>
+    <form id="baForm"><div class="fgrid">
+      ${BA_FIELD_DEFS.map((f) => field(f, editing)).join('')}
+      <div><label>Active</label><select name="active"><option value="1" ${!editing || editing.active !== false ? 'selected' : ''}>Active - shown to customers</option><option value="0" ${editing && editing.active === false ? 'selected' : ''}>Inactive - hidden from customers</option></select></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-gold" type="submit">${editing ? 'Save changes' : 'Create account'}</button>
+      <button class="btn btn-ghost" type="button" id="baCancel">Cancel</button>
+    </div></form>
+  </div>
+
+  <div class="panel"><div class="table-wrap" style="margin:-20px"><table class="tbl" id="baTbl"></table></div></div>`;
+
+  $('#baNew').onclick = () => { BA_EDIT_ID = 0; bankAccountsPage(); };
+  $('#baCancel').onclick = () => { BA_EDIT_ID = 0; bankAccountsPage(); };
+  const form = $('#baForm');
+  if (form) form.onsubmit = async (e) => {
+    e.preventDefault();
+    const fd = Object.fromEntries(new FormData(e.target));
+    const body = { ...fd, active: fd.active === '1' };
+    try {
+      if (editing) { await api('/api/admin/bank-accounts/' + editing.id, { method: 'PUT', body }); toast('Bank account updated.'); }
+      else { await api('/api/admin/bank-accounts', { method: 'POST', body }); toast('Bank account created.'); }
+      BA_EDIT_ID = 0;
+      bankAccountsPage();
+    } catch (err) { toast(err.message, true); }
+  };
+
+  const draw = () => {
+    $('#baTbl').innerHTML = `<thead><tr><th>Bank</th><th>Account holder</th><th>Account number</th><th>Type</th><th>Currency</th><th>Country</th><th>SWIFT / IBAN</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+      ${accounts.map((a) => `<tr>
+        <td><b>${esc(a.bankName)}</b>${a.label ? `<br><span class="muted">${esc(a.label)}</span>` : ''}${a.branch ? `<br><span class="muted">${esc(a.branch)}</span>` : ''}</td>
+        <td>${esc(a.accountName)}</td>
+        <td><code>${esc(a.accountNumber)}</code></td>
+        <td>${esc(a.accountType)}</td>
+        <td><b>${esc(a.currency)}</b></td>
+        <td>${esc(a.country || '—')}</td>
+        <td class="muted">${esc(a.swift || '—')}<br>${esc(a.iban || '')}</td>
+        <td>${a.active !== false ? '<span class="status published">active</span>' : '<span class="status draft">inactive</span>'}</td>
+        <td><div class="starrow">
+          <button data-a="edit">Edit</button>
+          <button data-a="toggle">${a.active !== false ? 'Deactivate' : 'Activate'}</button>
+          <button data-a="del" class="del">Delete</button>
+        </div></td></tr>`).join('') || '<tr><td colspan="9"><div class="empty"><b>No bank accounts yet.</b>Add the accounts customers should transfer to - for example one in NGN, one in USD, one in GBP and one in EUR.</div></td></tr>'}</tbody>`;
+  };
+  draw();
+  $('#baTbl').onclick = async (e) => {
+    const b = e.target.closest('button[data-a]'); if (!b) return;
+    const tr = b.closest('tr');
+    const idx = [...$('#baTbl').querySelectorAll('tbody tr')].indexOf(tr);
+    const a = accounts[idx]; if (!a) return;
+    try {
+      if (b.dataset.a === 'edit') { BA_EDIT_ID = a.id; bankAccountsPage(); }
+      if (b.dataset.a === 'toggle') { await api('/api/admin/bank-accounts/' + a.id, { method: 'PUT', body: { ...a, active: a.active === false } }); toast(a.active === false ? 'Account activated.' : 'Account deactivated - customers no longer see it.'); bankAccountsPage(); }
+      if (b.dataset.a === 'del') {
+        if (!confirm(`Delete the ${a.bankName} ${a.currency} account ${a.accountNumber}? This cannot be undone.`)) return;
+        await api('/api/admin/bank-accounts/' + a.id, { method: 'DELETE' }); toast('Bank account deleted.'); bankAccountsPage();
+      }
+    } catch (err) { toast(err.message, true); }
+  };
+}
+
+/* ================================================== PAYMENTS
+   Manual bank transfer payments. Nothing is ever confirmed automatically -
+   a staff member checks the bank account and confirms by hand. */
+async function paymentsPage() {
+  const data = await api('/api/admin/payments');
+  const list = data.payments || [];
+  const statuses = data.statuses || [];
+  pg.innerHTML = `
+  <div class="pg-head"><div><span class="crumb">Payments</span><h1>Manual bank transfer payments (${list.length})</h1></div>
+    <button class="btn btn-ghost" id="payReload">Refresh</button></div>
+  <div class="note" style="margin-bottom:14px"><b>Confirm only after you have checked the money arrived in the account.</b> An uploaded receipt is never treated as proof on its own - every confirmation is recorded with your name and the time.</div>
+  <div class="toolbar">
+    <button class="btn btn-ghost sm" data-st="">All</button>
+    ${statuses.map((s) => `<button class="btn btn-ghost sm" data-st="${s.key}">${s.label}</button>`).join('')}
+  </div>
+  <div class="panel"><div class="table-wrap" style="margin:-20px"><table class="tbl" id="payTbl"></table></div></div>`;
+  $('#payReload').onclick = () => paymentsPage();
+  $$('#pg .toolbar [data-st]').forEach((b) => b.onclick = () => { b.style.borderColor = b.dataset.st ? 'var(--gold)' : ''; b.style.color = b.dataset.st ? 'var(--gold2)' : ''; draw(b.dataset.st); });
+
+  const draw = (filter = '') => {
+    const rows = filter ? list.filter((p) => p.status === filter) : list;
+    $('#payTbl').innerHTML = `<thead><tr><th>Reference</th><th>Customer</th><th>Vehicle</th><th>Amount</th><th>Bank account</th><th>Receipt</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+      ${rows.map((p) => `<tr>
+        <td><code>${esc(p.reference)}</code></td>
+        <td><b>${esc(p.customer.name || '—')}</b><br><span class="muted">${esc(p.customer.email || '')}${p.customer.phone ? '<br>' + esc(p.customer.phone) : ''}</span></td>
+        <td>${p.vehicle.year ? esc(p.vehicle.year) + ' ' : ''}<b>${esc(p.vehicle.brand)} ${esc(p.vehicle.model)}</b></td>
+        <td><b>${esc(p.currency)} ${Number(p.amount).toLocaleString()}</b></td>
+        <td class="muted">${esc(p.bankName)}<br>${esc(p.accountName)}<br><code>${esc(p.accountNumber)}</code></td>
+        <td>${p.hasReceipt ? `<button class="btn btn-ghost sm" data-a="receipt" data-id="${p.id}">View receipt</button><br><span class="muted">${esc(p.receiptName || '')}</span>` : '<span class="muted">none uploaded</span>'}</td>
+        <td class="muted">${esc(String(p.submittedAt || p.createdAt || '').slice(0, 10))}${p.submittedAt ? '<br>submitted' : ''}</td>
+        <td><span class="status ${p.status === 'confirmed' ? 'published' : p.status === 'rejected' ? 'sold' : 'draft'}">${esc(p.statusLabel)}</span>
+          ${p.reviewedBy ? `<br><span class="muted">by ${esc(p.reviewedBy)}</span>` : ''}
+          ${p.reviewNote ? `<br><span class="muted">${esc(p.reviewNote)}</span>` : ''}</td>
+        <td><div class="starrow">
+          <button data-a="verify" data-id="${p.id}" data-st="under_verification">Verify</button>
+          <button data-a="confirm" data-id="${p.id}" data-st="confirmed">Confirm</button>
+          <button data-a="reject" data-id="${p.id}" data-st="rejected">Reject</button>
+          <button data-a="refund" data-id="${p.id}" data-st="refunded">Refund</button>
+        </div></td></tr>`).join('') || '<tr><td colspan="9"><div class="empty">No payments in this view yet.</div></td></tr>'}</tbody>`;
+  };
+  draw();
+  $('#payTbl').onclick = async (e) => {
+    const b = e.target.closest('button[data-a]'); if (!b) return;
+    const id = b.dataset.id;
+    try {
+      if (b.dataset.a === 'receipt') {
+        const r = await api(`/api/admin/payments/${id}/receipt`);
+        window.open(r.url, '_blank', 'noopener');
+        return;
+      }
+      const st = b.dataset.st;
+      let note = '';
+      if (st === 'confirmed') {
+        note = prompt('Confirm this payment? Type the amount you received in the bank account (this is recorded):', '');
+        if (note === null) return;
+        if (!note.trim()) { toast('Confirmation needs the amount you actually received.', true); return; }
+        note = 'Bank verified: received ' + note.trim();
+      } else if (st === 'rejected') {
+        note = prompt('Why is this payment rejected? The customer sees this note:', '');
+        if (note === null) return;
+      } else if (st === 'refunded') {
+        note = prompt('Refund reference / note for this refund:', '');
+        if (note === null) return;
+      }
+      await api(`/api/admin/payments/${id}`, { method: 'PUT', body: { status: st, reviewNote: note || '' } });
+      toast('Payment updated.');
+      paymentsPage();
     } catch (err) { toast(err.message, true); }
   };
 }

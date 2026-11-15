@@ -1225,6 +1225,351 @@ route('PUT', '/api/admin/orders/:id', async ({ env, request, g, ctx }) => {
   return L.json({ ok: true });
 });
 
+/* ============================================================ BANK ACCOUNTS
+   The dealership's own receiving accounts for manual bank transfers, managed
+   entirely from the admin dashboard. They live in the settings table under
+   "bank_account:<id>" so no database migration is required, and the public
+   settings whitelist keeps them out of every public API response.
+   ======================================================================== */
+const BA_PREFIX = 'bank_account:';
+const BA_CURRENCIES = ['USD', 'GBP', 'EUR', 'NGN', 'ZAR', 'KES', 'GHS', 'EGP', 'TZS', 'UGX', 'AED', 'SAR', 'QAR', 'KWD', 'OMR', 'BHD', 'CAD', 'AUD', 'NZD', 'JPY', 'CHF', 'CNY', 'HKD', 'SGD', 'INR', 'PKR', 'LKR', 'BDT', 'NPR', 'THB', 'MYR', 'IDR', 'PHP', 'VND', 'BRL', 'MXN', 'ARS', 'CLP', 'COP', 'TRY', 'PLN', 'CZK', 'SEK', 'NOK', 'DKK', 'ISK', 'RON', 'HUF'];
+const BA_TYPES = ['current', 'savings', 'checking', 'business', 'domiciliary', 'foreign currency'];
+
+async function readBankAccounts(env, onlyActive) {
+  const rows = await L.rest.get(env, 'settings', { key: `like.${BA_PREFIX}%` }).catch(() => []);
+  const out = [];
+  for (const r of rows || []) {
+    let a; try { a = JSON.parse(r.value); } catch { continue; }
+    if (!a || !a.id) continue;
+    if (onlyActive && a.active === false) continue;
+    out.push(a);
+  }
+  return out.sort((x, y) => String(x.currency || '').localeCompare(String(y.currency || '')) || String(x.bankName || '').localeCompare(String(y.bankName || '')));
+}
+function cleanBankAccount(input, existing) {
+  const b = input || {};
+  const s = (v, max = 200) => (v == null ? '' : String(v).trim().slice(0, max));
+  const currency = s(b.currency, 4).toUpperCase() || (existing && existing.currency) || 'USD';
+  return {
+    id: (existing && existing.id) || crypto.randomUUID(),
+    label: s(b.label, 60) || (existing && existing.label) || '',
+    bankName: s(b.bankName, 120),
+    accountName: s(b.accountName, 120),
+    accountNumber: s(b.accountNumber, 60),
+    accountType: BA_TYPES.includes(s(b.accountType, 30)) ? s(b.accountType, 30) : 'current',
+    currency: BA_CURRENCIES.includes(currency) ? currency : 'USD',
+    country: s(b.country, 60),
+    branch: s(b.branch, 120),
+    swift: s(b.swift, 20).toUpperCase(),
+    iban: s(b.iban, 40).toUpperCase(),
+    instructions: s(b.instructions, 2000),
+    active: b.active === undefined ? (existing ? existing.active !== false : true) : !!b.active,
+    createdAt: (existing && existing.createdAt) || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+/* what a customer is allowed to see of an account */
+function publicBankAccount(a) {
+  return {
+    id: a.id, label: a.label, bankName: a.bankName, accountName: a.accountName,
+    accountNumber: a.accountNumber, accountType: a.accountType, currency: a.currency,
+    country: a.country, branch: a.branch, swift: a.swift, iban: a.iban,
+    instructions: a.instructions,
+  };
+}
+
+route('GET', '/api/admin/bank-accounts', async ({ env, request }) => {
+  await L.staff(env, request);
+  return L.json({ accounts: await readBankAccounts(env, false), currencies: BA_CURRENCIES, types: BA_TYPES });
+});
+
+route('POST', '/api/admin/bank-accounts', async ({ env, request, ctx }) => {
+  const u = await L.writeStaff(env, request);
+  const b = await readJson(request);
+  const a = cleanBankAccount(b, null);
+  if (!a.bankName || !a.accountName || !a.accountNumber) {
+    throw L.err(400, 'Bank name, account holder name and account number are required.');
+  }
+  await L.rest.insert(env, 'settings', { key: BA_PREFIX + a.id, value: JSON.stringify(a) })
+    .catch(async () => {
+      /* the row already exists (same id) - update it instead */
+      await L.rest.update(env, 'settings', { key: BA_PREFIX + a.id }, {
+        value: JSON.stringify(a), updated_at: new Date().toISOString(),
+      }, true);
+    });
+  if (ctx) ctx.waitUntil(L.logActivity(env, u.email, 'bank_account_created',
+    `${a.bankName} ${a.currency} ****${String(a.accountNumber).slice(-4)}`));
+  return L.json({ ok: true, account: a });
+});
+
+route('PUT', '/api/admin/bank-accounts/:id', async ({ env, request, g, ctx }) => {
+  const u = await L.writeStaff(env, request);
+  const b = await readJson(request);
+  const existing = (await readBankAccounts(env, false)).find((x) => x.id === g.id);
+  if (!existing) throw L.err(404, 'Bank account not found.');
+  const a = cleanBankAccount(b, existing);
+  if (!a.bankName || !a.accountName || !a.accountNumber) {
+    throw L.err(400, 'Bank name, account holder name and account number are required.');
+  }
+  await L.rest.update(env, 'settings', { key: BA_PREFIX + a.id }, {
+    value: JSON.stringify(a), updated_at: new Date().toISOString(),
+  }, true);
+  if (ctx) ctx.waitUntil(L.logActivity(env, u.email, 'bank_account_updated',
+    `${a.bankName} ${a.currency} ****${String(a.accountNumber).slice(-4)}${a.active ? '' : ' (deactivated)'}`));
+  return L.json({ ok: true, account: a });
+});
+
+route('DELETE', '/api/admin/bank-accounts/:id', async ({ env, request, g, ctx }) => {
+  const u = await L.writeStaff(env, request);
+  const existing = (await readBankAccounts(env, false)).find((x) => x.id === g.id);
+  if (!existing) throw L.err(404, 'Bank account not found.');
+  await L.rest.del(env, 'settings', { key: BA_PREFIX + g.id });
+  if (ctx) ctx.waitUntil(L.logActivity(env, u.email, 'bank_account_deleted',
+    `${existing.bankName} ${existing.currency} ****${String(existing.accountNumber).slice(-4)}`));
+  return L.json({ ok: true });
+});
+
+/* ---------------- customer facing: active accounts for a currency -------- */
+route('GET', '/api/payment-methods/bank-accounts', async ({ env, q }) => {
+  const currency = String(q('currency') || '').toUpperCase();
+  const all = await readBankAccounts(env, true);
+  const accounts = currency ? all.filter((a) => a.currency === currency) : all;
+  return L.json({ accounts: accounts.map(publicBankAccount), currencies: [...new Set(all.map((a) => a.currency))] });
+});
+
+/* ============================================================== PAYMENTS
+   A manual bank transfer is stored as an order with the payment details in
+   the notes column. A payment is NEVER confirmed automatically: only a staff
+   member can confirm it after checking the bank account.
+   ======================================================================== */
+const PAY_STATUSES = ['awaiting_payment', 'payment_submitted', 'under_verification', 'confirmed', 'rejected', 'refunded'];
+const PAY_LABEL = {
+  awaiting_payment: 'Awaiting Payment',
+  payment_submitted: 'Payment Submitted',
+  under_verification: 'Under Verification',
+  confirmed: 'Confirmed',
+  rejected: 'Rejected',
+  refunded: 'Refunded',
+};
+/* The orders table only allows a fixed set of values, so the payment status is
+ * kept in the notes and mirrored onto the order row. The notes are the
+ * authority; the order status is only a summary. */
+const ORDER_STATUS_FOR_PAYMENT = {
+  awaiting_payment: 'new',
+  payment_submitted: 'in_progress',
+  under_verification: 'in_progress',
+  confirmed: 'completed',
+  rejected: 'cancelled',
+  refunded: 'cancelled',
+};
+const PAYMENT_STATUS_FROM_ORDER = {
+  new: 'awaiting_payment',
+  in_progress: 'payment_submitted',
+  deposit_paid: 'payment_submitted',
+  completed: 'confirmed',
+  cancelled: 'rejected',
+};
+function readPayment(row) {
+  let p = null;
+  try { p = JSON.parse(row.notes || '{}').payment || null; } catch { p = null; }
+  const status = PAY_STATUSES.includes(p && p.status) ? p.status : (PAYMENT_STATUS_FROM_ORDER[row.status] || 'awaiting_payment');
+  return {
+    id: row.id, vehicleId: row.vehicle_id, userId: row.user_id,
+    amount: Number(row.amount || 0), currency: row.currency || 'USD',
+    status,
+    statusLabel: PAY_LABEL[status] || PAY_LABEL.awaiting_payment,
+    createdAt: row.created_at, payment: p || {},
+  };
+}
+function newReference() {
+  const d = new Date();
+  const stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+  const rand = (crypto.randomUUID() || '').replace(/-/g, '').slice(0, 8).toUpperCase();
+  return `DMG-${stamp}-${rand}`;
+}
+
+route('POST', '/api/payments', async ({ env, request, ip, ctx }) => {
+  const b = await readJson(request);
+  const vehicleId = +b.vehicleId || 0;
+  const vr = await L.rest.get(env, 'vehicles', { id: `eq.${vehicleId}`, select: 'id,slug,brand,model,year,price,currency,status' }).catch(() => []);
+  const vehicle = (vr || [])[0];
+  if (!vehicle) throw L.err(404, 'That vehicle could not be found.');
+  const name = String(b.name || '').trim().slice(0, 120);
+  const email = String(b.email || '').trim().slice(0, 160).toLowerCase();
+  if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    throw L.err(400, 'Please give your name and a valid email address so we can send you the payment details.');
+  }
+  const currency = String(b.currency || vehicle.currency || 'USD').toUpperCase().slice(0, 4);
+  const amount = Number(b.amount || vehicle.price || 0);
+  if (!(amount > 0)) throw L.err(400, 'Please enter the amount you are transferring.');
+
+  const accounts = await readBankAccounts(env, true);
+  const chosen = b.accountId ? accounts.find((a) => a.id === b.accountId) : null;
+  if (!chosen) throw L.err(400, 'That payment account is not available. Please pick one of the active accounts.');
+  if (chosen.currency !== currency) {
+    throw L.err(400, `That account is a ${chosen.currency} account. Please choose a ${currency} account.`);
+  }
+
+  const reference = newReference();
+  const u = await L.authUser(env, request);
+  const notes = JSON.stringify({
+    payment: {
+      method: 'manual_bank_transfer',
+      reference,
+      bankAccountId: chosen.id,
+      bankName: chosen.bankName,
+      accountName: chosen.accountName,
+      accountNumber: chosen.accountNumber,
+      accountType: chosen.accountType,
+      bankCurrency: chosen.currency,
+      country: chosen.country,
+      branch: chosen.branch,
+      swift: chosen.swift,
+      iban: chosen.iban,
+      instructions: chosen.instructions,
+      customer: { name, email, phone: String(b.phone || '').trim().slice(0, 60) },
+      paidAmount: amount,
+      submittedAt: '', receiptUrl: '', receiptPath: '', receiptName: '',
+      reviewedAt: '', reviewedBy: '', reviewNote: '',
+    },
+  });
+  const row = await L.rest.insert(env, 'orders', {
+    vehicle_id: vehicleId, user_id: u ? u.id : null, type: 'purchase',
+    amount, currency, status: ORDER_STATUS_FOR_PAYMENT.awaiting_payment, notes,
+  });
+  if (ctx) ctx.waitUntil(L.logActivity(env, 'customer', 'payment_created', `${reference} - ${vehicle.brand} ${vehicle.model}`));
+  return L.json({
+    ok: true, reference, id: row.id, amount, currency,
+    account: publicBankAccount(chosen),
+    instructions: chosen.instructions,
+    message: 'Transfer the exact amount to the account below, then upload your receipt. Our accounts team verifies every payment by hand.',
+  });
+});
+
+route('POST', '/api/payments/:id/receipt', async ({ env, request, g, url, ctx }) => {
+  const reference = String(url.searchParams.get('reference') || '').trim();
+  const rows = await L.rest.get(env, 'orders', { id: `eq.${+g.id || 0}`, type: 'eq.purchase', select: '*' }).catch(() => []);
+  const row = (rows || [])[0];
+  if (!row) throw L.err(404, 'Payment not found.');
+  const pay = readPayment(row).payment;
+  if (!pay.reference) throw L.err(404, 'Payment not found.');
+  if (!reference || reference !== pay.reference) throw L.err(403, 'The transaction reference does not match.');
+  if (pay.status === 'confirmed') throw L.err(409, 'This payment has already been confirmed by our accounts team.');
+  if (pay.status === 'rejected') throw L.err(409, 'This payment was rejected. Please contact the dealership for help.');
+  const fileName = String(url.searchParams.get('fileName') || 'receipt.jpg').slice(0, 120);
+  const ext = (fileName.toLowerCase().match(/\.([a-z0-9]+)$/i) || [])[1] || 'jpg';
+  const allowed = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
+  if (!allowed.includes(ext)) throw L.err(400, 'Upload a JPG, PNG, WEBP or PDF receipt.');
+  const declared = +(request.headers.get('content-length') || 0);
+  if (declared > 8 * 1024 * 1024) throw L.err(413, 'The receipt file must be 8 MB or smaller.');
+
+  await L.storageEnsureBucket(env, 'payment-receipts', false, 8);
+  const objectPath = `${pay.reference.replace(/[^A-Z0-9-]/gi, '')}-${Date.now().toString(36)}.${ext}`;
+  const contentType = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', pdf: 'application/pdf' }[ext];
+  await L.storageUpload(env, 'payment-receipts', objectPath, request.body, contentType, true);
+
+  const next = {
+    ...pay,
+    receiptPath: objectPath,
+    receiptUrl: '',
+    receiptName: fileName.slice(0, 120),
+    submittedAt: new Date().toISOString(),
+    status: 'payment_submitted',
+  };
+  await L.rest.update(env, 'orders', { id: row.id }, {
+    status: ORDER_STATUS_FOR_PAYMENT.payment_submitted,
+    notes: JSON.stringify({ payment: next }),
+  }, true);
+  if (ctx) ctx.waitUntil(L.logActivity(env, 'customer', 'payment_receipt_uploaded', pay.reference));
+  return L.json({ ok: true, reference: pay.reference, status: 'payment_submitted', statusLabel: PAY_LABEL.payment_submitted });
+});
+
+route('GET', '/api/payments/:id', async ({ env, request, g, q }) => {
+  const reference = String(q('reference') || '').trim();
+  const rows = await L.rest.get(env, 'orders', { id: `eq.${+g.id || 0}`, type: 'eq.purchase', select: '*' }).catch(() => []);
+  const row = (rows || [])[0];
+  if (!row) throw L.err(404, 'Payment not found.');
+  const pay = readPayment(row);
+  if (!pay.payment.reference) throw L.err(404, 'Payment not found.');
+  if (!reference || reference !== pay.payment.reference) throw L.err(403, 'The transaction reference does not match.');
+  return L.json({
+    ok: true, reference: pay.payment.reference, status: pay.status, statusLabel: pay.statusLabel,
+    amount: Number(row.amount || 0), currency: row.currency, submittedAt: pay.payment.submittedAt || '',
+    reviewedAt: pay.payment.reviewedAt || '', reviewNote: pay.payment.reviewedAt ? pay.payment.reviewNote : '',
+  });
+});
+
+/* ---------------- admin: payments dashboard ---------------- */
+route('GET', '/api/admin/payments', async ({ env, request, q }) => {
+  await L.staff(env, request);
+  const status = q('status');
+  const rows = await L.rest.get(env, 'orders', {
+    type: 'eq.purchase', select: '*', order: 'created_at.desc', limit: '300',
+  }).catch(() => []);
+  const ids = [...new Set((rows || []).map((r) => r.vehicle_id))];
+  const vs = await L.rest.get(env, 'vehicles', { id: `in.(${ids.join(',') || 0})`, select: 'id,brand,model,year,slug' }).catch(() => []);
+  const map = Object.fromEntries((vs || []).map((v) => [v.id, v]));
+  const all = (rows || []).map((r) => {
+    const p = readPayment(r);
+    const v = map[r.vehicle_id] || {};
+    return {
+      id: p.id, reference: p.payment.reference || '', status: p.status, statusLabel: p.statusLabel,
+      amount: p.amount, currency: p.currency, createdAt: p.createdAt,
+      submittedAt: p.payment.submittedAt || '', paidAmount: p.payment.paidAmount || 0,
+      customer: p.payment.customer || {}, bankAccountId: p.payment.bankAccountId || '',
+      bankName: p.payment.bankName || '', accountNumber: p.payment.accountNumber || '',
+      accountName: p.payment.accountName || '', accountCurrency: p.payment.bankCurrency || '',
+      receiptName: p.payment.receiptName || '', hasReceipt: !!p.payment.receiptPath,
+      receiptPath: p.payment.receiptPath || '',
+      reviewedAt: p.payment.reviewedAt || '', reviewedBy: p.payment.reviewedBy || '',
+      reviewNote: p.payment.reviewNote || '',
+      vehicle: { id: v.id || r.vehicle_id, brand: v.brand || '', model: v.model || '', year: v.year || '', slug: v.slug || '' },
+    };
+  }).filter((p) => p.reference);   /* only manual bank transfer payments */
+  const payments = status ? all.filter((p) => p.status === status) : all;
+  return L.json({
+    payments,
+    statuses: PAY_STATUSES.map((s) => ({ key: s, label: PAY_LABEL[s] })),
+  });
+});
+
+route('PUT', '/api/admin/payments/:id', async ({ env, request, g, ctx }) => {
+  const u = await L.writeStaff(env, request);
+  const b = await readJson(request);
+  const rows = await L.rest.get(env, 'orders', { id: `eq.${+g.id || 0}`, type: 'eq.purchase', select: '*' }).catch(() => []);
+  const row = (rows || [])[0];
+  if (!row) throw L.err(404, 'Payment not found.');
+  if (!PAY_STATUSES.includes(b.status)) throw L.err(400, 'Unknown payment status.');
+  const pay = readPayment(row).payment;
+  /* a receipt is never enough: confirming always records who confirmed it */
+  const next = {
+    ...pay,
+    status: b.status,
+    reviewedAt: b.status === 'awaiting_payment' ? '' : new Date().toISOString(),
+    reviewedBy: b.status === 'awaiting_payment' ? '' : u.email,
+    reviewNote: String(b.reviewNote || '').slice(0, 1000),
+  };
+  await L.rest.update(env, 'orders', { id: row.id }, {
+    status: ORDER_STATUS_FOR_PAYMENT[b.status] || 'new',
+    notes: JSON.stringify({ payment: next }),
+  }, true);
+  if (ctx) ctx.waitUntil(L.logActivity(env, u.email, 'payment_status_changed',
+    `${pay.reference || ('order #' + row.id)}: ${row.status} -> ${b.status}`));
+  return L.json({ ok: true, status: b.status, statusLabel: PAY_LABEL[b.status] });
+});
+
+route('GET', '/api/admin/payments/:id/receipt', async ({ env, request, g }) => {
+  await L.staff(env, request);
+  const rows = await L.rest.get(env, 'orders', { id: `eq.${+g.id || 0}`, type: 'eq.purchase', select: '*' }).catch(() => []);
+  const row = (rows || [])[0];
+  if (!row) throw L.err(404, 'Payment not found.');
+  const pay = readPayment(row).payment;
+  if (!pay.receiptPath) throw L.err(404, 'No receipt has been uploaded for this payment.');
+  const url = await L.storageSignedUrl(env, 'payment-receipts', pay.receiptPath, 300);
+  if (!url) throw L.err(404, 'The receipt file could not be opened.');
+  return L.json({ ok: true, url, expiresIn: 300, name: pay.receiptName || 'receipt' });
+});
+
 /* ---------------- settings & activity ---------------- */
 route('GET', '/api/admin/settings', async ({ env, request }) => {
   await L.staff(env, request);

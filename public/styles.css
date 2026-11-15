@@ -465,6 +465,17 @@ main#app{min-height:calc(100vh - 64px);min-height:calc(100dvh - 64px)}
 video{display:block;max-width:100%;background:#000}
 .vidprev{width:100%;height:100%;object-fit:cover;background:#05070a}
 .vid-none{display:grid;place-items:center;width:100%;height:100%;min-height:120px;padding:18px;text-align:center;background:linear-gradient(135deg,#1b2027,#0b0d10);color:var(--ink-faint);font-size:13.5px;line-height:1.5}
+#modal .modal-card.wide{width:min(720px,calc(100% - 28px))}
+/* manual bank transfer checkout */
+.fgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 14px}
+.fgrid .full{grid-column:1/-1}
+.fgrid label{display:block;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-faint);margin:10px 0 4px}
+.fgrid input,.fgrid select,.fgrid textarea{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:11px 12px;color:var(--ink);font-size:16px;font-family:var(--sans)}
+.fgrid textarea{resize:vertical}
+.bt-acct{display:block;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;background:var(--panel2)}
+.bt-acct:has(input:checked){border-color:var(--gold);background:rgba(201,164,92,.08)}
+.bt-acct code{font-size:15px;letter-spacing:.4px}
+@media(max-width:600px){.fgrid{grid-template-columns:minmax(0,1fr)}}
 .vcard .ph > .vidprev{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .vcard .ph > .vid-none{position:absolute;inset:0}
 .vidcard .vidprev{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}

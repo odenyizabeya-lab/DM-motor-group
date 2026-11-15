@@ -252,9 +252,9 @@ function inspectionModal({ vehicleId, vehicleTitle = 'Vehicle of interest' } = {
     } catch (err) { btn.disabled = false; btn.textContent = 'Request inspection'; toast(err.message, true); }
   });
 }
-function modal(html) {
+function modal(html, extraClass = '') {
   const m = $('#modal'); m.hidden = false;
-  m.innerHTML = `<div class="backdrop" onclick="closeModal()"></div><div class="modal-card">${html}<button class="x" style="position:absolute;top:14px;right:14px" onclick="closeModal()">✕</button></div>`;
+  m.innerHTML = `<div class="backdrop" onclick="closeModal()"></div><div class="modal-card ${extraClass}">${html}<button class="x" style="position:absolute;top:14px;right:14px" onclick="closeModal()">✕</button></div>`;
   document.body.style.overflow = 'hidden';
 }
 window.closeModal = () => { $('#modal').hidden = true; $('#modal').innerHTML = ''; document.body.style.overflow = ''; };
@@ -844,6 +844,135 @@ async function renderVehicleDetails(slug, v) {
   $$('#detailsBody [data-enq]').forEach((b) => b.onclick = () => enquiryModal({ vehicleId: v.id, vehicleTitle: `${v.brand} ${v.model} ${v.year}`, type: b.dataset.enq }));
 }
 
+/* ---------------- manual bank transfer checkout ---------------- */
+async function bankTransferModal(vehicle) {
+  const v = vehicle;
+  const price = Number(v.price || 0);
+  const cur = v.currency || 'USD';
+  modal(`<h2>Pay by bank transfer</h2>    <p style="color:var(--ink-dim)">Pay for <b>${esc(v.brand)} ${esc(v.model)} ${v.year}</b> by transferring to one of our company bank accounts. You will receive a unique transaction reference and can upload your transfer receipt here.</p>
+    <div id="btStep1">
+      <div class="fgrid" style="margin-top:12px">
+        <div><label>Your name *</label><input id="btName" type="text" autocomplete="name"></div>
+        <div><label>Email *</label><input id="btEmail" type="email" autocomplete="email"></div>
+        <div><label>Phone</label><input id="btPhone" type="tel" autocomplete="tel"></div>
+        <div><label>Currency</label><select id="btCurrency"></select></div>
+        <div class="full"><label>Amount to transfer *</label><input id="btAmount" type="number" min="1" step="0.01" value="${price > 0 ? price : ''}"></div>
+      </div>
+      <button class="btn btn-gold wide" id="btFind" style="margin-top:16px">Show our bank accounts</button>
+      <div id="btAccounts" style="margin-top:16px"></div>
+    </div>
+    <div id="btStep2" hidden></div>
+    <div class="note" style="margin-top:16px"><b>How it works.</b> We never confirm a payment automatically. Our accounts team checks the money in our bank account by hand and then confirms your order - usually within one working day. Keep your transaction reference for your records.</div>`, 'wide');
+
+  const step1 = $('#btStep1'), step2 = $('#btStep2');
+  let accounts = [], currencies = [cur];
+  try {
+    const r = await (await fetch('/api/payment-methods/bank-accounts')).json();
+    accounts = r.accounts || [];
+    currencies = [...new Set([cur, ...(r.currencies || [])])];
+  } catch (e) { /* handled below */ }
+  const sel = $('#btCurrency');
+  sel.innerHTML = currencies.map((c) => `<option ${c === cur ? 'selected' : ''}>${esc(c)}</option>`).join('');
+  $('#btAmount').value = price > 0 ? price : '';
+  if (!accounts.length) {
+    $('#btAccounts').innerHTML = `<div class="note">No bank account is available for ${esc(cur)} at the moment. Please contact the dealership and we will send you the details.</div>`;
+    $('#btFind').disabled = true;
+  }
+
+  $('#btFind').onclick = () => {
+    const currency = sel.value;
+    const list = accounts.filter((a) => a.currency === currency);
+    if (!list.length) {
+      $('#btAccounts').innerHTML = `<div class="note">We have no active ${esc(currency)} account at the moment. Please contact the dealership.</div>`;
+      return;
+    }
+    $('#btAccounts').innerHTML = `<h4 style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--gold2);margin-bottom:8px">Our ${esc(currency)} account(s)</h4>
+      ${list.map((a, i) => `<label class="bt-acct" style="display:block;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer">
+        <input type="radio" name="btAccount" value="${esc(a.id)}" ${i === 0 ? 'checked' : ''} style="margin-right:8px">
+        <b>${esc(a.bankName)}</b> ${a.branch ? `<span style="color:var(--ink-faint)">· ${esc(a.branch)}</span>` : ''}
+        <div style="margin-top:8px;font-size:14px;line-height:1.7">
+          <div>Account name: <b>${esc(a.accountName)}</b></div>
+          <div>Account number: <b>${esc(a.accountNumber)}</b> <button type="button" class="btn btn-ghost sm bt-copy" data-copy="${esc(a.accountNumber)}">Copy</button></div>
+          ${a.iban ? `<div>IBAN: <b>${esc(a.iban)}</b> <button type="button" class="btn btn-ghost sm bt-copy" data-copy="${esc(a.iban)}">Copy</button></div>` : ''}
+          ${a.swift ? `<div>SWIFT / BIC: <b>${esc(a.swift)}</b></div>` : ''}
+          <div>Currency: <b>${esc(a.currency)}</b> · Type: ${esc(a.accountType)}</div>
+          ${a.country ? `<div>Country: ${esc(a.country)}</div>` : ''}
+        </div>
+      </label>`).join('')}
+      <button class="btn btn-gold wide" id="btContinue" style="margin-top:6px">Generate my payment reference</button>`;
+    $$('#btAccounts .bt-copy').forEach((b) => b.onclick = async (e) => {
+      e.preventDefault();
+      try { await navigator.clipboard.writeText(b.dataset.copy); toast('Copied to clipboard.'); } catch (e2) { toast('Copy failed — please copy it manually.', true); }
+    });
+    $('#btContinue').onclick = () => startPayment();
+  };
+
+  const startPayment = async () => {
+    const accountId = ($('#btAccounts input[name=btAccount]:checked') || {}).value;
+    if (!accountId) { toast('Please choose the account you will transfer to.', true); return; }
+    const body = {
+      vehicleId: v.id, name: $('#btName').value, email: $('#btEmail').value, phone: $('#btPhone').value,
+      currency: sel.value, amount: Number($('#btAmount').value), accountId,
+    };
+    if (!body.name || !body.email) { toast('Please give your name and email address.', true); return; }
+    if (!(body.amount > 0)) { toast('Please enter the amount you are transferring.', true); return; }
+    try {
+      const r = await api('/api/payments', { method: 'POST', body });
+      window.__btPayment = { id: r.id, reference: r.reference };
+      step1.hidden = true;
+      step2.hidden = false;
+      step2.innerHTML = `
+        <div class="note" style="margin-top:0"><b>Transfer exactly ${esc(r.currency)} ${Number(r.amount).toLocaleString()}</b> to the account below and quote the reference.</div>
+        <div style="border:1px solid var(--gold);border-radius:12px;padding:16px;margin-top:14px">
+          <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-faint)">Your transaction reference</div>
+          <div style="font-size:21px;font-weight:700;color:var(--gold2);letter-spacing:1px">${esc(r.reference)}</div>
+          <button type="button" class="btn btn-ghost sm" id="btCopyRef" style="margin-top:8px">Copy reference</button>
+        </div>
+        <h4 style="margin-top:18px;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--gold2)">Bank account</h4>
+        <div style="font-size:14px;line-height:1.8">
+          <div>Bank: <b>${esc(r.account.bankName)}</b>${r.account.branch ? ` · ${esc(r.account.branch)}` : ''}</div>
+          <div>Account name: <b>${esc(r.account.accountName)}</b></div>
+          <div>Account number: <b>${esc(r.account.accountNumber)}</b> <button type="button" class="btn btn-ghost sm" id="btCopyAcc" data-copy="${esc(r.account.accountNumber)}">Copy</button></div>
+          ${r.account.iban ? `<div>IBAN: <b>${esc(r.account.iban)}</b> <button type="button" class="btn btn-ghost sm" id="btCopyIban" data-copy="${esc(r.account.iban)}">Copy</button></div>` : ''}
+          ${r.account.swift ? `<div>SWIFT / BIC: <b>${esc(r.account.swift)}</b></div>` : ''}
+          <div>Currency: <b>${esc(r.currency)}</b> · Amount to send: <b>${esc(r.currency)} ${Number(r.amount).toLocaleString()}</b></div>
+        </div>
+        ${r.instructions ? `<div class="note" style="margin-top:14px">${esc(r.instructions)}</div>` : ''}
+        <h4 style="margin-top:20px;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--gold2)">Upload your transfer receipt</h4>
+        <input type="file" id="btFile" accept="image/*,application/pdf" style="margin-top:8px">
+        <button class="btn btn-gold wide" id="btUpload" style="margin-top:12px">Submit my receipt</button>
+        <p class="muted" style="margin-top:10px">JPG, PNG, WEBP or PDF up to 8 MB. Your receipt is reviewed by our accounts team — payments are never confirmed automatically.</p>`;
+      const copy = async (text) => { try { await navigator.clipboard.writeText(text); toast('Copied to clipboard.'); } catch (e) { toast('Copy failed — please copy it manually.', true); } };
+      $('#btCopyRef').onclick = () => copy(r.reference);
+      $('#btCopyAcc').onclick = () => copy(r.account.accountNumber);
+      if ($('#btCopyIban')) $('#btCopyIban').onclick = () => copy(r.account.iban);
+      $('#btUpload').onclick = async () => {
+        const file = $('#btFile').files[0];
+        if (!file) { toast('Please choose your receipt file.', true); return; }
+        $('#btUpload').disabled = true;
+        $('#btUpload').textContent = 'Uploading…';
+        try {
+          const res = await fetch(`/api/payments/${r.id}/receipt?reference=${encodeURIComponent(r.reference)}&fileName=${encodeURIComponent(file.name)}`, {
+            method: 'POST', body: file, headers: { 'content-type': file.type || 'application/octet-stream' },
+          });
+          const out = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(out.error || 'The receipt could not be uploaded.');
+          step2.innerHTML = `<div style="text-align:center;padding:18px 6px">
+            <div style="font-size:40px">✅</div>
+            <h3 style="margin:8px 0">Receipt received</h3>
+            <p style="color:var(--ink-dim)">Your reference <b>${esc(r.reference)}</b> is now <b>${esc(out.statusLabel || 'Payment Submitted')}</b>. Our accounts team will verify the transfer in our bank account and confirm your order by email.</p>
+            <p style="color:var(--ink-faint);font-size:13px">Amount to transfer: ${esc(r.currency)} ${Number(r.amount).toLocaleString()} · ${esc(r.account.bankName)}</p>
+          </div>`;
+        } catch (err) {
+          toast(err.message, true);
+          $('#btUpload').disabled = false;
+          $('#btUpload').textContent = 'Submit my receipt';
+        }
+      };
+    } catch (err) { toast(err.message, true); }
+  };
+}
+
 async function viewVehicle(m) {
   return (async () => {
     const v = await api(`/api/vehicles/${m[1]}`);
@@ -879,6 +1008,7 @@ async function viewVehicle(m) {
               <button class="btn btn-ghost" data-enq="testdrive">Request a viewing / test drive</button>
               <button class="btn btn-ghost" data-enq="purchase">Submit a purchase enquiry</button>
               <button class="btn btn-ghost" data-enq="delivery">Request delivery information</button>
+              <button class="btn btn-ghost" id="btnPayBank">🏦 Pay by bank transfer</button>
             </div>` : `
             <div class="note"><b>This vehicle has been sold.</b> Archived listings stay on the site for transparency of our sales history. Ask us about similar stock${v.similar.length ? ' — see the selection below' : ''}.</div>
             <a class="btn btn-gold wide" href="/contact">Contact the dealership</a>`}
@@ -966,6 +1096,7 @@ async function viewVehicle(m) {
     /* CTAs */
     $$('#app [data-enq]').forEach((b) => b.onclick = () => enquiryModal({ vehicleId: v.id, vehicleTitle: `${v.brand} ${v.model} ${v.year}`, type: b.dataset.enq }));
     $('#btnEnqMain') && ($('#btnEnqMain').onclick = () => enquiryModal({ vehicleId: v.id, vehicleTitle: `${v.brand} ${v.model} ${v.year}`, type: 'question' }));
+    $('#btnPayBank') && ($('#btnPayBank').onclick = () => bankTransferModal(v));
     const waTxt = encodeURIComponent(`Hello DM Motor Group — I am interested in the ${v.brand} ${v.model} ${v.year} (${location.origin}/vehicles/${v.slug}). Please send me the details.`);
     $('#btnWa') && ($('#btnWa').href = `https://wa.me/${esc(state.wa)}?text=${waTxt}`);
     $('#btnFavD').onclick = async () => { await toggleFav(v); $('#btnFavD').textContent = state.favourites.has(v.id) ? '♥ Saved to favourites' : '♡ Save to favourites'; };
@@ -1249,7 +1380,7 @@ window.addEventListener('pageshow', () => {});
   try { await getMeta(); } catch {}
   try { const h = await api('/api/home'); state.settings = h.settings || {}; applySettings(h); } catch {}
   await route(location.pathname + location.search, true);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=25').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=28').catch(() => {});
 })();
 /* Android app installation (Chrome "Add to Home screen" flow) */
 window.__pwaPrompt = null;

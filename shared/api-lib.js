@@ -71,7 +71,10 @@ function whereQS(match) {
     if (v === null || v === undefined) { out[k] = 'is.null'; continue; }
     if (typeof v === 'number' || typeof v === 'boolean') { out[k] = `eq.${v}`; continue; }
     const s = String(v);
-    out[k] = OPS_RE.test(s) ? s : `eq.${encodeURIComponent(s)}`;
+    /* URLSearchParams encodes the value exactly once. Encoding it here as
+     * well would double-encode it, and a key such as "bank_account:<uuid>"
+     * would then never match a row. */
+    out[k] = OPS_RE.test(s) ? s : `eq.${s}`;
   }
   return new URLSearchParams(out).toString();
 }
@@ -136,6 +139,33 @@ async function storageDelete(env, urls) {
     if (!p) return;
     await fetch(storageUrl(env, p.bucket, p.path), { method: 'DELETE', headers: storageHeaders(env) }).catch(() => {});
   }));
+}
+
+/** Create a storage bucket if it does not exist yet (idempotent). */
+async function storageEnsureBucket(env, bucket, isPublic = false, sizeLimitMb = 10) {
+  const res = await fetch(`${env.SUPABASE_URL}/storage/v1/bucket`, {
+    method: 'POST',
+    headers: storageHeaders(env, { 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ id: bucket, name: bucket, public: isPublic, file_size_limit: sizeLimitMb * 1024 * 1024 }),
+  });
+  if (res.ok) return true;
+  const err = await res.json().catch(() => ({}));
+  /* already exists is a success for our purposes */
+  return /already|duplicate/i.test(String(err.message || err.error_code || ''));
+}
+
+/** Short-lived signed URL for a private object (payment receipts). */
+async function storageSignedUrl(env, bucket, path, expiresIn = 300) {
+  if (!bucket || !path) return '';
+  const res = await fetch(`${env.SUPABASE_URL}/storage/v1/object/sign/${bucket}/${path}`, {
+    method: 'POST',
+    headers: storageHeaders(env, { 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ expiresIn }),
+  }).catch(() => null);
+  if (!res || !res.ok) return '';
+  const j = await res.json().catch(() => ({}));
+  if (!j.signedURL) return '';
+  return j.signedURL.startsWith('http') ? j.signedURL : `${env.SUPABASE_URL}${j.signedURL}`;
 }
 
 /* -------------------------------------------------------------------- auth */
@@ -492,6 +522,7 @@ function cleanSpec(input) {
 const apiLib = {
   err, json, readJson, rateLimit, slugify, extractStoragePath,
   sb, rest, storageUpload, storageDelete, storagePublic, storageUrl, storageHeaders,
+  storageEnsureBucket, storageSignedUrl,
   authUser, requireAuth, staff, writeStaff, loginPayload, sendNotification, logActivity,
   mediaFor, vehicleOut, vehicleDetailOut, geminiGenerate, openaiGenerate, aiGenerate, aiProviderId,
   missingRelationMessage, tableExists, missingTables, invalidateAuthCache,
