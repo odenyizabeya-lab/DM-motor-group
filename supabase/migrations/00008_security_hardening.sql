@@ -1,10 +1,21 @@
 -- ============================================================================
--- 00008 — security hardening for Row Level Security.
+-- MIGRATION 2b - security hardening for Row Level Security
+-- File: 00008_security_hardening.sql
+--
+-- Run this AFTER 00007_ai_customer_service.sql, in the same session or a
+-- second one. Every statement is idempotent and safe to re-run.
 --
 -- The Cloudflare Worker writes through the service role, which bypasses RLS.
 -- These policies therefore only govern direct PostgREST/Storage access by
--- anonymous visitors and signed-in customers. Every statement is idempotent
--- and safe to re-run.
+-- anonymous visitors and signed-in customers.
+--
+-- MEASURED on the live database before this migration (2026-11-16):
+--   * an anonymous client COULD read internal settings rows such as
+--     `dev_reset_tokens` (old permissive policy),
+--   * an anonymous client COULD insert a testimonial already marked
+--     'approved' (old permissive policy) - a live rating-manipulation hole.
+-- Private customer tables (enquiries, profiles, orders) were already closed
+-- to anonymous reads and are left that way.
 --
 -- Addresses:
 --   1. managers could change any profile role directly (privilege escalation)
@@ -82,6 +93,12 @@ create policy "media: public reads published vehicles" on public.media
 -- ---------------------------------------------------------------------------
 -- Internal flags (maintenance_mode, dev_reset_tokens, ...) and any future
 -- credential accidentally stored here must not be exposed by PostgREST.
+--
+-- The list below is the whitelist used by the website (see
+-- shared/settings.js PUBLIC_SETTINGS_KEYS). It has been extended with the
+-- legal and policy keys that the Terms, Privacy, Refund, Delivery and Support
+-- pages read - without them those pages would fall back to the placeholders
+-- after this migration.
 drop policy if exists "settings: all can read" on public.settings;
 drop policy if exists "settings: public reads public keys" on public.settings;
 create policy "settings: public reads public keys" on public.settings
@@ -96,7 +113,12 @@ create policy "settings: public reads public keys" on public.settings
       'instagram', 'social_instagram', 'facebook', 'social_facebook',
       'youtube', 'social_youtube', 'linkedin', 'social_linkedin',
       'tiktok', 'social_tiktok',
-      'currency', 'tagline', 'trade_license', 'inspection_note', 'payment_info'
+      'currency', 'tagline', 'trade_license', 'inspection_note', 'payment_info',
+      'legal_company_name', 'legal_registration_no', 'legal_address',
+      'legal_governing_law', 'legal_entity_form',
+      'policy_refund_window_days', 'policy_delivery_lead_time',
+      'policy_deposit_percent', 'policy_deposit_refund_days',
+      'support_hours', 'support_response_hours'
     )
   );
 
@@ -113,7 +135,5 @@ create policy "activity: staff write" on public.activity_logs
   for insert with check (public.is_manager () or public.is_admin ());
 
 -- ============================================================================
--- NOTE: this migration has not been applied to the live database yet. It needs
--- a Supabase personal access token (or the SQL editor). Until then the live
--- project keeps the older, weaker policies documented in 00002_rls.sql.
+-- End of migration 2b.
 -- ============================================================================

@@ -7,14 +7,17 @@
     "build": "node build.mjs",
     "deploy": "node build.mjs && npx wrangler pages deploy dist --project-name dm-motor-group --branch main",
     "serve": "node server.js",
-    "details": "node scripts/generate-details.mjs"
+    "details": "node scripts/generate-details.mjs",
+    "test:sql": "node scripts/test-migrations-pg.mjs",
+    "audit:platform": "node scripts/audit-platform.mjs"
   },
   "engines": {
     "node": ">=22.5.0"
   },
   "license": "UNLICENSED",
   "devDependencies": {
-    "esbuild": "^0.28.2"
+    "esbuild": "^0.28.2",
+    "embedded-postgres": "^18.6.0-beta.19"
   },
   "allowScripts": {
     "esbuild@0.28.2": true
