@@ -118,10 +118,12 @@ for (const l of links) {
 /* ---------- 5. ADMIN PAGE FUNCTIONS PRESENT ---------- */
 log('\n## 5. ADMIN DASHBOARD PAGES PRESENT');
 const adminJs = fs.readFileSync('admin/admin.js', 'utf8');
-const PAGES = { dashboard: 'dashboard', vehicles: 'vehicles', specifications: 'specifications', enquiries: 'enquiries', customers: 'customers', testimonials: 'testimonials', banners: 'banners', ai: 'AI car scanner', ai_service: 'AI customer service', integrations: 'integrations', bank_accounts: 'bank accounts', payments: 'payments', settings: 'settings', settings_general: 'settings general', settings_media: 'settings media', settings_users: 'settings users', settings_maintenance: 'settings maintenance', activity: 'activity log' };
+/* the real page registry lives in the admin PAGES map */
+const pageMap = (adminJs.match(/const PAGES = \{[\s\S]*?\};/) || [''])[0];
+const PAGES = { dashboard: 'dashboard', vehicles: 'vehicles', specifications: 'specifications', enquiries: 'enquiries', customers: 'customers', testimonials: 'testimonials', banners: 'banners', ai: 'AI car scanner', ai_service: 'AI customer service', integrations: 'integrations', bank_accounts: 'bank accounts', payments: 'payments', reservations: 'reservations & orders', settings: 'settings', settings_general: 'settings general', settings_media: 'settings media', settings_users: 'settings users', settings_maintenance: 'settings maintenance', activity: 'activity log' };
 const missingPages = [];
 for (const [k, label] of Object.entries(PAGES)) {
-  const present = new RegExp('\\b' + k + ':').test(adminJs) || new RegExp('function ' + k + 'Page').test(adminJs);
+  const present = new RegExp('(^|[{,\\s])' + k + '\\s*[:,]').test(pageMap) || new RegExp('function ' + k + '\\s*\\(').test(adminJs);
   if (!present) missingPages.push(label);
   log(`| ${label.padEnd(24)} | ${present ? 'present' : 'MISSING'} |`);
 }
