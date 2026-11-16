@@ -22,6 +22,13 @@ const SPA_TITLES = new Map([
   ['/compare', 'Compare Vehicles | DM Motor Group'],
   ['/contact', 'Contact the Dealership | DM Motor Group'],
   ['/account', 'Customer Account | DM Motor Group'],
+  ['/about', 'About DM Motor Group | Premium International Automobile Dealership'],
+  ['/faq', 'Frequently Asked Questions | DM Motor Group'],
+  ['/terms', 'Terms and Conditions of Sale | DM Motor Group'],
+  ['/privacy', 'Privacy Policy | DM Motor Group'],
+  ['/refund', 'Refund and Cancellation Policy | DM Motor Group'],
+  ['/delivery', 'Delivery Information | DM Motor Group'],
+  ['/support', 'Customer Support | DM Motor Group'],
 ]);
 
 const HTML = HTML_HEADERS;

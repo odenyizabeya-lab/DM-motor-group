@@ -68,6 +68,11 @@ export const PUBLIC_SETTINGS_KEYS = [
   'social_instagram', 'instagram', 'social_facebook', 'facebook',
   'social_youtube', 'youtube', 'social_linkedin', 'linkedin', 'social_tiktok', 'tiktok',
   'currency', 'tagline', 'trade_license', 'inspection_note', 'payment_info',
+  /* legal and policy details shown on the terms, privacy, refund, delivery
+   * and support pages - the dealer edits them in Admin > Settings */
+  'legal_company_name', 'legal_registration_no', 'legal_address', 'legal_governing_law',
+  'legal_entity_form', 'policy_refund_window_days', 'policy_delivery_lead_time',
+  'policy_deposit_percent', 'policy_deposit_refund_days', 'support_hours', 'support_response_hours',
 ];
 
 /** Normalise settings and drop anything that is not meant for the public. */

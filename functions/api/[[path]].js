@@ -6,6 +6,7 @@
 import L from '../../shared/api-lib.js';
 import aiCustomer from '../../shared/ai-customer.js';
 import emailService from '../../shared/email-service.js';
+import { ORDER_STAGES, RESERVATION_STAGES, RESERVATION_TERMS, stageByKey, stageIndex, reservationStageByKey, buildPdf, invoiceNumber } from '../../shared/order-stages.js';
 import aiService from '../../shared/ai-service.js';
 import { normalizeSettings, toDbSettingsPatch, publicSettings } from '../../shared/settings.js';
 
@@ -570,10 +571,306 @@ route('GET', '/api/my/orders', async ({ env, request }) => {
   const rows = await L.rest.get(env, 'orders', {
     select: '*,vehicles(slug,brand,model,year)', user_id: `eq.${u.id}`, order: 'id.desc', limit: '100',
   });
-  return L.json((rows || []).map((o) => ({
-    ...o,
+  return L.json((rows || []).map((o) => orderOut(o)));
+});
+
+/* ---------------------------------------------------------------- orders
+   An order is a purchase or a reservation. The order row carries the
+   lifecycle in its notes so that no database migration is required. */
+function orderNotes(row) {
+  try { return JSON.parse(row.notes || '{}'); } catch { return {}; }
+}
+function orderOut(o) {
+  const n = orderNotes(o);
+  const pay = n.payment || null;
+  const res = n.reservation || null;
+  const stage = (n.order && n.order.stage) || (pay ? 'payment_confirmed' : (o.status === 'completed' ? 'delivered' : 'enquiry_received'));
+  return {
+    id: o.id, type: o.type, status: o.status,
+    amount: Number(o.amount || 0), currency: o.currency, createdAt: o.created_at,
     vehicleTitle: o.vehicles ? `${o.vehicles.brand} ${o.vehicles.model} ${o.vehicles.year}` : '',
-  })));
+    vehicleSlug: o.vehicles ? o.vehicles.slug : '',
+    stage, stageLabel: stageByKey(stage).label, stageIndex: stageIndex(stage),
+    stageUpdatedAt: (n.order && n.order.stageUpdatedAt) || '',
+    payment: pay ? { reference: pay.reference, status: pay.status, statusLabel: pay.statusLabel, bankName: pay.bankName, accountNumber: pay.accountNumber, submittedAt: pay.submittedAt, hasReceipt: !!pay.receiptPath } : null,
+    reservation: res ? { stage: res.stage, stageLabel: reservationStageByKey(res.stage).label, deposit: res.deposit, reference: res.reference, terms: res.terms } : null,
+  };
+}
+
+/* A buyer asks to reserve a vehicle. Only one live reservation may exist. */
+route('POST', '/api/reservations', async ({ env, request, ctx }) => {
+  const b = await readJson(request);
+  const vehicleId = +b.vehicleId || 0;
+  const vr = await L.rest.get(env, 'vehicles', { id: `eq.${vehicleId}`, select: 'id,slug,brand,model,year,price,currency,status' });
+  const v = vr && vr[0];
+  if (!v) throw L.err(404, 'That vehicle could not be found.');
+  if (v.status === 'sold') throw L.err(409, 'That vehicle has already been sold.');
+  const name = String(b.name || '').trim().slice(0, 120);
+  const email = String(b.email || '').trim().slice(0, 160).toLowerCase();
+  if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    throw L.err(400, 'Please give your name and a valid email address so we can send the reservation terms.');
+  }
+  /* one live reservation per vehicle */
+  const existing = await L.rest.get(env, 'orders', { vehicle_id: `eq.${vehicleId}`, type: 'eq.reservation', select: 'id,notes,status' }).catch(() => []);
+  for (const o of existing || []) {
+    const n = orderNotes(o);
+    const st = (n.reservation && n.reservation.stage) || 'requested';
+    if (!['declined', 'cancelled', 'completed'].includes(st) && o.status !== 'cancelled') {
+      throw L.err(409, 'This vehicle already has a live reservation. Please contact us and we will let you know if it becomes free.');
+    }
+  }
+  const depositPct = Number((await L.rest.get(env, 'settings', { key: 'policy_deposit_percent', select: 'value' }).catch(() => []))[0]?.value || 10);
+  const deposit = b.deposit != null && b.deposit !== '' ? Number(b.deposit) : Math.round(Number(v.price || 0) * (depositPct / 100));
+  const reference = 'RES-' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '-' + Math.random().toString(36).slice(2, 8).toUpperCase();
+  const notes = JSON.stringify({
+    reservation: {
+      stage: 'requested', reference, deposit: Number.isFinite(deposit) ? deposit : 0,
+      currency: v.currency || 'USD', customer: { name, email, phone: String(b.phone || '').slice(0, 60) },
+      message: String(b.message || '').slice(0, 1000),
+      terms: RESERVATION_TERMS, createdAt: new Date().toISOString(),
+    },
+  });
+  const saved = await L.rest.insert(env, 'orders', {
+    vehicle_id: v.id, user_id: null, type: 'reservation',
+    amount: Number.isFinite(deposit) ? deposit : 0, currency: v.currency || 'USD',
+    status: 'new', notes,
+  });
+  /* the enquiry pipeline shows it too, so nobody is missed */
+  const enq = await L.rest.insert(env, 'enquiries', {
+    vehicle_id: v.id, type: 'reservation', name, email, phone: String(b.phone || '').slice(0, 60),
+    message: `Reservation request (reference ${reference}) for the ${v.brand} ${v.model} ${v.year}.${b.message ? ' ' + String(b.message).slice(0, 800) : ''}`,
+    status: 'new',
+  }).catch(() => null);
+  if (enq && enq.id) {
+    const n2 = orderNotes(saved);
+    n2.reservation.enquiryId = enq.id;
+    await L.rest.update(env, 'orders', { id: saved.id }, { notes: JSON.stringify(n2) }, true);
+  }
+  if (ctx) {
+    ctx.waitUntil(L.logActivity(env, 'customer', 'reservation_requested', `${reference} - ${v.brand} ${v.model}`));
+    ctx.waitUntil(paymentEmail(env, email,
+      `Your reservation request for the ${v.brand} ${v.model}`,
+      `Dear ${name},\n\nThank you. We have received your reservation request for the ${v.brand} ${v.model} ${v.year}.\n\n`
+      + `Your reservation reference is ${reference}.\n`
+      + (Number.isFinite(deposit) && deposit > 0 ? `The reservation deposit is ${v.currency} ${deposit.toLocaleString()}.\n` : '')
+      + `Reservation terms:\n${RESERVATION_TERMS.map((t, i) => `${i + 1}. ${t}`).join('\n')}\n\n`
+      + `We will send the reservation agreement and the payment instructions for the deposit. `
+      + `A vehicle can hold only one live reservation at a time.\n\nKind regards,\nDM Motor Group`));
+  }
+  return L.json({
+    ok: true, id: saved.id, reference, deposit, currency: v.currency || 'USD',
+    terms: RESERVATION_TERMS,
+    message: 'Your reservation request has been received. We will send the reservation agreement and deposit instructions.',
+  });
+});
+
+/* Public status lookup for a reservation reference. */
+route('GET', '/api/reservations/track', async ({ env, request, q, ip }) => {
+  const reference = String(q('reference') || '').trim().toUpperCase();
+  if (!/^RES-\d{8}-[A-Z0-9]{4,10}$/.test(reference)) throw L.err(400, 'That does not look like a reservation reference.');
+  if (!L.rateLimit(`restrack:${ip || 'x'}:${reference}`, 20, 10 * 60e3)) throw L.err(429, 'Too many lookups. Please wait a few minutes.');
+  const rows = await L.rest.get(env, 'orders', { type: 'eq.reservation', select: '*' }).catch(() => []);
+  const row = (rows || []).find((r) => { const n = orderNotes(r); return n.reservation && n.reservation.reference === reference; });
+  if (!row) throw L.err(404, 'We could not find a reservation with that reference.');
+  const n = orderNotes(row);
+  const st = reservationStageByKey(n.reservation && n.reservation.stage);
+  return L.json({ ok: true, reference, stage: st.key, stageLabel: st.label, createdAt: row.created_at });
+});
+
+/* Customer order / reservation list for the account page. */
+route('GET', '/api/my/reservations', async ({ env, request }) => {
+  const u = await L.requireAuth(env, request);
+  const rows = await L.rest.get(env, 'orders', {
+    type: 'eq.reservation', select: '*,vehicles(slug,brand,model,year)', user_id: `eq.${u.id}`, order: 'id.desc', limit: '50',
+  }).catch(() => []);
+  return L.json((rows || []).map((o) => orderOut(o)));
+});
+
+/* ---------------- admin: reservations, orders and stage control --------- */
+route('GET', '/api/admin/reservations', async ({ env, request }) => {
+  await L.staff(env, request);
+  const rows = await L.rest.get(env, 'orders', {
+    type: 'eq.reservation', select: '*,vehicles(slug,brand,model,year,status)', order: 'id.desc', limit: '200',
+  }).catch(() => []);
+  const items = (rows || []).map((o) => {
+    const n = orderNotes(o);
+    return {
+      id: o.id, createdAt: o.created_at, amount: Number(o.amount || 0), currency: o.currency,
+      vehicle: o.vehicles ? `${o.vehicles.brand} ${o.vehicles.model} ${o.vehicles.year}` : '',
+      vehicleId: o.vehicle_id, vehicleStatus: o.vehicles ? o.vehicles.status : '',
+      vehicleSlug: o.vehicles ? o.vehicles.slug : '',
+      reservation: n.reservation || null,
+      stage: (n.reservation && n.reservation.stage) || 'requested',
+      stageLabel: reservationStageByKey((n.reservation && n.reservation.stage) || 'requested').label,
+    };
+  });
+  return L.json({ items, stages: RESERVATION_STAGES });
+});
+
+route('PUT', '/api/admin/reservations/:id', async ({ env, request, g, ctx }) => {
+  const u = await L.writeStaff(env, request);
+  const b = await readJson(request);
+  const rows = await L.rest.get(env, 'orders', { id: `eq.${+g.id || 0}`, type: 'eq.reservation', select: '*' }).catch(() => []);
+  const row = (rows || [])[0];
+  if (!row) throw L.err(404, 'Reservation not found.');
+  const n = orderNotes(row);
+  const res = n.reservation || {};
+  const action = String(b.action || '');
+  const stage = RESERVATION_STAGES.some((s) => s.key === action) ? action : (RESERVATION_STAGES.some((s) => s.key === b.stage) ? b.stage : res.stage || 'requested');
+  n.reservation = { ...res, stage, stageUpdatedAt: new Date().toISOString(), staffNote: String(b.note || '').slice(0, 1000) };
+  const status = stage === 'declined' || stage === 'cancelled' ? 'cancelled' : stage === 'completed' ? 'completed' : stage === 'deposit_paid' ? 'deposit_paid' : 'new';
+  await L.rest.update(env, 'orders', { id: row.id }, { status, notes: JSON.stringify(n) }, true);
+  /* a confirmed reservation holds the vehicle */
+  if (stage === 'confirmed' || stage === 'deposit_paid') {
+    await L.rest.update(env, 'vehicles', { id: row.vehicle_id }, { status: 'reserved', updated_at: new Date().toISOString() }, true).catch(() => {});
+  }
+  if (stage === 'declined' || stage === 'cancelled') {
+    const cur = await L.rest.get(env, 'vehicles', { id: `eq.${row.vehicle_id}`, select: 'status' }).catch(() => []);
+    if (cur && cur[0] && cur[0].status === 'reserved') {
+      await L.rest.update(env, 'vehicles', { id: row.vehicle_id }, { status: 'published', updated_at: new Date().toISOString() }, true).catch(() => {});
+    }
+  }
+  if (ctx) {
+    ctx.waitUntil(L.logActivity(env, u.email, 'reservation_updated', `${res.reference || ('#' + row.id)} -> ${stage}`));
+    const customer = res.customer || {};
+    if (customer.email) {
+      ctx.waitUntil(paymentEmail(env, customer.email,
+        `Reservation update - ${res.reference || ''}`,
+        `Dear ${customer.name || 'customer'},\n\nYour reservation ${res.reference || ''} is now: ${reservationStageByKey(stage).label}.\n`
+        + (b.note ? String(b.note) + '\n' : '')
+        + `Kind regards,\nDM Motor Group`));
+    }
+  }
+  return L.json({ ok: true, stage, stageLabel: reservationStageByKey(stage).label });
+});
+
+/* Advance an order through the ten delivery stages. */
+route('PUT', '/api/admin/orders/:id/stage', async ({ env, request, g, ctx }) => {
+  const u = await L.writeStaff(env, request);
+  const b = await readJson(request);
+  const rows = await L.rest.get(env, 'orders', { id: `eq.${+g.id || 0}`, select: '*' }).catch(() => []);
+  const row = (rows || [])[0];
+  if (!row) throw L.err(404, 'Order not found.');
+  const key = String(b.stage || '');
+  if (!ORDER_STAGES.some((s) => s.key === key)) throw L.err(400, 'Unknown order stage.');
+  const n = orderNotes(row);
+  n.order = { ...(n.order || {}), stage: key, stageUpdatedAt: new Date().toISOString(), staffNote: String(b.note || '').slice(0, 1000) };
+  const status = key === 'delivered' ? 'completed' : key === 'payment_confirmed' ? 'deposit_paid' : 'in_progress';
+  await L.rest.update(env, 'orders', { id: row.id }, { status, notes: JSON.stringify(n) }, true);
+  if (ctx) {
+    ctx.waitUntil(L.logActivity(env, u.email, 'order_stage_changed', `order #${row.id} -> ${key}`));
+    if (row.user_id) {
+      ctx.waitUntil(L.sendNotification(env, row.user_id, 'Order update: ' + stageByKey(key).label, stageByKey(key).customer, '/account'));
+    }
+    const n2 = orderNotes(row);
+    if (n2.payment && n2.payment.customer && n2.payment.customer.email) {
+      ctx.waitUntil(paymentEmail(env, n2.payment.customer.email,
+        `Your order update - ${stageByKey(key).label}`,
+        `Dear ${n2.payment.customer.name || 'customer'},\n\n${stageByKey(key).customer}\n`
+        + (b.note ? String(b.note) + '\n' : '')
+        + `Reference: ${n2.payment.reference || ''}\n\nKind regards,\nDM Motor Group`));
+    }
+  }
+  return L.json({ ok: true, stage: key, stageLabel: stageByKey(key).label });
+});
+
+/* ---------------- invoices and receipts (PDF) --------------------------- */
+function invoiceLines(o, n, kind) {
+  const pay = n.payment || null;
+  const res = n.reservation || null;
+  const vehicle = o.vehicles ? `${o.vehicles.brand} ${o.vehicles.model} ${o.vehicles.year}` : 'Vehicle';
+  const lines = [];
+  lines.push({ text: 'VEHICLE', size: 10, bold: true, gap: 16 });
+  lines.push(vehicle);
+  if (o.vehicles && o.vehicles.slug) lines.push(`Reference: /vehicles/${o.vehicles.slug}`);
+  lines.push({ text: '', gap: 8 });
+  lines.push({ text: 'CUSTOMER', size: 10, bold: true, gap: 16 });
+  const c = (pay && pay.customer) || (res && res.customer) || {};
+  lines.push(c.name || 'Customer');
+  if (c.email) lines.push(c.email);
+  if (c.phone) lines.push(c.phone);
+  lines.push({ text: '', gap: 8 });
+  lines.push({ text: 'TRANSACTION', size: 10, bold: true, gap: 16 });
+  lines.push(`Transaction reference: ${(pay && pay.reference) || (res && res.reference) || ('#' + o.id)}`);
+  lines.push(`Payment method: ${(pay && pay.method === 'manual_bank_transfer') ? 'Manual bank transfer' : (o.type === 'reservation' ? 'Reservation deposit' : 'Order')}`);
+  lines.push(`Status: ${(pay && pay.statusLabel) || (res && reservationStageByKey(res.stage).label) || o.status}`);
+  lines.push(`Date: ${String(o.created_at || '').slice(0, 10)}`);
+  if (res && res.deposit) lines.push(`Deposit agreed: ${o.currency} ${Number(res.deposit).toLocaleString()}`);
+  if (pay && pay.bankName) {
+    lines.push({ text: '', gap: 6 });
+    lines.push(`Bank account used: ${pay.bankName}`);
+    lines.push(`Account name: ${pay.accountName || ''}`);
+    lines.push(`Account number: ${pay.accountNumber || ''}`);
+  }
+  lines.push({ text: '', gap: 10 });
+  lines.push({ text: 'AMOUNTS', size: 10, bold: true, gap: 16 });
+  lines.push(`Total payable: ${o.currency} ${Number(o.amount || 0).toLocaleString()}`);
+  if (pay && pay.paidAmount && Number(pay.paidAmount) !== Number(o.amount)) {
+    lines.push(`Amount received: ${o.currency} ${Number(pay.paidAmount).toLocaleString()}`);
+  }
+  if (pay && pay.reviewNote) lines.push(`Verification note: ${pay.reviewNote}`);
+  lines.push({ text: '', gap: 8 });
+  lines.push(kind === 'receipt'
+    ? 'This receipt confirms that the payment above was verified in the company bank account by a member of staff.'
+    : 'This invoice is issued for the vehicle named above. Payment is due within the agreed period.');
+  lines.push('This document was generated automatically by DM Motor Group.');
+  return lines;
+}
+
+route('GET', '/api/my/orders/:id/invoice.pdf', async ({ env, request, g }) => {
+  const u = await L.requireAuth(env, request);
+  const rows = await L.rest.get(env, 'orders', { id: `eq.${+g.id || 0}`, select: '*,vehicles(slug,brand,model,year)', user_id: `eq.${u.id}` });
+  const o = (rows || [])[0];
+  if (!o) throw L.err(404, 'Order not found.');
+  const n = orderNotes(o);
+  const pay = n.payment || null;
+  const kind = pay && pay.status === 'confirmed' ? 'receipt' : 'invoice';
+  const company = {
+    name: 'DM Motor Group',
+    address: 'Address as shown on the website - confirm in Admin > Settings > Legal & policies',
+    contact: 'sales@dmmotorgroup.com',
+  };
+  const num = invoiceNumber(kind === 'receipt' ? 'RCPT' : 'INV', o.id);
+  const bytes = buildPdf({
+    title: kind === 'receipt' ? 'Payment receipt' : 'Invoice',
+    subtitle: `${kind === 'receipt' ? 'Receipt' : 'Invoice'} number ${num}`,
+    company,
+    meta: { 'Invoice number': num, 'Order reference': '#' + o.id },
+    lines: invoiceLines(o, n, kind),
+  });
+  return new Response(bytes, {
+    headers: {
+      'content-type': 'application/pdf',
+      'content-disposition': `inline; filename="${kind}-${num}.pdf"`,
+      'cache-control': 'no-store',
+    },
+  });
+});
+
+route('GET', '/api/admin/orders/:id/invoice.pdf', async ({ env, request, g }) => {
+  await L.staff(env, request);
+  const rows = await L.rest.get(env, 'orders', { id: `eq.${+g.id || 0}`, select: '*,vehicles(slug,brand,model,year)' });
+  const o = (rows || [])[0];
+  if (!o) throw L.err(404, 'Order not found.');
+  const n = orderNotes(o);
+  const pay = n.payment || null;
+  const kind = pay && pay.status === 'confirmed' ? 'receipt' : 'invoice';
+  const company = {
+    name: 'DM Motor Group',
+    address: 'Address as shown on the website - confirm in Admin > Settings > Legal & policies',
+    contact: 'sales@dmmotorgroup.com',
+  };
+  const num = invoiceNumber(kind === 'receipt' ? 'RCPT' : 'INV', o.id);
+  const bytes = buildPdf({
+    title: kind === 'receipt' ? 'Payment receipt' : 'Invoice',
+    subtitle: `${kind === 'receipt' ? 'Receipt' : 'Invoice'} number ${num}`,
+    company,
+    meta: { 'Invoice number': num, 'Order reference': '#' + o.id },
+    lines: invoiceLines(o, n, kind),
+  });
+  return new Response(bytes, {
+    headers: { 'content-type': 'application/pdf', 'content-disposition': `inline; filename="${kind}-${num}.pdf"`, 'cache-control': 'no-store' },
+  });
 });
 
 /* =============================================================== ADMIN API */
@@ -1193,9 +1490,13 @@ route('PUT', '/api/admin/banners/:id/image', async ({ env, request, g, ctx }) =>
 route('GET', '/api/admin/orders', async ({ env, request }) => {
   await L.staff(env, request);
   const rows = await L.rest.get(env, 'orders', { select: '*,vehicles(slug,brand,model,year)', order: 'id.desc', limit: '300' });
+  const stages = ORDER_STAGES.map((s) => ({ key: s.key, label: s.label }));
   return L.json((rows || []).map((o) => ({
-    ...o,
+    ...orderOut(o),
+    id: o.id, type: o.type, status: o.status, notes: o.notes, createdAt: o.created_at,
+    customer: (orderNotes(o).payment && orderNotes(o).payment.customer) || (orderNotes(o).reservation && orderNotes(o).reservation.customer) || {},
     vehicleTitle: o.vehicles ? `${o.vehicles.brand} ${o.vehicles.model} ${o.vehicles.year}` : '',
+    stages,
   })));
 });
 

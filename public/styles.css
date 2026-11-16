@@ -465,6 +465,29 @@ main#app{min-height:calc(100vh - 64px);min-height:calc(100dvh - 64px)}
 video{display:block;max-width:100%;background:#000}
 .vidprev{width:100%;height:100%;object-fit:cover;background:#05070a}
 .vid-none{display:grid;place-items:center;width:100%;height:100%;min-height:120px;padding:18px;text-align:center;background:linear-gradient(135deg,#1b2027,#0b0d10);color:var(--ink-faint);font-size:13.5px;line-height:1.5}
+/* information pages (about, faq, terms, privacy, refund, delivery, support) */
+.info-title{font-family:var(--serif);font-size:clamp(28px,4.4vw,40px);line-height:1.15;margin:14px 0 10px;color:var(--ink)}
+.info-lede{font-size:17px;line-height:1.6;color:var(--gold2);margin-bottom:26px;max-width:70ch}
+.info-h2{font-family:var(--serif);font-size:21px;margin:30px 0 10px;color:var(--ink);border-left:2px solid var(--gold);padding-left:12px}
+.info-p{font-size:15px;line-height:1.75;color:var(--ink-dim);margin:0 0 12px;max-width:78ch}
+.info-p b,.info-ul b{color:var(--ink);font-weight:600}
+.info-ul{list-style:none;padding:0;margin:0 0 12px;max-width:80ch}
+.info-ul li{position:relative;padding-left:20px;font-size:15px;line-height:1.7;color:var(--ink-dim);margin-bottom:9px}
+.info-ul li::before{content:"—";position:absolute;left:0;color:var(--gold)}
+.info-cta{display:flex;gap:12px;flex-wrap:wrap;margin:30px 0 18px;padding-top:22px;border-top:1px solid var(--line)}
+.info-foot{font-size:12.5px;color:var(--ink-faint);line-height:1.6;border-top:1px solid var(--line);padding-top:16px}
+/* order / delivery tracker */
+ol.track{list-style:none;padding:0;margin:16px 0 0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+ol.track li{display:flex;flex-direction:column;gap:6px;align-items:flex-start;font-size:11.5px;line-height:1.35;color:var(--ink-faint);border-top:2px solid var(--line);padding-top:8px}
+ol.track li span{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;border:1px solid var(--line2);font-size:11px;font-weight:700}
+ol.track li b{font-weight:600;color:var(--ink-faint)}
+ol.track li.done{border-top-color:var(--green)}
+ol.track li.done span{border-color:var(--green);color:#8fd8b4}
+ol.track li.done b{color:var(--ink-dim)}
+ol.track li.now{border-top-color:var(--gold)}
+ol.track li.now span{border-color:var(--gold);background:rgba(201,164,92,.15);color:var(--gold2)}
+ol.track li.now b{color:var(--gold2)}
+@media(max-width:700px){ol.track{grid-template-columns:repeat(2,minmax(0,1fr))}}
 #modal .modal-card.wide{width:min(720px,calc(100% - 28px))}
 /* manual bank transfer checkout */
 .fgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 14px}

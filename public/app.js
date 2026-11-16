@@ -395,6 +395,194 @@ window.closeLightbox = () => { $('#lightbox').hidden = true; $('#lightbox').inne
 /* =================================================================
    ROUTES
 ================================================================= */
+/* =====================================================================
+   Information pages: About, FAQ, Terms, Privacy, Refund, Delivery, Support.
+   The text is written for DM Motor Group. The few facts only the dealership
+   can supply (legal name, registration number, governing law, refund window,
+   delivery lead time, deposit percentage, support hours) are read from the
+   settings table and can be edited in Admin -> Settings -> Legal & policies.
+   ===================================================================== */
+const INFO_SETTINGS = {
+  legal_company_name: 'DM Motor Group',
+  legal_registration_no: '[your company registration number]',
+  legal_address: '[your registered business address]',
+  legal_governing_law: '[the law that governs these terms]',
+  legal_entity_form: '[your legal entity type]',
+  policy_refund_window_days: '14',
+  policy_delivery_lead_time: '4-8 weeks after cleared payment',
+  policy_deposit_percent: '10',
+  policy_deposit_refund_days: '7',
+  support_hours: 'Monday to Saturday, 09:00-19:00 (GMT+4)',
+  support_response_hours: '24',
+};
+const infoSettings = Object.assign({}, INFO_SETTINGS, state.settings || {});
+
+/* small helpers so each page reads cleanly */
+const h2 = (t) => `<h2 class="info-h2">${t}</h2>`;
+const p = (t) => `<p class="info-p">${t}</p>`;
+const ul = (items) => `<ul class="info-ul">${items.map((i) => `<li>${i}</li>`).join('')}</ul>`;
+
+const INFO_PAGES = {
+  about: {
+    title: 'About DM Motor Group',
+    lede: 'An international dealership that shows you the actual car before it asks for a cent.',
+    blocks: [
+      h2('Who we are') + p(`<b>${infoSettings.legal_company_name}</b> is a${infoSettings.legal_entity_form === '[your legal entity type]' ? '' : ' ' + infoSettings.legal_entity_form} international automobile dealership. We buy and sell hand-selected cars - classics, performance cars, luxury SUVs and modern electric vehicles - for buyers in more than one country.`) + p(`Every vehicle in our catalogue is presented with its own full-length video rather than a set of flattering photographs. You can watch the walk-around, the engine bay and the interior before you travel, call or transfer anything.`),
+      h2('How we work') + ul([
+        '<b>Video first.</b> The video attached to each listing is of the vehicle described on that page. Where it was supplied to us by another dealer we say so in the listing.',
+        '<b>Verified or not verified.</b> Every specification on a vehicle page is either confirmed by the video and the documents, or clearly marked as not verified. We never fill a gap with a guess.',
+        '<b>One price, in writing.</b> The asking price is shown on the page, the payment instructions are yours, and the final drive-away figure is confirmed in writing before any money moves.',
+        '<b>Human payment checks.</b> A bank transfer is never confirmed from a screenshot. Our accounts team checks the money in our bank account and then confirms your order by hand.',
+      ]),
+      h2('Buying from another country') + p('Most of our buyers are in a different country from the car. We handle the paperwork, the payment and the transport, and we keep you updated at every stage from enquiry to delivery. Your contract, the invoice and the receipt are issued in the currency you pay in.'),
+      h2('What we will not claim') + p('We do not attach invented inspection badges, we do not publish reviews we have not received, and we do not describe a car as "mint" when the video shows otherwise. Where something is unknown we write "not verified" and tell you exactly what we would need to confirm it.'),
+      h2('Talk to us') + p(`Use the <a href="/contact">contact page</a>, WhatsApp or email ${esc(state.settings?.email_sales || 'sales@dmmotorgroup.com')}. Support hours: ${infoSettings.support_hours}.`),
+    ],
+  },
+  faq: {
+    title: 'Frequently asked questions',
+    lede: 'The questions our buyers ask most, answered plainly.',
+    blocks: [
+      h2('Paying for a vehicle') + ul([
+        '<b>How do I pay?</b> By bank transfer to one of our company accounts. On the vehicle page, choose "Pay by bank transfer": you enter your name, email and the amount, pick the account for your currency and receive a unique transaction reference.',
+        '<b>Which currency can I pay in?</b> Any currency we hold an active account for. We currently support USD, GBP, EUR, NGN and a wide list of other currencies - the exact list is shown when you start a payment.',
+        '<b>When is my payment confirmed?</b> After we have seen the funds arrive in our bank account. A receipt is not proof of payment; our accounts team checks the account itself, usually within one working day.',
+        '<b>Do you accept card payment?</b> Card and online payment methods can be enabled per transaction by the dealership. Until a provider is configured for your region, bank transfer is the route we can offer.',
+      ]),
+      h2('Reservations and deposits') + ul([
+        '<b>Can I reserve a car?</b> Yes. Submit a reservation enquiry for the vehicle and we will hold it for you once the reservation terms are accepted and the deposit is paid.',
+        '<b>Is the deposit refundable?</b> Yes, if the sale does not complete for a reason on our side, or if you cancel within the refund window stated on the reservation. The conditions are shown before you pay anything.',
+        '<b>Can two people reserve the same car?</b> Not successfully - a vehicle can only carry one live reservation. As soon as a deposit is confirmed the listing moves to Reserved.',
+      ]),
+      h2('The vehicle itself') + ul([
+        '<b>Why is there no photograph gallery?</b> Because we would rather show you the real vehicle in motion. The video plays inline on every page and in the showroom.',
+        '<b>What does "not verified" mean?</b> That the detail could not be confirmed from the video or the documents - for example the odometer reading or the VIN. Ask us and we will tell you exactly what we need to confirm it.',
+        '<b>Can I see the car before I pay?</b> Yes. Request a viewing or a test drive, or ask for an independent inspection. On some vehicles the video is the only footage we hold.',
+      ]),
+      h2('Delivery and paperwork') + ul([
+        '<b>How long does delivery take?</b> Typically ' + infoSettings.policy_delivery_lead_time + ', depending on the route, shipping method and paperwork.',
+        '<b>Who arranges transport?</b> We do, unless you would rather use your own carrier. The cost is confirmed in writing before dispatch.',
+        '<b>Which documents do I receive?</b> The purchase agreement, the invoice, the payment receipt and the vehicle documents, all in the currency of the transaction.',
+      ]),
+      h2('Contact') + p(`Support hours are ${infoSettings.support_hours} and we aim to reply within ${infoSettings.support_response_hours} hours. Use the <a href="/contact">contact page</a> or the WhatsApp button on any vehicle page.`),
+    ],
+  },
+  terms: {
+    title: 'Terms and conditions of sale',
+    lede: `These terms apply to every vehicle listed by ${infoSettings.legal_company_name}.`,
+    blocks: [
+      h2('1. Who you are contracting with') + p(`The seller is ${infoSettings.legal_company_name}${infoSettings.legal_registration_no && !infoSettings.legal_registration_no.startsWith('[') ? ', registration number ' + esc(infoSettings.legal_registration_no) : ''}, of ${esc(infoSettings.legal_address)}. These terms govern the sale of vehicles and the use of this website.`),
+      h2('2. Vehicle information and video') + p('Each listing describes one vehicle. The video attached to a listing is supplied with it. Information taken from the video is marked as such; information that has not been independently confirmed is marked "not verified". Photographs are not used in place of video. We may correct a listing at any time, and a correction is not a change to these terms.'),
+      h2('3. Prices, currency and taxes') + p('The asking price is shown in the currency stated on the listing. Where you pay in a currency other than the listing currency, the amount you must transfer is calculated at the rate confirmed to you in writing. Registration, import duty, taxes, transport, insurance and any third-party inspection costs are not included unless we say so in writing.'),
+      h2('4. Reservations and deposits') + p(`A reservation holds a vehicle once we have accepted the reservation terms in writing and received the agreed deposit (normally ${infoSettings.policy_deposit_percent} of the purchase price). The deposit is held against the purchase price and is refundable in the circumstances described in our refund and cancellation policy. A vehicle may carry only one live reservation.`),
+      h2('5. Payment') + p('Payments are made by bank transfer to a company account of ours, or by a payment provider enabled by the dealership. You must quote your transaction reference so that we can identify your payment. A payment is only accepted once the funds have been verified in our bank account or confirmed by the payment provider. We never accept payment details through messaging apps and we never ask you to send card numbers to us.'),
+      h2('6. Delivery, risk and insurance') + p(`Delivery or transport is arranged by agreement in writing. Risk passes to you when the vehicle is handed over or, where the vehicle is shipped, when it is loaded for carriage unless the parties agree otherwise in writing. Insurance during transit is arranged for the vehicle's value unless we agree a different amount with you.`),
+      h2('7. Title, documents and condition') + p('The vehicle is sold with the documents listed on the invoice. Ownership history, service records and inspection reports are provided where they are held and are marked as verified or unverified. Where a document has not been independently verified we say so. Vehicles are sold in the condition shown in the video and at handover, not as a representation of a condition we have not inspected.'),
+      h2('8. Warranties and liability') + p('No warranty is given as to the condition, suitability or fitness of a vehicle except as required by law or as expressly set out in the purchase agreement. Nothing in these terms limits your statutory rights or our liability for fraud or for anything that cannot lawfully be limited.'),
+      h2('9. Your account and the website') + p('You are responsible for keeping your account credentials confidential. You may not use the website to upload unlawful content, to interfere with its operation, or to scrape vehicle data for commercial republication.'),
+      h2('10. Governing law') + p(`These terms are governed by the laws of ${infoSettings.legal_governing_law}, and the courts of that place have jurisdiction. If any part of these terms is found to be unenforceable, the rest continues to apply.`),
+      h2('11. Changes') + p('We may update these terms. The version in force at the time of your purchase is the version that applies to that purchase.'),
+      h2('12. How to contact us') + p(`Enquiries about these terms: ${esc(state.settings?.email_sales || 'sales@dmmotorgroup.com')} or the <a href="/contact">contact page</a>. Please quote your transaction reference where you are writing about a payment.`),
+    ],
+  },
+  privacy: {
+    title: 'Privacy policy',
+    lede: `How ${infoSettings.legal_company_name} handles the information you give us.`,
+    blocks: [
+      h2('What we collect') + ul([
+        '<b>Enquiry and account information</b> - your name, email address, telephone number, the vehicles you are interested in and the messages you send us.',
+        '<b>Payment information</b> - the amount, currency, the bank account you paid from, your transaction reference and the receipt you upload. We never receive or store card numbers; card payments are handled by the payment provider.',
+        '<b>Website information</b> - the pages you view and the vehicle videos you play, so that we can show you more of what you are interested in and keep the site secure.',
+      ]),
+      h2('Why we use it') + ul([
+        'To answer your enquiry, prepare the vehicle, issue your invoice and receipt and deliver the vehicle.',
+        'To verify a payment and protect you and us against fraud.',
+        'To keep the website secure, prevent abuse and improve the catalogue.',
+        'To meet our legal, tax and record-keeping obligations.',
+      ]),
+      h2('Who we share it with') + p('We share your information only with the parties who need it to fulfil your order: the payment provider, the transport carrier, the registration authority and professional advisers. We do not sell your data. We may disclose information where the law requires it.'),
+      h2('Receipts and uploaded documents') + p('Payment receipts you upload are stored in a private area that only our staff can open, and they are removed when they are no longer needed for tax or dispute purposes. Ownership documents you send us are treated the same way.'),
+      h2('How long we keep it') + p('Enquiry records are kept while the enquiry is live and for a reasonable period afterwards. Purchase records, invoices and receipts are kept for as long as the tax law requires.'),
+      h2('Your rights') + p('You may ask us what we hold about you, ask us to correct it, or ask us to delete it where we are not required to keep it. Write to us and we will deal with your request within a reasonable time. You may also complain to your local data protection authority.'),
+      h2('Cookies') + p('We use a small number of cookies and local storage entries to keep you signed in, to remember your comparison list and to measure which vehicles people watch. There is no advertising tracking on this site.'),
+      h2('Contact') + p(`Questions about your data: ${esc(state.settings?.email_sales || 'sales@dmmotorgroup.com')}.`),
+    ],
+  },
+  refund: {
+    title: 'Refund and cancellation policy',
+    lede: 'When money comes back, and how long it takes.',
+    blocks: [
+      h2('Reservation deposits') + ul([
+        `<b>Full refund</b> if we are unable to deliver the vehicle, if the vehicle is sold to another buyer before your reservation is confirmed, or if we cancel for any reason on our side.`,
+        `<b>Refund within ${infoSettings.policy_deposit_window_days || infoSettings.policy_refund_window_days} working days</b> of the decision, to the account the deposit came from.`,
+        `<b>Cancellation by you</b> inside the refund window stated on your reservation is refunded in full; outside it, the deposit may be retained against the costs we have already committed to you. The exact position is written into your reservation terms before you pay.`,
+        '<b>Non-refundable situations</b> - a deposit is not refundable once the vehicle has been shipped or handed over, or where the cancellation was caused by a change in your circumstances after the reservation terms were accepted. We will always explain the position before you pay.',
+      ]),
+      h2('Vehicle payments') + p('If a sale does not complete after full payment has been received and verified, the full amount is refunded by the same method it was paid, normally within 10 working days of the cancellation, less any amount you have agreed in writing that we may keep (for example transport costs already incurred).'),
+      h2('Overpayments and duplicate transfers') + p('If we receive more than the amount due, or two transfers for the same reference, we contact you and refund the difference. Please quote your transaction reference with every transfer - an untraceable transfer can take longer to return.'),
+      h2('Card and online payments') + p('Refunds for card payments are made by the payment provider to the same card. Your bank or card issuer may take a few days to show the credit. We do not charge a refund fee on bank transfers.'),
+      h2('How to claim') + p(`Email ${esc(state.settings?.email_sales || 'sales@dmmotorgroup.com')} or use the <a href="/contact">contact page</a> with your transaction reference, the date of payment and the reason for the cancellation. We acknowledge every claim within ${infoSettings.support_response_hours} hours.`),
+    ],
+  },
+  delivery: {
+    title: 'Delivery information',
+    lede: 'How a vehicle reaches you, step by step.',
+    blocks: [
+      h2('The ten stages') + ul([
+        '1. <b>Enquiry received</b> - we confirm the vehicle is available and send you the full specification and video.',
+        '2. <b>Availability confirmed</b> - the vehicle is held for you and the reservation terms are issued.',
+        '3. <b>Invoice issued</b> - you receive the invoice with the exact amount, currency and bank details.',
+        '4. <b>Payment awaiting verification</b> - we check our bank account before anything moves.',
+        '5. <b>Payment confirmed</b> - a receipt is issued in your name.',
+        '6. <b>Vehicle preparation</b> - servicing, detailing, document checks and the optional inspection.',
+        '7. <b>Documentation</b> - the purchase agreement, export documents and the vehicle file are completed.',
+        '8. <b>Shipping or delivery arranged</b> - carrier, insurance and the route are confirmed with you in writing.',
+        '9. <b>In transit</b> - you receive the tracking details and a photograph of the loaded vehicle.',
+        '10. <b>Delivered</b> - handover, documents, keys and the condition check are completed with you.',
+      ]),
+      h2('What we need from you') + ul(['Proof of identity and address for the purchase agreement.', 'A confirmed payment reference.', 'Your delivery address and the consignee details for the documents.', 'Any agreed inspection report.']),
+      h2('Timing, cost and insurance') + p(`Typical lead time is ${infoSettings.policy_delivery_lead_time}. Transport and insurance are quoted in writing before dispatch and depend on the route, the vehicle and the level of cover. The vehicle is insured for its agreed value while in transit unless we agree otherwise with you.`),
+      h2('Acceptance at delivery') + p('Please check the vehicle against the delivery list with the driver: mileage, keys, documents, tools and any existing damage. Note anything that differs from the agreed condition on the handover sheet, before the vehicle is accepted.'),
+      h2('Tracking') + p('You can see the current stage of your order on your account page. We notify you at each stage, and you can ask for an update at any time through the contact page or WhatsApp.'),
+    ],
+  },
+  support: {
+    title: 'Customer support',
+    lede: 'A named contact, a real reply, and no waiting for a ticket number.',
+    blocks: [
+      h2('How to reach us') + ul([
+        `<b>Email</b> - ${esc(state.settings?.email_sales || 'sales@dmmotorgroup.com')}.`,
+        `<b>WhatsApp</b> - the button on any vehicle page, or ${esc(state.settings?.phone_main || '+971 4 584 2200')}.`,
+        '<b>Contact form</b> - the <a href="/contact">contact page</a>, which reaches the sales desk directly.',
+        '<b>Your account</b> - the <a href="/account">customer dashboard</a> shows your enquiries, reservations, invoices and payments in one place.',
+      ]),
+      h2('When you will hear back') + p(`Support hours are ${infoSettings.support_hours}. We aim to answer within ${infoSettings.support_response_hours} hours, and the same day during opening hours. Payment questions are prioritised because they hold up a purchase.`),
+      h2('What to include') + ul(['The vehicle you are asking about.', 'Your transaction reference, if it is about a payment.', 'Your email address so we can reply to the right place.']),
+      h2('Before you travel') + p('If you plan to view a vehicle, tell us the date and we will confirm whether it is possible and, if it is, what viewing options exist. We do not promise a viewing we cannot honour.'),
+      h2('Complaints') + p('If something has gone wrong, write to us with the details and the person you dealt with. We acknowledge every complaint, give you a single point of contact and tell you what we are doing about it.'),
+    ],
+  },
+};
+
+async function viewInfo(kind) {
+  const page = INFO_PAGES[kind];
+  if (!page) { app.innerHTML = `<div class="empty" style="margin-top:40px"><b>Page not found</b><a class="btn btn-gold" href="/">Homepage</a></div>`; return; }
+  title(`${page.title} — DM Motor Group`);
+  metaDesc(page.lede);
+  app.innerHTML = `
+  <div class="wrap" style="max-width:900px;margin:0 auto;padding:26px 0 40px">
+    <div class="crumb"><a href="/">Home</a> → ${esc(page.title)}</div>
+    <h1 class="info-title">${esc(page.title)}</h1>
+    <p class="info-lede">${esc(page.lede)}</p>
+    ${page.blocks.join('')}
+    <div class="info-cta">
+      <a class="btn btn-gold" href="/vehicles">Browse the showroom</a>
+      <a class="btn btn-ghost" href="/contact">Contact the dealership</a>
+    </div>
+    <p class="info-foot">Information on this page is provided by DM Motor Group. Where a document has not been independently verified we say so rather than imply otherwise.</p>
+  </div>`;
+}
+
 const routes = [
   { re: /^\/$/, view: viewHome, titlev: () => 'DM Motor Group — Premium International Automobile Dealership' },
   { re: /^\/vehicles$/, view: viewShowroom, title: 'Vehicle Showroom — DM Motor Group' },
@@ -403,6 +591,13 @@ const routes = [
   { re: /^\/compare\/?$/, view: viewCompare, title: 'Compare Vehicles — DM Motor Group' },
   { re: /^\/account\/?$/, view: viewAccount, title: 'Customer Account — DM Motor Group' },
   { re: /^\/contact\/?$/, view: viewContact, title: 'Contact & Purchasing — DM Motor Group' },
+  { re: /^\/about\/?$/, view: () => viewInfo('about'), title: 'About DM Motor Group' },
+  { re: /^\/faq\/?$/, view: () => viewInfo('faq'), title: 'Frequently Asked Questions — DM Motor Group' },
+  { re: /^\/terms\/?$/, view: () => viewInfo('terms'), title: 'Terms and Conditions — DM Motor Group' },
+  { re: /^\/privacy\/?$/, view: () => viewInfo('privacy'), title: 'Privacy Policy — DM Motor Group' },
+  { re: /^\/refund\/?$/, view: () => viewInfo('refund'), title: 'Refund and Cancellation Policy — DM Motor Group' },
+  { re: /^\/delivery\/?$/, view: () => viewInfo('delivery'), title: 'Delivery Information — DM Motor Group' },
+  { re: /^\/support\/?$/, view: () => viewInfo('support'), title: 'Customer Support — DM Motor Group' },
 ];
 
 async function navigate() { window.scrollTo({ top: 0 }); await route(location.pathname + location.search, true); }
@@ -844,6 +1039,56 @@ async function renderVehicleDetails(slug, v) {
   $$('#detailsBody [data-enq]').forEach((b) => b.onclick = () => enquiryModal({ vehicleId: v.id, vehicleTitle: `${v.brand} ${v.model} ${v.year}`, type: b.dataset.enq }));
 }
 
+/* ---------------- vehicle reservation request ---------------- */
+async function reserveModal(vehicle) {
+  const v = vehicle;
+  const price = Number(v.price || 0);
+  modal(`<h2>Reserve this vehicle</h2>
+    <p style="color:var(--ink-dim)">Ask us to hold the <b>${esc(v.brand)} ${esc(v.model)} ${v.year}</b> for you. We will send the reservation agreement and the deposit instructions, and the vehicle stays available while we confirm.</p>
+    <div class="fgrid" style="margin-top:12px">
+      <div><label>Your name *</label><input id="rsName" type="text" autocomplete="name"></div>
+      <div><label>Email *</label><input id="rsEmail" type="email" autocomplete="email"></div>
+      <div><label>Phone</label><input id="rsPhone" type="tel" autocomplete="tel"></div>
+      <div><label>Deposit you can send</label><input id="rsDeposit" type="number" min="0" step="0.01" value="${price > 0 ? Math.round(price * 0.1) : ''}"></div>
+      <div class="full"><label>Anything we should know</label><textarea id="rsMsg" rows="2" style="width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:11px 12px;color:var(--ink);font-size:16px"></textarea></div>
+    </div>
+    <div id="rsTerms" style="margin-top:16px"></div>
+    <button class="btn btn-gold wide" id="rsGo" style="margin-top:14px">Request the reservation</button>
+    <div class="note" style="margin-top:14px"><b>One vehicle, one live reservation.</b> If someone else is already holding this car we will tell you straight away and you can join the next enquiry.</div>`, 'wide');
+
+  $('#rsGo').onclick = async () => {
+    const name = $('#rsName').value.trim();
+    const email = $('#rsEmail').value.trim();
+    if (!name || !email) { toast('Please give your name and email address.', true); return; }
+    $('#rsGo').disabled = true;
+    $('#rsGo').textContent = 'Sending…';
+    try {
+      const r = await api('/api/reservations', {
+        method: 'POST',
+        body: {
+          vehicleId: v.id, name, email, phone: $('#rsPhone').value.trim(),
+          deposit: $('#rsDeposit').value, message: $('#rsMsg').value.trim(),
+        },
+      });
+      closeModal();
+      modal(`<h2>Reservation request received</h2>
+        <p style="color:var(--ink-dim)">Thank you. We have your request for the <b>${esc(v.brand)} ${esc(v.model)} ${v.year}</b>.</p>
+        <div style="border:1px solid var(--gold);border-radius:12px;padding:14px;margin:14px 0">
+          <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-faint)">Your reservation reference</div>
+          <div style="font-size:20px;font-weight:700;color:var(--gold2)">${esc(r.reference)}</div>
+          ${r.deposit ? `<div style="font-size:13.5px;color:var(--ink-dim);margin-top:6px">Deposit ${esc(r.currency)} ${Number(r.deposit).toLocaleString()}</div>` : ''}
+        </div>
+        <h4 style="margin:16px 0 8px;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--gold2)">Reservation terms</h4>
+        <ul class="feat-cols">${(r.terms || []).map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+        <p style="color:var(--ink-faint);font-size:13px;margin-top:14px">We will email the reservation agreement and the payment instructions for the deposit. You can check the status any time from your account page with your reference.</p>`);
+    } catch (err) {
+      toast(err.message, true);
+      $('#rsGo').disabled = false;
+      $('#rsGo').textContent = 'Request the reservation';
+    }
+  };
+}
+
 /* ---------------- manual bank transfer checkout ---------------- */
 async function bankTransferModal(vehicle) {
   const v = vehicle;
@@ -1043,6 +1288,7 @@ async function viewVehicle(m) {
               <button class="btn btn-ghost" data-enq="purchase">Submit a purchase enquiry</button>
               <button class="btn btn-ghost" data-enq="delivery">Request delivery information</button>
               <button class="btn btn-ghost" id="btnPayBank">🏦 Pay by bank transfer</button>
+              <button class="btn btn-ghost" id="btnReserve">Reserve this vehicle</button>
             </div>` : `
             <div class="note"><b>This vehicle has been sold.</b> Archived listings stay on the site for transparency of our sales history. Ask us about similar stock${v.similar.length ? ' — see the selection below' : ''}.</div>
             <a class="btn btn-gold wide" href="/contact">Contact the dealership</a>`}
@@ -1131,6 +1377,7 @@ async function viewVehicle(m) {
     $$('#app [data-enq]').forEach((b) => b.onclick = () => enquiryModal({ vehicleId: v.id, vehicleTitle: `${v.brand} ${v.model} ${v.year}`, type: b.dataset.enq }));
     $('#btnEnqMain') && ($('#btnEnqMain').onclick = () => enquiryModal({ vehicleId: v.id, vehicleTitle: `${v.brand} ${v.model} ${v.year}`, type: 'question' }));
     $('#btnPayBank') && ($('#btnPayBank').onclick = () => bankTransferModal(v));
+    $('#btnReserve') && ($('#btnReserve').onclick = () => reserveModal(v));
     const waTxt = encodeURIComponent(`Hello DM Motor Group — I am interested in the ${v.brand} ${v.model} ${v.year} (${location.origin}/vehicles/${v.slug}). Please send me the details.`);
     $('#btnWa') && ($('#btnWa').href = `https://wa.me/${esc(state.wa)}?text=${waTxt}`);
     $('#btnFavD').onclick = async () => { await toggleFav(v); $('#btnFavD').textContent = state.favourites.has(v.id) ? '♥ Saved to favourites' : '♡ Save to favourites'; };
@@ -1221,21 +1468,82 @@ async function viewAccount(_m, sp) {
   title('Customer Account — DM Motor Group');
   const tab = sp.get('tab') || (state.user ? 'overview' : 'signin');
   if (!state.user) return renderAuthPage(tab);
-  const tabs = [['overview', 'My account', ''], ['favourites', 'Favourites', state.favourites.size], ['enquiries', 'Enquiry history', ''], ['notifications', 'Notifications', state.unread], ['profile', 'Profile & security', '']];
+  const tabs = [['overview', 'My account', ''], ['orders', 'Orders & delivery', ''], ['reservations', 'Reservations', ''],
+    ['payments', 'Payments & invoices', ''], ['favourites', 'Favourites', state.favourites.size],
+    ['enquiries', 'Enquiry history', ''], ['notifications', 'Notifications', state.unread], ['profile', 'Profile & security', '']];
   let body = '';
+  const STAGE_LIST = [
+    ['enquiry_received', 'Enquiry received'], ['availability_confirmed', 'Availability confirmed'],
+    ['invoice_issued', 'Invoice issued'], ['payment_awaiting', 'Payment awaiting verification'],
+    ['payment_confirmed', 'Payment confirmed'], ['preparation', 'Vehicle preparation'],
+    ['documentation', 'Documentation'], ['shipping', 'Shipping arranged'],
+    ['in_transit', 'In transit'], ['delivered', 'Delivered'],
+  ];
+  const timeline = (stage) => {
+    const idx = STAGE_LIST.findIndex((s) => s[0] === stage);
+    return `<ol class="track">${STAGE_LIST.map(([k, l], i) => `<li class="${i < idx ? 'done' : i === idx ? 'now' : ''}"><span>${i < idx ? '✓' : i + 1}</span><b>${l}</b></li>`).join('')}</ol>`;
+  };
   if (tab === 'overview') body = `
     <div class="panel"><h3 style="margin-bottom:14px">Welcome back, ${esc(state.user.name.split(' ')[0])}</h3>
-    <p class="detail-desc">From here you can save favourites, compare vehicles, follow your enquiries and receive dealership responses. You never need an account to browse the showroom.</p>
+    <p class="detail-desc">From here you can save favourites, compare vehicles, follow your enquiries, track a purchase from enquiry to delivery and download your invoices and receipts.</p>
     <div class="trust" style="margin-bottom:0">
-      <div><b>${state.favourites.size}</b><span>saved favourites</span></div>
-      <div><b>${cmpList().length}</b><span>in comparison</span></div>
-      <div><b>${state.enqCount ?? '—'}</b><span>enquiries submitted</span></div>
-      <div><b>${state.unread}</b><span>unread messages</span></div>
+      <div><b id="ovFav">${state.favourites.size}</b><span>saved favourites</span></div>
+      <div><b id="ovCmp">${cmpList().length}</b><span>in comparison</span></div>
+      <div><b id="ovEnq">${state.enqCount ?? '—'}</b><span>enquiries submitted</span></div>
+      <div><b id="ovOrd">—</b><span>orders & reservations</span></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px">
       <a class="btn btn-gold" href="/vehicles">Browse the showroom</a>
-      <a class="btn btn-ghost" href="/account?tab=favourites">View my favourites</a>
+      <a class="btn btn-ghost" href="/account?tab=orders">Track my order</a>
     </div></div>`;
+  if (tab === 'orders') {
+    const orders = await api('/api/my/orders');
+    state.ovOrders = orders.length;
+    body = orders.length ? orders.map((o) => `
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
+          <b>${esc(o.vehicleTitle || 'Vehicle')}</b>
+          <span class="status-pill">${esc(o.stageLabel)}</span>
+        </div>
+        <div style="color:var(--ink-faint);font-size:12.5px;margin-top:6px">Order #${o.id} · ${esc(o.type)} · ${esc(o.currency)} ${Number(o.amount).toLocaleString()} · started ${esc(String(o.createdAt).slice(0, 10))}${o.stageUpdatedAt ? ` · stage updated ${esc(String(o.stageUpdatedAt).slice(0, 10))}` : ''}</div>
+        ${timeline(o.stage)}
+        ${o.payment ? `<p style="color:var(--ink-dim);font-size:13.5px;margin-top:10px">Payment reference <b>${esc(o.payment.reference || '')}</b> · ${esc(o.payment.statusLabel || '')}</p>` : ''}
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+          <a class="btn btn-ghost sm" href="/api/my/orders/${o.id}/invoice.pdf" target="_blank" rel="noopener">Download invoice</a>
+          ${o.payment && o.payment.status === 'confirmed' ? `<a class="btn btn-gold sm" href="/api/my/orders/${o.id}/invoice.pdf" target="_blank" rel="noopener">Download receipt</a>` : ''}
+          ${o.vehicleSlug ? `<a class="btn btn-ghost sm" href="/vehicles/${esc(o.vehicleSlug)}">View the vehicle</a>` : ''}
+        </div>
+      </div>`).join('') : `<div class="empty"><b>No orders yet</b>When you reserve or buy a vehicle, its progress appears here from enquiry through to delivery.</div>`;
+  }
+  if (tab === 'reservations') {
+    const res = await api('/api/my/reservations');
+    body = res.length ? res.map((r) => `
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
+          <b>${esc(r.vehicleTitle || 'Vehicle')}</b><span class="status-pill">${esc(r.stageLabel)}</span></div>
+        <div style="color:var(--ink-faint);font-size:12.5px;margin-top:6px">Reference ${esc((r.reservation && r.reservation.reference) || '')} · deposit ${esc(r.currency)} ${Number((r.reservation && r.reservation.deposit) || 0).toLocaleString()} · requested ${esc(String(r.createdAt).slice(0, 10))}</div>
+        ${r.reservation && r.reservation.terms ? `<ul class="feat-cols" style="margin-top:10px">${r.reservation.terms.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
+      </div>`).join('') : `<div class="empty"><b>No reservations yet</b>Use “Reserve this vehicle” on any vehicle page. A vehicle can hold one live reservation at a time.</div>`;
+  }
+  if (tab === 'payments') {
+    const orders = await api('/api/my/orders');
+    const pays = orders.filter((o) => o.payment);
+    body = (pays.length ? pays.map((o) => `
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
+          <b>${esc(o.vehicleTitle || 'Vehicle')}</b><span class="status-pill">${esc(o.payment.statusLabel || o.payment.status)}</span></div>
+        <div style="color:var(--ink-faint);font-size:12.5px;margin-top:6px">Reference ${esc(o.payment.reference || '')} · ${esc(o.currency)} ${Number(o.amount).toLocaleString()} · method: manual bank transfer${o.payment.bankName ? ` · ${esc(o.payment.bankName)}` : ''}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+          <a class="btn btn-ghost sm" href="/api/my/orders/${o.id}/invoice.pdf" target="_blank" rel="noopener">Invoice (PDF)</a>
+          ${o.payment.status === 'confirmed' ? `<a class="btn btn-gold sm" href="/api/my/orders/${o.id}/invoice.pdf" target="_blank" rel="noopener">Receipt (PDF)</a>` : '<span class="muted">The receipt is issued once our accounts team has verified the funds in our bank account.</span>'}
+        </div>
+      </div>`).join('') : `<div class="empty"><b>No payments yet</b>Your transfers and their receipts appear here.</div>`)
+      + `<div class="panel"><h3>Check a payment you have already sent</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <input id="pvRef" placeholder="DMG-20261115-XXXXXXXX" style="flex:1;min-width:220px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:11px 12px;color:var(--ink);font-size:16px">
+          <button class="btn btn-ghost" id="pvGo">Check status</button>
+        </div><div id="pvOut" style="margin-top:12px"></div></div>`;
+  }
   if (tab === 'favourites') {
     const favs = await api('/api/favourites');
     body = `<div class="grid">${favs.map((v) => vCard(v)).join('') || `<div class="empty" style="grid-column:1/-1"><b>No favourites yet</b>Press ♡ on any vehicle to save it here.<a class="btn btn-gold" href="/vehicles">Browse the showroom</a></div>`}</div>`;
@@ -1272,6 +1580,18 @@ async function viewAccount(_m, sp) {
     <div>${body}</div>
   </div>`;
   $('#btnLogout').onclick = async () => { try { await api('/api/auth/logout', { method: 'POST' }); } catch {} localStorage.removeItem(TOKEN_KEY); state.user = null; state.favourites.clear(); state.unread = 0; hdrCount(); toast('Signed out.'); route('/account'); };
+  $('#pvGo') && ($('#pvGo').onclick = async () => {
+    const ref = $('#pvRef').value.trim();
+    const out = $('#pvOut');
+    if (!ref) { out.innerHTML = '<span class="muted">Enter your transaction reference.</span>'; return; }
+    out.innerHTML = '<span class="muted">Looking up…</span>';
+    try {
+      const r = await fetch('/api/payments/lookup?reference=' + encodeURIComponent(ref));
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) { out.innerHTML = `<span class="muted">${esc(j.error || 'We could not find that reference.')}</span>`; return; }
+      out.innerHTML = `<div class="panel" style="margin:0"><b>${esc(j.reference)}</b> · ${esc(j.statusLabel)}<br><span class="muted">${esc(j.currency)} ${Number(j.amount).toLocaleString()}</span>${j.reviewNote ? `<br><span class="muted">${esc(j.reviewNote)}</span>` : ''}</div>`;
+    } catch (e) { out.innerHTML = '<span class="muted">We could not reach the server just now.</span>'; }
+  });
   $('#profForm') && ($('#profForm').onsubmit = async (e) => {
     e.preventDefault(); const f = Object.fromEntries(new FormData(e.target));
     try { await api('/api/auth/profile', { method: 'PUT', body: f }); toast('Profile updated.'); state.user.name = f.name || state.user.name; route('/account?tab=profile'); }
@@ -1414,7 +1734,7 @@ window.addEventListener('pageshow', () => {});
   try { await getMeta(); } catch {}
   try { const h = await api('/api/home'); state.settings = h.settings || {}; applySettings(h); } catch {}
   await route(location.pathname + location.search, true);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=30').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=32').catch(() => {});
 })();
 /* Android app installation (Chrome "Add to Home screen" flow) */
 window.__pwaPrompt = null;

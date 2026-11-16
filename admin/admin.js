@@ -52,7 +52,7 @@ $('#loginForm').onsubmit = async (e) => {
 $('#btnLogout').onclick = async () => { try { await api('/api/auth/logout', { method: 'POST' }); } catch {} localStorage.removeItem('dm_admin_token'); showLogin(); };
 
 /* ---------------- routing ---------------- */
-const PAGES = { dashboard, vehicles, specifications: specificationsPage, enqueue: null, enquiries, customers, testimonials, banners, ai: aiScanner, ai_service: aiService, integrations: integrationsPage, bank_accounts: bankAccountsPage, payments: paymentsPage, settings: settingsPage, settings_general: settingsGeneral, settings_media: settingsMedia, settings_users: settingsUsers, settings_maintenance: settingsMaintenance, activity };
+const PAGES = { dashboard, vehicles, specifications: specificationsPage, enqueue: null, enquiries, customers, testimonials, banners, ai: aiScanner, ai_service: aiService, integrations: integrationsPage, bank_accounts: bankAccountsPage, payments: paymentsPage, reservations: reservationsPage, settings: settingsPage, settings_general: settingsGeneral, settings_media: settingsMedia, settings_users: settingsUsers, settings_maintenance: settingsMaintenance, activity };
 window.addEventListener('hashchange', renderRoute);
 async function renderRoute() {
   if (!state.user) return;
@@ -316,6 +316,65 @@ async function specEditorPage(id, defaults) {
       specEditorPage(id, defaults);
     } catch (err) { toast(err.message, true); }
   };
+}
+
+/* ================================================== RESERVATIONS & ORDERS
+   The dealership sees every reservation, moves it through the stages and can
+   issue the invoice or receipt as a PDF. */
+async function reservationsPage() {
+  const data = await api('/api/admin/reservations');
+  const items = data.items || [];
+  const stages = data.stages || [];
+  const orders = await api('/api/admin/orders');
+  const orderRows = Array.isArray(orders) ? orders : (orders.orders || []);
+  pg.innerHTML = `
+  <div class="pg-head"><div><span class="crumb">Sales</span><h1>Reservations &amp; orders (${items.length})</h1></div>
+    <button class="btn btn-ghost" id="rsReload">Refresh</button></div>
+  <div class="panel"><h3>Reservations</h3>
+    <div id="rsList">${items.length ? items.map((r) => `
+      <div class="enq-card">
+        <div class="top"><b>${esc(r.vehicle)}</b><span>${esc(r.stageLabel)} · <span class="muted">${esc(r.reservation && r.reservation.reference || '')}</span></span></div>
+        <div class="msg">${esc((r.reservation && r.reservation.customer && r.reservation.customer.name) || '')} · ${esc((r.reservation && r.reservation.customer && r.reservation.customer.email) || '')}
+          ${r.reservation && r.reservation.customer && r.reservation.customer.phone ? ' · ' + esc(r.reservation.customer.customer ? '' : r.reservation.customer.phone) : ''}</div>
+        <div class="muted">Deposit ${esc(r.currency)} ${Number(r.reservation && r.reservation.deposit || 0).toLocaleString()} · requested ${esc(String(r.createdAt).slice(0, 10))} · vehicle status: ${esc(r.vehicleStatus)}</div>
+        <div class="rowbtns" style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+          ${stages.map((s) => `<button class="btn btn-ghost sm" data-rs="${r.id}" data-stage="${s.key}" ${r.stage === s.key ? 'style="border-color:var(--gold);color:var(--gold2)"' : ''}>${esc(s.label)}</button>`).join('')}
+          <a class="btn btn-ghost sm" href="/api/admin/orders/${r.id}/invoice.pdf" target="_blank" rel="noopener">Invoice PDF</a>
+        </div>
+        <div id="rsNote_${r.id}" style="margin-top:8px"></div>
+      </div>`).join('') : '<div class="empty"><b>No reservations yet</b>Customer reservation requests appear here with the deposit and the terms.</div>'}
+    </div>
+  </div>
+  <div class="panel"><h3>Orders &amp; delivery tracking</h3>
+    <div class="table-wrap"><table class="tbl" id="ordTbl"><thead><tr><th>Order</th><th>Vehicle</th><th>Amount</th><th>Stage</th><th>Documents</th><th>Actions</th></tr></thead><tbody>
+      ${(orderRows || []).map((o) => `<tr data-oid="${o.id}">
+        <td>#${o.id}<br><span class="muted">${esc(o.type)}</span></td>
+        <td>${esc(o.vehicleTitle || '—')}</td>
+        <td>${esc(o.currency)} ${Number(o.amount || 0).toLocaleString()}</td>
+        <td><span class="status ${o.status === 'completed' ? 'published' : 'draft'}">${esc(o.stageLabel || o.status)}</span></td>
+        <td><a class="btn btn-ghost sm" href="/api/admin/orders/${o.id}/invoice.pdf" target="_blank" rel="noopener">PDF</a></td>
+        <td><select data-oid="${o.id}" data-stage-pick style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px">
+          ${(o.stages || []).map((s) => `<option value="${esc(s.key)}" ${s.key === o.stage ? 'selected' : ''}>${esc(s.label)}</option>`).join('')}
+        </select></td></tr>`).join('') || '<tr><td colspan="6"><div class="empty">No orders yet.</div></td></tr>'}
+    </tbody></table></div>
+  </div>`;
+  $('#rsReload').onclick = () => reservationsPage();
+  $$('#rsList [data-rs]').forEach((b) => b.onclick = async () => {
+    const note = prompt('Optional note for the customer (shown in their account):', '');
+    if (note === null) return;
+    try {
+      await api(`/api/admin/reservations/${b.dataset.rs}`, { method: 'PUT', body: { stage: b.dataset.stage, note } });
+      toast('Reservation updated and the customer notified.');
+      reservationsPage();
+    } catch (err) { toast(err.message, true); }
+  });
+  $$('#ordTbl [data-stage-pick]').forEach((s) => s.onchange = async () => {
+    try {
+      await api(`/api/admin/orders/${s.dataset.oid}/stage`, { method: 'PUT', body: { stage: s.value } });
+      toast('Order stage updated and the customer notified.');
+      reservationsPage();
+    } catch (err) { toast(err.message, true); }
+  });
 }
 
 /* ================================================== BANK ACCOUNTS
@@ -1172,9 +1231,19 @@ async function settingsPage() {
     ${T(s, 'address_primary', 'Primary showroom address')}${T(s, 'address_secondary', 'Secondary address')}${T(s, 'hours', 'Opening hours')}
   </div></div>
   <div class="panel"><h3>Trust & payment information (shown verbatim to customers)</h3><div class="fgrid">
-    ${T(s, 'payment_info', 'Payment instructions')}${T(s, 'inspection_note', 'Inspection policy note')}${T(s, 'trade_license', 'Trade licence note')}
-    ${F(s, 'social_instagram', 'Instagram URL')}${F(s, 'social_facebook', 'Facebook URL')}${F(s, 'social_youtube', 'YouTube URL')}${F(s, 'social_linkedin', 'LinkedIn URL')}
+    ${T(s, 'payment_info', 'Payment instructions')}${T(s, 'inspection_note', 'Inspection policy note')}${T(s, 'trade_license', 'Trade licence note')}    ${F(s, 'social_instagram', 'Instagram URL')}${F(s, 'social_facebook', 'Facebook URL')}${F(s, 'social_youtube', 'YouTube URL')}${F(s, 'social_linkedin', 'LinkedIn URL')}
   </div></div>
+  <div class="panel"><h3>Legal &amp; policy details (used on the Terms, Privacy, Refund, Delivery and Support pages)</h3>
+    <p class="muted" style="margin:-4px 0 10px">These fill the legal pages automatically. Anything in square brackets is a placeholder - replace it with your real details.</p>
+    <div class="fgrid">
+      ${F(s, 'legal_company_name', 'Legal company name')}${F(s, 'legal_entity_form', 'Legal entity type (e.g. Limited Liability Company)')}
+      ${F(s, 'legal_registration_no', 'Company registration number')}${F(s, 'legal_address', 'Registered business address')}
+      ${F(s, 'legal_governing_law', 'Governing law / jurisdiction')}
+      ${F(s, 'policy_refund_window_days', 'Refund window (days)')}${F(s, 'policy_deposit_percent', 'Reservation deposit (% of price)')}
+      ${F(s, 'policy_deposit_refund_days', 'Deposit refund time (working days)')}${F(s, 'policy_delivery_lead_time', 'Typical delivery lead time')}
+      ${F(s, 'support_hours', 'Support hours')}${F(s, 'support_response_hours', 'Target first reply (hours)')}
+    </div>
+  </div>
   <button class="btn btn-gold" type="submit">💾 Save all settings</button>
   <p class="muted" style="margin-top:10px">Settings persist in the database and apply instantly to the website, mobile app and admin dashboard.</p></form>`;
   $('#setForm').onsubmit = async (e) => {
