@@ -788,10 +788,14 @@ function bindMediaManager(v) {
     try {
       const r = await api(`/api/admin/upload?vehicleId=${v.id}&type=${type}&category=${type === 'image' ? 'exterior' : 'video'}&filename=${encodeURIComponent(file.name)}`,
         { method: 'PUT', raw: { type: file.type || (type === 'image' ? 'image/jpeg' : 'video/mp4'), data: file } });
-      /* auto-generate thumbnail client-side */
+      /* auto-generate thumbnail client-side (and decor frames for videos) */
       try {
         if (type === 'image') await makeThumb(r.id, await shrinkImage(file));
-        else await makeThumb(r.id, await videoFrame(file));
+        else {
+          await makeThumb(r.id, await videoFrame(file));
+          try { await uploadDecorFrames(v.id, file); toast('Banner frames saved for this video.'); }
+          catch (e) { toast('Video uploaded, but banner frames were not saved: ' + (e && e.message), true); }
+        }
       } catch (e) { void e; }
       await refresh();
       toast(`Uploaded: ${file.name}`);
@@ -815,6 +819,10 @@ function bindMediaManager(v) {
       const r = await api(`/api/admin/media/${pendingReplace}/file?filename=${encodeURIComponent(file.name)}`, { method: 'PUT', raw: { type: file.type || 'video/mp4', data: file } });
       pendingReplace = 0;
       toast(r.playable ? 'Video replaced and verified as playable.' : `Video replaced, but it did not verify: ${r.reason}`, !r.playable);
+      if (r.playable) {
+        try { await uploadDecorFrames(v.id, file); toast('Banner frames refreshed for the new video.'); }
+        catch (e) { toast('Video replaced, but banner frames were not refreshed: ' + (e && e.message), true); }
+      }
       refresh();
     } catch (err) { toast(err.message, true); }
   };
@@ -851,9 +859,83 @@ async function makeThumb(mediaId, blob) {
   await api(`/api/admin/media/${mediaId}/thumb`, { method: 'PUT', raw: { type: 'image/webp', data: blob } });
 }
 
+/* ---------------- decor frames for the vehicle's VIEW DETAILS page ----------------
+ * At upload time (local file — no CORS), the uploader's browser extracts up to
+ * 6 clear, different frames from the NEW VIDEO and stores them with the vehicle.
+ * The public page then uses them as banner / information-card backgrounds for
+ * EVERY visitor, instantly — no per-visitor browser work. Re-uploading a video
+ * re-captures frames of the new video (the endpoint replaces old frames). */
+const blobToDataUrl = (blob) => new Promise((resolve, reject) => {
+  const rd = new FileReader();
+  rd.onload = () => resolve(String(rd.result || ''));
+  rd.onerror = () => reject(new Error('could not read the extracted frame'));
+  rd.readAsDataURL(blob);
+});
+function lumaProbe(ctx, w, h) {
+  const s = document.createElement('canvas'); s.width = 48; s.height = 27;
+  const sc = s.getContext('2d'); sc.drawImage(ctx.canvas, 0, 0, 48, 27);
+  const d = sc.getImageData(0, 0, 48, 27).data;
+  let sum = 0, sum2 = 0; const n = d.length / 4;
+  for (let i = 0; i < d.length; i += 4) { const l = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]; sum += l; sum2 += l * l; }
+  const mean = sum / n, variance = sum2 / n - mean * mean;
+  return { mean, variance };
+}
+async function adminVideoFrames(file) {
+  const v = document.createElement('video');
+  v.muted = true; v.preload = 'auto'; if ('playsInline' in v) v.playsInline = true;
+  v.src = URL.createObjectURL(file);
+  try {
+    await new Promise((res, rej) => {
+      const to = setTimeout(() => rej(new Error('video metadata timeout')), 20000);
+      v.onloadedmetadata = () => { clearTimeout(to); res(); };
+      v.onerror = () => { clearTimeout(to); rej(new Error('video could not be read')); };
+    });
+    const dur = v.duration;
+    if (!dur || !isFinite(dur) || dur < 2) throw new Error('video too short to sample');
+    const W = 1280;
+    const c = Object.assign(document.createElement('canvas'), { width: W, height: Math.max(2, Math.round(W * ((v.videoHeight / v.videoWidth) || 0.5625))) });
+    const ctx = c.getContext('2d');
+    const N = dur > 24 ? 9 : 6;
+    const pts = Array.from({ length: N }, (_, i) => dur * (0.08 + (0.84 * i) / Math.max(1, N - 1)));
+    const got = [];
+    for (const t of pts) {
+      try {
+        await new Promise((res, rej) => {
+          const to = setTimeout(() => rej(new Error('seek timeout')), 9000);
+          const done = () => { clearTimeout(to); res(); };
+          v.onseeked = done;
+          v.currentTime = Math.min(Math.max(t, 0.1), dur - 0.1);
+        });
+        await new Promise((r) => setTimeout(r, 130));
+        ctx.drawImage(v, 0, 0, c.width, c.height);
+        const m = lumaProbe(ctx, c.width, c.height);
+        if (m.mean < 18 || m.mean > 236 || m.variance < 260) continue;
+        const blob = await new Promise((r) => c.toBlob(r, 'image/jpeg', 0.78));
+        if (blob) got.push({ blob, score: m.variance });
+        if (got.length >= 6) break;
+      } catch { /* try the next timestamp */ }
+    }
+    if (got.length < 3) throw new Error('not enough clear frames');
+    got.sort((a, b) => b.score - a.score);
+    return got.slice(0, 6);
+  } finally {
+    try { v.pause(); } catch {}
+    URL.revokeObjectURL(v.src);
+  }
+}
+async function uploadDecorFrames(vehicleId, file) {
+  const frames = await adminVideoFrames(file);
+  const out = [];
+  for (const f of frames) {
+    out.push({ mimeType: 'image/jpeg', dataBase64: await blobToDataUrl(f.blob) });
+  }
+  return api(`/api/admin/vehicles/${vehicleId}/frames`, { method: 'POST', body: { frames: out } });
+}
+
 /* ================================================== AI CAR SCANNER */
 let aiImages = [];
 let aiVideo = null;
+let aiVideoFile = null;
 let aiBusy = false;
 let aiReport = null;
 let aiVehicleId = null;
@@ -864,6 +946,12 @@ const aiReadBase64 = (f) => new Promise((res, rej) => { const r = new FileReader
 async function aiRunScan(images, video, provider) {
   const r = await api('/api/admin/scan', { method: 'POST', body: { images, video, provider } });
   aiReport = r.scan || {}; aiVehicleId = r.vehicleId || null; aiProvider = r.provider || provider || aiProvider;
+  /* the scanner stores the video server-side — capture the decor frames from
+   * the local file right now so the vehicle page is decorated instantly */
+  if (aiVehicleId && aiVideoFile) {
+    try { await uploadDecorFrames(aiVehicleId, aiVideoFile); toast('Banner frames saved for this video.'); }
+    catch (e) { toast('Scan succeeded, but banner frames were not saved: ' + (e && e.message), true); }
+  }
   return r;
 }
 
@@ -1019,7 +1107,7 @@ async function aiScanner() {
     e.target.value = '';
   };
   const aiVid = document.getElementById('aiVid');
-  if (aiVid) aiVid.onchange = async (e) => { const f = e.target.files && e.target.files[0]; if (f) { aiVideo = { name: f.name, mimeType: f.type || 'video/mp4', dataBase64: await aiReadBase64(f) }; } };
+  if (aiVid) aiVid.onchange = async (e) => { const f = e.target.files && e.target.files[0]; if (f) { aiVideo = { name: f.name, mimeType: f.type || 'video/mp4', dataBase64: await aiReadBase64(f) }; aiVideoFile = f; } };
 
   const aiEditBtn = document.getElementById('aiEditBtn');
   if (aiEditBtn) aiEditBtn.onclick = () => { if (aiVehicleId) location.hash = '#/vehicles/' + aiVehicleId; };

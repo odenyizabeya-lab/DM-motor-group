@@ -810,12 +810,24 @@ async function vfGetFrames(vehicleId, url) {
   return blobs;
 }
 
-async function decorateVehicleWithFrames(vehicleId, url) {
+async function decorateVehicleWithFrames(vehicleId, url, serverFrames) {
   vfRevoke();
   try {
-    const blobs = await vfGetFrames(vehicleId, url);
-    if (!blobs || blobs.length < 3) return;
-    const urls = blobs.map((b) => { const u = URL.createObjectURL(b); __frameUrls.push(u); return u; });
+    let urls = [];
+    if (Array.isArray(serverFrames) && serverFrames.length >= 3) {
+      /* frames prepared once at upload time, stored with the vehicle —
+       * every visitor gets them instantly, no browser work required */
+      urls = serverFrames.slice(0, 6);
+      window.__vfLast = { vehicleId, fromServer: true, frames: urls.length };
+    } else {
+      /* legacy/current vehicles: extract frames from THIS vehicle's own video
+       * in the visitor's browser (cached per device), or do nothing → CSS fallback */
+      const blobs = await vfGetFrames(vehicleId, url);
+      if (!blobs || blobs.length < 3) return;
+      urls = blobs.map((b) => { const u = URL.createObjectURL(b); __frameUrls.push(u); return u; });
+      if (window.__vfLast && window.__vfLast.vehicleId === vehicleId) window.__vfLast.fromServer = false;
+      else window.__vfLast = { vehicleId, fromServer: false, fromCache: false, frames: urls.length };
+    }
     $$('#app .dbanner').forEach((b, i) => {
       if (b.querySelector('.db-frame')) return;
       const d = document.createElement('div');
@@ -1788,7 +1800,7 @@ async function viewVehicle(m) {
     if (videos.length) mountVideo(0);
     /* decorative frames from THIS vehicle's own video — runs in the background
      * after render; on any failure the CSS banners simply stay as they are */
-    if (videos.length && videos[0] && videos[0].url) decorateVehicleWithFrames(v.id, videos[0].url);
+    if (videos.length && videos[0] && videos[0].url) decorateVehicleWithFrames(v.id, videos[0].url, v.frames);
     const vlist = $('#videoList');
     if (vlist) vlist.onclick = (e) => { const b = e.target.closest('.vchip'); if (b) mountVideo(+b.dataset.vi); };
     bindCards(app);
@@ -2154,7 +2166,7 @@ window.addEventListener('pageshow', () => {});
   try { await getMeta(); } catch {}
   try { const h = await api('/api/home'); state.settings = h.settings || {}; applySettings(h); } catch {}
   await route(location.pathname + location.search, true);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=38').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=39').catch(() => {});
 })();
 /* Android app installation (Chrome "Add to Home screen" flow) */
 window.__pwaPrompt = null;

@@ -78,13 +78,15 @@ await sql(`
 `);
 console.log('3. sample data inserted');
 
-let m1 = 'OK', m2a = 'OK', m2b = 'OK';
+let m1 = 'OK', m2a = 'OK', m2b = 'OK', m3 = 'OK';
 try { await sql(fs.readFileSync('supabase/migrations/00006_vehicle_ai_fields.sql', 'utf8')); } catch (e) { m1 = 'FAILED: ' + String(e.message).split('\n').filter((l) => /error/i.test(l)).slice(0, 3).join(' | '); }
 try { await sql(fs.readFileSync('supabase/migrations/00007_ai_customer_service.sql', 'utf8')); } catch (e) { m2a = 'FAILED: ' + String(e.message).split('\n').filter((l) => /error/i.test(l)).slice(0, 3).join(' | '); }
 try { await sql(fs.readFileSync('supabase/migrations/00008_security_hardening.sql', 'utf8')); } catch (e) { m2b = 'FAILED: ' + String(e.message).split('\n').filter((l) => /error/i.test(l)).slice(0, 3).join(' | '); }
+try { await sql(fs.readFileSync('supabase/migrations/00009_vehicle_frames.sql', 'utf8')); } catch (e) { m3 = 'FAILED: ' + String(e.message).split('\n').filter((l) => /error/i.test(l)).slice(0, 3).join(' | '); }
 console.log('\n4. MIGRATION 1 :', m1);
 console.log('   MIGRATION 2a:', m2a);
 console.log('   MIGRATION 2b:', m2b);
+console.log('   MIGRATION 3 :', m3);
 
 const NEW_VEH_COLS = "('headline','selling_points','market_value_estimate','seo_title','seo_description','technology_features','interior_features','exterior_features','damage','ownership_history','service_history','documents','inspection_points','inspection_date','inspection_verified','reservation_deposit','reservation_terms','discount_percent','discount_note','discount_until')";
 console.log('\n5. VERIFICATION');
@@ -109,6 +111,7 @@ try {
   await sql(fs.readFileSync('supabase/migrations/00006_vehicle_ai_fields.sql', 'utf8'));
   await sql(fs.readFileSync('supabase/migrations/00007_ai_customer_service.sql', 'utf8'));
   await sql(fs.readFileSync('supabase/migrations/00008_security_hardening.sql', 'utf8'));
+  await sql(fs.readFileSync('supabase/migrations/00009_vehicle_frames.sql', 'utf8'));
 } catch (e) { again = 'FAILED: ' + String(e.message).split('\n').filter((l) => /error/i.test(l)).slice(0, 3).join(' | '); }
 console.log('\n6. RE-RUN (idempotency):', again);
 console.log('   vehicle columns after re-run:', await val(`select count(*) from information_schema.columns where table_schema='public' and table_name='vehicles' and column_name in ${NEW_VEH_COLS}`), '(must still be 20)');
@@ -132,6 +135,18 @@ console.log('   enquiries                            ->', (await asAnon('select 
 console.log('   profiles                             ->', (await asAnon('select count(*) c from profiles'))[0].c, '(must be 0)');
 console.log('   orders                               ->', (await asAnon('select count(*) c from orders'))[0].c, '(must be 0)');
 console.log('   insert approved testimonial          ->', String(await asAnon("insert into testimonials (name, location, rating, body, status) values ('x','x',5,'x','approved')")).slice(0, 90), '(must be denied)');
+
+/* vehicle_frames verification: table exists, RLS works for anon reads */
+console.log('\n7b. vehicle_frames (migration 3)');
+await sql(`insert into public.vehicle_frames (vehicle_id, url, position)
+  select id, 'https://example.test/f1.jpg', 0 from public.vehicles where slug = 'test-car-1'`);
+await sql(`insert into public.vehicle_frames (vehicle_id, url, position)
+  select id, 'https://example.test/f2.jpg', 0 from public.vehicles where slug = 'test-car-2'`);
+console.log('   rows inserted                :', await val('select count(*) from vehicle_frames'), '(must be 2)');
+console.log('   duplicate (vehicle_id, position)  :', await val("select count(*) from (select vehicle_id, position from vehicle_frames group by 1,2 having count(*) > 1) x"), '(must be 0)');
+console.log('   anon sees published frames  ->', (await asAnon("select count(*) c from vehicle_frames f join vehicles v on v.id = f.vehicle_id where v.slug = 'test-car-1'"))[0].c, '(must be 1)');
+console.log('   anon sees draft frames      ->', (await asAnon("select count(*) c from vehicle_frames f join vehicles v on v.id = f.vehicle_id where v.slug = 'test-car-2'"))[0].c, '(must be 0)');
+console.log('   anon cannot insert frames   ->', String(await asAnon("insert into vehicle_frames (vehicle_id, url, position) values (1, 'https://example.test/evil.jpg', 0)")).slice(0, 80), '(must be denied)');
 
 await sql(`insert into public.ai_jobs (kind, payload) values ('t1','{}'::jsonb),('t2','{}'::jsonb);`);
 console.log('\n8. ai_claim_jobs(1) claimed:', (await q('select count(*) c from ai_claim_jobs(1)'))[0].c, 'row; still pending:', await val("select count(*) from ai_jobs where status='pending'"), '(1 of 2)');

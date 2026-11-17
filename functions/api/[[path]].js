@@ -360,6 +360,13 @@ route('GET', '/api/vehicles/:slug', async ({ env, request, g, ctx }) => {
   const sim = (similar || []).slice(0, 4).sort((a, b) => Math.abs(a.price - v.price) - Math.abs(b.price - v.price));
   const simMedia = await L.mediaFor(env, sim.map((s) => s.id));
   const out = L.vehicleDetailOut(v, md || []);
+  /* decorative frames captured from this vehicle's own video; the table may
+   * not exist yet (migration 00009) — then the page falls back to extracting
+   * frames from the video in the visitor's browser. */
+  try {
+    const fr = await L.rest.get(env, 'vehicle_frames', { vehicle_id: `eq.${v.id}`, select: 'url', order: 'position.asc' });
+    out.frames = (fr || []).map((f) => f.url);
+  } catch { out.frames = []; }
   out.similar = sim.map((s) => L.vehicleOut(s, simMedia.get(s.id) || []));
   if (u) {
     const fav = await L.rest.get(env, 'favourites', { user_id: `eq.${u.id}`, vehicle_id: `eq.${v.id}`, select: 'vehicle_id' });
@@ -1117,8 +1124,9 @@ route('DELETE', '/api/admin/vehicles/:id', async ({ env, request, g, ctx }) => {
   const v = rows && rows[0];
   if (!v) throw L.err(404, 'Not found');
   const media = await L.rest.get(env, 'media', { vehicle_id: `eq.${v.id}`, select: 'url,thumb_url' });
-  await L.rest.del(env, 'vehicles', { id: v.id }); /* cascades to media rows */
-  if (ctx) ctx.waitUntil(L.storageDelete(env, (media || []).flatMap((m) => [m.url, m.thumb_url])));
+  const vframes = await L.rest.get(env, 'vehicle_frames', { vehicle_id: `eq.${v.id}`, select: 'url' }).catch(() => []);
+  await L.rest.del(env, 'vehicles', { id: v.id }); /* cascades to media rows and vehicle_frames rows */
+  if (ctx) ctx.waitUntil(L.storageDelete(env, (media || []).flatMap((m) => [m.url, m.thumb_url]).concat((vframes || []).map((f) => f.url))));
   if (ctx) ctx.waitUntil(L.logActivity(env, u.email, 'vehicle_deleted', `${v.brand} ${v.model} (#${v.id})`));
   return L.json({ ok: true });
 });
@@ -1218,6 +1226,57 @@ route('PUT', '/api/admin/upload', async ({ env, request, url, ctx }) => {
 
   if (ctx) ctx.waitUntil(L.logActivity(env, u.email, 'banner_uploaded', objectPath));
   return L.json({ ok: true, url: publicUrl });
+});
+
+/* POST /api/admin/vehicles/:id/frames — decorative screenshots captured from
+ * the vehicle's OWN video by the uploader's browser (canvas from a local file,
+ * so CORS is never involved). Idempotent: previous frames (rows + storage
+ * objects) are replaced, so re-uploading a video re-decorates the page with
+ * frames of the NEW video. Served publicly via /api/vehicles/:slug (frames).
+ * Body: { frames: [{ mimeType, dataBase64, name? }] } — 3 to 6 frames. */
+route('POST', '/api/admin/vehicles/:id/frames', async ({ env, request, g, ctx }) => {
+  const u = await L.writeStaff(env, request);
+  const vehicleId = +g.id || 0;
+  if (!vehicleId) throw L.err(400, 'A valid vehicle id is required.');
+  if (+(request.headers.get('content-length') || 0) > 24 * 1024 * 1024) {
+    throw L.err(413, 'The frame upload is too large.');
+  }
+  const vr = await L.rest.get(env, 'vehicles', { id: `eq.${vehicleId}`, select: 'id' }).catch(() => []);
+  if (!vr || !vr.length) throw L.err(404, 'Vehicle not found.');
+  const b = await L.readJson(request, 24 * 1024 * 1024);
+  const frames = (Array.isArray(b.frames) ? b.frames : []).slice(0, 6);
+  const IMAGE_MIME = { 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/png': 'png' };
+  const decode = (b64, maxBytes) => {
+    const clean = String(b64 || '').replace(/^data:[^;]+;base64,/, '');
+    if (clean.length > Math.ceil(maxBytes * 4 / 3) + 4) return null;
+    try { return Uint8Array.from(atob(clean), (c) => c.charCodeAt(0)); } catch { return null; }
+  };
+  const decoded = [];
+  for (const f of frames) {
+    const mt = String((f && f.mimeType) || '').split(';')[0].trim().toLowerCase();
+    const ext = IMAGE_MIME[mt];
+    if (!ext) continue;
+    const bytes = decode(f && f.dataBase64, 1500 * 1024);
+    if (bytes && bytes.length) decoded.push({ bytes, mt, ext });
+  }
+  if (decoded.length < 3) throw L.err(400, 'At least 3 clear frames are required (got ' + decoded.length + ').');
+  const old = await L.rest.get(env, 'vehicle_frames', { vehicle_id: `eq.${vehicleId}`, select: 'url' }).catch(() => null);
+  if (old === null) {
+    throw L.err(503, 'The vehicle frames storage is not ready yet. Run migration 00009_vehicle_frames.sql.');
+  }
+  const newUrls = [];
+  for (let i = 0; i < decoded.length; i++) {
+    const d = decoded[i];
+    const objectPath = `frames/${vehicleId}/${Date.now().toString(36)}-${i + 1}-${crypto.randomUUID().slice(0, 6)}.${d.ext}`;
+    newUrls.push(await L.storageUpload(env, 'vehicle-media', objectPath, d.bytes, d.mt, false));
+  }
+  if (old && old.length) {
+    await L.storageDelete(env, old.map((o) => o.url));
+    await L.rest.del(env, 'vehicle_frames', { vehicle_id: `eq.${vehicleId}` });
+  }
+  await L.rest.insert(env, 'vehicle_frames', decoded.map((_, i) => ({ vehicle_id: vehicleId, url: newUrls[i], position: i })));
+  if (ctx) ctx.waitUntil(L.logActivity(env, u.email, 'vehicle_frames_saved', `#${vehicleId} · ${decoded.length} frames`));
+  return L.json({ ok: true, count: decoded.length });
 });
 
 /* ---------------------------------------------------------------------------
