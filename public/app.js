@@ -147,7 +147,7 @@ function vCard(v, opts = {}) {
       </div>
       ${opts.offer ? `<div style="color:var(--ink-dim);font-size:12.5px">Offer ends when reserved — ask for the current drive-away price.</div>` : ''}
       <div class="foot">
-        <a class="btn btn-ghost sm" href="/vehicles/${esc(v.slug)}">Details</a>
+        <a class="btn btn-ghost sm" href="/vehicles/${esc(v.slug)}">View details</a>
         <button class="btn btn-gold sm" data-act="enq" data-type="price">Request price</button>
       </div>
     </div>
@@ -633,6 +633,35 @@ window.route = route;
 /* ---------------- section helpers ---------------- */
 const secHead = (t, small, href, label = 'View all') =>
   `<div class="sec-head reveal"><h2>${t}${small ? `<small>${small}</small>` : ''}</h2>${href ? `<a href="${href}">${label} →</a>` : ''}</div>`;
+
+/* ---------------- premium section banners (vehicle detail page) ----------------
+ * Pure CSS artwork: deep black textures, champagne-gold line work, gradients
+ * and subtle automotive-inspired patterns. No photographs anywhere — the
+ * video-only showroom policy is preserved. */
+const stroke = 'fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"';
+const DB_ICONS = {
+  spec: `<svg viewBox="0 0 24 24" ${stroke}><path d="M4.5 17a7.5 7.5 0 1 1 15 0"/><path d="M12 13.5 15.5 10"/><circle cx="12" cy="14" r="1.2"/></svg>`,
+  file: `<svg viewBox="0 0 24 24" ${stroke}><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M10 13h6M10 16.5h6"/></svg>`,
+  quote: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.5 7.2c-2.6.6-4 2.4-4 5v4.6h5V11H8.6c.2-1.4 1-2.3 2.4-2.8zM20 7.2c-2.6.6-4 2.4-4 5v4.6h5V11h-2.9c.2-1.4 1-2.3 2.4-2.8z"/></svg>`,
+  shield: `<svg viewBox="0 0 24 24" ${stroke}><path d="M12 3l7 2.8V11c0 4.8-2.9 7.8-7 9.9C7.9 18.8 5 15.8 5 11V5.8z"/><path d="M9.2 11.8l2 2 3.8-4"/></svg>`,
+  wheel: `<svg viewBox="0 0 24 24" ${stroke}><circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="2.4"/><path d="M3.9 10.8h16.2M12 14.4v5.8"/></svg>`,
+};
+const dBanner = (icon, kicker, t, small, href, label = 'View all') =>
+  `<div class="dbanner db-${icon}"><span class="db-glyph" aria-hidden="true">${DB_ICONS[icon]}</span>
+    <div class="db-text"><span class="db-kicker">${kicker}</span><h2>${t}</h2>${small ? `<p class="db-sub">${small}</p>` : ''}</div>
+    ${href ? `<a class="db-link" href="${href}">${label} →</a>` : ''}</div>`;
+
+/* small gold icons for the key facts panel */
+const KFI = {
+  year: `<svg viewBox="0 0 24 24" ${stroke}><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg>`,
+  mileage: `<svg viewBox="0 0 24 24" ${stroke}><path d="M5.5 21 10 3M18.5 21 14 3M12 7v2.5M12 12.5v2.5M12 18v2"/></svg>`,
+  engine: `<svg viewBox="0 0 24 24" ${stroke}><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.2 5.2l2.1 2.1M16.7 16.7l2.1 2.1M18.8 5.2l-2.1 2.1M7.3 16.7l-2.1 2.1"/></svg>`,
+  trans: `<svg viewBox="0 0 24 24" ${stroke}><path d="M6 5v14M12 5v8M12 16.5v2.5M18 5v14M6 13h12"/></svg>`,
+  fuel: `<svg viewBox="0 0 24 24" ${stroke}><path d="M12 3.2s6 7 6 10.8a6 6 0 0 1-12 0c0-3.8 6-10.8 6-10.8z"/></svg>`,
+  body: `<svg viewBox="0 0 24 24" ${stroke}><path d="M4 15.5 5.8 10h12.4L20 15.5"/><rect x="3.5" y="15.5" width="17" height="3.2" rx="1.2"/><circle cx="8" cy="18.7" r="1.5"/><circle cx="16" cy="18.7" r="1.5"/></svg>`,
+  cond: `<svg viewBox="0 0 24 24" ${stroke}><circle cx="12" cy="12" r="8.2"/><path d="M9 12.2l2 2 4-4.2"/></svg>`,
+  loc: `<svg viewBox="0 0 24 24" ${stroke}><path d="M12 21s-6.2-5.4-6.2-10a6.2 6.2 0 0 1 12.4 0c0 4.6-6.2 10-6.2 10z"/><circle cx="12" cy="10.8" r="2.1"/></svg>`,
+};
 function bindSectionVideos(root, list) {
   cacheVehiclesFromVideos(list);
   bindVidCards(root);
@@ -925,7 +954,7 @@ function detailsBlock(d, v) {
     <div><span>Media on file</span><b>${d.media.videos} video(s) · ${d.media.photos} photo(s)</b></div>
   </div>
 
-  <div class="d-sec">
+  <div class="d-sec dv-spec">
     <h3><span class="d-num">1</span> Complete vehicle specification</h3>
     <div class="d-cols">
       <div>
@@ -957,7 +986,7 @@ function detailsBlock(d, v) {
     <p class="d-muted">${esc(spec.otherEquipment)}</p>
   </div>
 
-  <div class="d-sec">
+  <div class="d-sec dv-engine">
     <h3><span class="d-num">2</span> Engine and performance</h3>
     <table class="d-table">
       ${dRow('Engine capacity', d.engine.capacity)}${dRow('Engine type', d.engine.type)}
@@ -966,7 +995,7 @@ function detailsBlock(d, v) {
     </table>
   </div>
 
-  <div class="d-sec">
+  <div class="d-sec dv-condition">
     <h3><span class="d-num">3</span> Vehicle condition</h3>
     <table class="d-table">
       ${dRow('Overall condition', d.condition.overall)}${dRow('Exterior condition', d.condition.exterior)}
@@ -976,7 +1005,7 @@ function detailsBlock(d, v) {
     </table>
   </div>
 
-  <div class="d-sec">
+  <div class="d-sec dv-interior">
     <h3><span class="d-num">4</span> Interior and features</h3>
     <div class="d-cols">
       <div>
@@ -996,7 +1025,7 @@ function detailsBlock(d, v) {
     </div>
   </div>
 
-  <div class="d-sec">
+  <div class="d-sec dv-media">
     <h3><span class="d-num">5</span> Photographs and video</h3>
     <div class="d-media">
       <div><b>${d.media.videos}</b><span>Full-length video presentation(s) attached to this listing</span></div>
@@ -1006,7 +1035,7 @@ function detailsBlock(d, v) {
     ${d.verifiedFacts ? `<p class="d-verified"><b>What the footage shows.</b> ${esc(d.verifiedFacts)}</p>` : ''}
   </div>
 
-  <div class="d-sec">
+  <div class="d-sec dv-market">
     <h3><span class="d-num">6</span> Market value and our asking price</h3>
     <div class="d-price">
       <div class="d-ask"><span>Our asking price</span><b>${asking}</b><small>${d.market.askingPrice && d.market.pricePosition ? `Sits ${esc(d.market.pricePosition)} the published market band` : 'final figure confirmed in writing before any payment'}</small></div>
@@ -1017,7 +1046,7 @@ function detailsBlock(d, v) {
     <p class="d-muted">${esc(d.market.statement)} ${esc(d.market.note)}</p>
   </div>
 
-  <div class="d-sec">
+  <div class="d-sec dv-customer">
     <h3><span class="d-num">7</span> Customer information</h3>
     ${d.description ? `<p class="detail-desc">${esc(d.description)}</p>` : ''}
     ${d.disclosures.length ? `<div class="d-disclose"><b>Known facts and disclosures</b><ul>${d.disclosures.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>` : '<div class="d-disclose ok"><b>No adverse findings were identified in the footage review.</b> Items marked "Not verified" above still require physical inspection.</div>'}
@@ -1300,15 +1329,15 @@ async function viewVehicle(m) {
           </div>
         </div>
         <div class="keyfacts">
-          <div><span>Year</span><b>${v.year}</b></div><div><span>Mileage</span><b>${fmtKm(v.mileage)}</b></div>
-          <div><span>Engine</span><b>${esc(v.engine || '—')}</b></div><div><span>Transmission</span><b>${esc(v.transmission || '—')}</b></div>
-          <div><span>Fuel</span><b>${esc(v.fuel || '—')}</b></div><div><span>Body</span><b>${esc(v.bodyType || '—')}</b></div>
-          <div><span>Condition</span><b>${esc(v.condition || '—')}</b></div><div><span>Location</span><b>${esc(v.location || '—')}</b></div>
+          <div><span><i class="kfi" aria-hidden="true">${KFI.year}</i>Year</span><b>${v.year}</b></div><div><span><i class="kfi" aria-hidden="true">${KFI.mileage}</i>Mileage</span><b>${fmtKm(v.mileage)}</b></div>
+          <div><span><i class="kfi" aria-hidden="true">${KFI.engine}</i>Engine</span><b>${esc(v.engine || '—')}</b></div><div><span><i class="kfi" aria-hidden="true">${KFI.trans}</i>Transmission</span><b>${esc(v.transmission || '—')}</b></div>
+          <div><span><i class="kfi" aria-hidden="true">${KFI.fuel}</i>Fuel</span><b>${esc(v.fuel || '—')}</b></div><div><span><i class="kfi" aria-hidden="true">${KFI.body}</i>Body</span><b>${esc(v.bodyType || '—')}</b></div>
+          <div><span><i class="kfi" aria-hidden="true">${KFI.cond}</i>Condition</span><b>${esc(v.condition || '—')}</b></div><div><span><i class="kfi" aria-hidden="true">${KFI.loc}</i>Location</span><b>${esc(v.location || '—')}</b></div>
         </div>
       </div>
     </div>
 
-    <section class="section">${secHead('Full specifications', 'exactly as registered by the dealership')}
+    <section class="section sec-spec">${dBanner('spec', 'Specification dossier', 'Full specifications', 'exactly as registered by the dealership')}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:34px" class="spec-2col">
         <div><table class="spec-table">${
           [
@@ -1329,24 +1358,24 @@ async function viewVehicle(m) {
       </div>
     </section>
 
-    <section class="section" id="vehicleDetails">${secHead('Complete vehicle details', 'every specification, what is verified and what is not')}
+    <section class="section sec-details" id="vehicleDetails">${dBanner('file', 'Verification file', 'Complete vehicle details', 'every specification, what is verified and what is not')}
       <div id="detailsBody"><div class="note">Loading the complete vehicle file…</div></div>
     </section>
 
-    <section class="section">${secHead('Vehicle description')}
-      <p class="detail-desc">${esc(v.description)}</p>
+    <section class="section sec-desc">${dBanner('quote', 'The dealership\u2019s word', 'Vehicle description')}
+      <div class="desc-card"><p class="detail-desc">${esc(v.description)}</p></div>
       <div class="note"><b>Information notice.</b> Specifications, history and pricing are supplied by DM Motor Group and kept in our registration files. Verified information (VIN checks, third-party inspection) is labelled as verified above; all other figures come from the dealership record.</div>
     </section>
 
     ${v.features?.length || v.safetyFeatures?.length ? `
-    <section class="section">${secHead('Equipment', 'features & safety')}
+    <section class="section sec-equip">${dBanner('shield', 'Comfort & protection', 'Equipment', 'features & safety')}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:34px" class="spec-2col">
         <div><h4 style="font-family:var(--sans);font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--gold2);margin-bottom:10px">Comfort & features</h4><ul class="feat-cols">${v.features.map((f) => `<li>${esc(f)}</li>`).join('') || ''}</ul></div>
         <div><h4 style="font-family:var(--sans);font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--gold2);margin-bottom:10px">Safety features</h4><ul class="feat-cols">${v.safetyFeatures.map((f) => `<li>${esc(f)}</li>`).join('') || ''}</ul></div>
       </div>
     </section>` : ''}
 
-    ${v.similar?.length ? `<section class="section">${secHead('Similar vehicles you may like', '', '/vehicles?category=' + v.category)}
+    ${v.similar?.length ? `<section class="section sec-similar">${dBanner('wheel', 'Continue exploring', 'Similar vehicles you may like', '', '/vehicles?category=' + v.category)}
       <div class="grid">${v.similar.map((x) => vCard(x)).join('')}</div></section>` : ''}`;
 
     /* video playlist: the vehicle's videos are the only media on this page */
@@ -1734,7 +1763,7 @@ window.addEventListener('pageshow', () => {});
   try { await getMeta(); } catch {}
   try { const h = await api('/api/home'); state.settings = h.settings || {}; applySettings(h); } catch {}
   await route(location.pathname + location.search, true);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=32').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=33').catch(() => {});
 })();
 /* Android app installation (Chrome "Add to Home screen" flow) */
 window.__pwaPrompt = null;

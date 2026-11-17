@@ -1,7 +1,7 @@
 'use strict';
 /* DM Motor Group — service worker: app shell + offline fallback */
-const CACHE = 'dm-v32';
-const ASSETS = ['/', '/styles.css?v=20', '/app.js?v=26', '/manifest.webmanifest', '/assets/icon.svg', '/apple-touch-icon.png'];
+const CACHE = 'dm-v33';
+const ASSETS = ['/', '/styles.css?v=21', '/app.js?v=27', '/manifest.webmanifest', '/assets/icon.svg', '/apple-touch-icon.png'];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
 });

@@ -534,3 +534,154 @@ ol.track li.now b{color:var(--gold2)}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
+
+/* ======================================================================
+   VEHICLE DETAIL PAGE — LUXURY PRESENTATION UPGRADE
+   Premium black + champagne-gold. Pure CSS artwork only: deep black
+   textures, gold hairlines, gradients and subtle automotive-inspired
+   line patterns. NO photographs are introduced anywhere (video-only
+   showroom policy). Presentation only — no structure or feature changes.
+   ====================================================================== */
+:root{
+  --lux-line:rgba(201,164,92,.22);
+  --lux-line-strong:rgba(201,164,92,.45);
+  --lux-card-a:#161a21;--lux-card-b:#10131a;--lux-card-c:#12161d;
+  --lux-shadow:0 18px 44px -26px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.035)
+}
+
+/* ---------------- premium section banners ---------------- */
+.dbanner{position:relative;display:flex;align-items:center;gap:20px;overflow:hidden;
+  border:1px solid var(--lux-line-strong);border-radius:18px;padding:28px 30px;margin-bottom:24px;
+  background:
+    radial-gradient(120% 170% at 86% -20%,rgba(201,164,92,.17),transparent 55%),
+    linear-gradient(135deg,#14181e 0%,#0b0d10 58%,#10131a 100%);
+  box-shadow:var(--lux-shadow)}
+.dbanner::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.55;
+  background:
+    repeating-linear-gradient(115deg,rgba(201,164,92,.055) 0 1px,transparent 1px 15px),
+    radial-gradient(55% 130% at 0% 100%,rgba(201,164,92,.09),transparent 62%)}
+.dbanner::after{content:"";position:absolute;left:0;right:0;top:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold) 16%,var(--gold2) 50%,var(--gold) 84%,transparent)}
+.db-glyph{position:absolute;right:26px;top:50%;transform:translateY(-50%);width:104px;height:104px;
+  color:rgba(201,164,92,.16);pointer-events:none}
+.db-glyph svg{width:100%;height:100%}
+.db-text{position:relative;min-width:0}
+.db-kicker{display:flex;align-items:center;gap:10px;font-size:10.5px;letter-spacing:3.2px;text-transform:uppercase;
+  color:var(--gold2);margin-bottom:8px;white-space:nowrap}
+.db-kicker::before{content:"";width:30px;height:1px;background:linear-gradient(90deg,var(--gold),transparent);flex:none}
+.dbanner h2{font-family:var(--serif);font-size:clamp(22px,3vw,30px);line-height:1.15;margin:0;color:var(--ink);
+  text-shadow:0 2px 18px rgba(0,0,0,.55)}
+.db-sub{margin:7px 0 0;font-size:13px;letter-spacing:.6px;color:var(--ink-dim)}
+.db-link{position:relative;margin-left:auto;flex:none;align-self:center;color:var(--gold2);font-size:13.5px;
+  letter-spacing:.5px;border:1px solid var(--lux-line);border-radius:99px;padding:9px 16px;white-space:nowrap;
+  background:rgba(201,164,92,.07);transition:.2s}
+.db-link:hover{border-color:var(--gold);color:var(--gold2);background:rgba(201,164,92,.14)}
+/* each section carries its own identity within one brand: */
+.db-details::before{opacity:.5;background:
+    repeating-linear-gradient(63deg,rgba(201,164,92,.05) 0 1px,transparent 1px 11px),
+    radial-gradient(60% 120% at 8% 110%,rgba(201,164,92,.1),transparent 60%)}
+.db-desc{background:
+    radial-gradient(110% 150% at 10% -25%,rgba(201,164,92,.13),transparent 55%),
+    linear-gradient(150deg,#12151b 0%,#0b0d10 62%,#11141a 100%)}
+.db-desc::before{opacity:.4;background:repeating-linear-gradient(90deg,rgba(201,164,92,.05) 0 1px,transparent 1px 26px)}
+.db-equip::before{opacity:.42;background:
+    repeating-linear-gradient(45deg,rgba(201,164,92,.045) 0 1px,transparent 1px 12px),
+    repeating-linear-gradient(-45deg,rgba(201,164,92,.045) 0 1px,transparent 1px 12px),
+    radial-gradient(55% 125% at 95% 105%,rgba(201,164,92,.09),transparent 60%)}
+.db-similar{background:
+    radial-gradient(120% 170% at 50% 130%,rgba(201,164,92,.14),transparent 60%),
+    linear-gradient(135deg,#12161c 0%,#0b0d10 60%,#0f1218 100%)}
+.db-similar::before{opacity:.5;background:repeating-linear-gradient(152deg,rgba(201,164,92,.05) 0 1px,transparent 1px 17px)}
+@media(max-width:700px){
+  .dbanner{padding:20px 18px;gap:12px;border-radius:15px;margin-bottom:18px}
+  .db-glyph{width:64px;height:64px;right:12px;color:rgba(201,164,92,.12)}
+  .db-kicker{letter-spacing:2.2px;font-size:10px}
+  .db-link{padding:8px 13px;font-size:12.5px}
+}
+
+/* ---------------- key facts panel ---------------- */
+.keyfacts{position:relative;border:1px solid var(--lux-line);border-radius:18px;padding:16px 20px;margin-top:6px;
+  background:linear-gradient(160deg,#14181e,#0e1116);box-shadow:var(--lux-shadow)}
+.keyfacts::after{content:"";position:absolute;top:0;left:20px;right:20px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(201,164,92,.55),transparent)}
+.keyfacts div{display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid rgba(201,164,92,.13);padding:8px 0}
+.keyfacts div:last-child,.keyfacts div:nth-last-child(2):nth-child(odd){border:0}
+.keyfacts span{display:inline-flex;align-items:center;gap:8px;font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--ink-faint)}
+.keyfacts b{color:var(--ink);font-weight:600;font-size:14px;text-align:right}
+.kfi{width:15px;height:15px;display:inline-grid;place-items:center;color:var(--gold);flex:none}
+.kfi svg{width:100%;height:100%}
+
+/* ---------------- specification tables ---------------- */
+.spec-table td,.d-table td{padding:10px 8px;border-bottom:1px solid rgba(201,164,92,.14);transition:background .15s}
+.spec-table td:first-child,.d-table td:first-child{font-size:10.5px;letter-spacing:1.3px;text-transform:uppercase;
+  color:var(--ink-faint);width:44%}
+.spec-table tr:hover td,.d-table tr:hover td{background:rgba(201,164,92,.045)}
+
+/* description presented as a letterhead card */
+.desc-card{position:relative;border:1px solid var(--lux-line);border-radius:16px;padding:20px 24px;
+  background:linear-gradient(160deg,#14181e,#0f1216);box-shadow:var(--lux-shadow);margin:2px 0 4px;overflow:hidden}
+.desc-card::before{content:"\201C";position:absolute;top:-6px;right:14px;font-family:var(--serif);font-size:70px;
+  color:rgba(201,164,92,.13);line-height:1;pointer-events:none}
+.desc-card::after{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:linear-gradient(180deg,var(--gold),rgba(201,164,92,.06))}
+.desc-card .detail-desc{margin:0}
+
+/* ---------------- the seven numbered information panels ---------------- */
+.d-sec{--acc:rgba(201,164,92,.06);position:relative;margin-bottom:24px;border:1px solid var(--lux-line);
+  border-radius:18px;padding:24px 26px;overflow:hidden;
+  background:
+    radial-gradient(90% 130% at 100% 0%,var(--acc),transparent 55%),
+    linear-gradient(160deg,var(--lux-card-a) 0%,var(--lux-card-b) 55%,var(--lux-card-c) 100%);
+  box-shadow:var(--lux-shadow)}
+.d-sec::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background:repeating-linear-gradient(0deg,rgba(201,164,92,.03) 0 1px,transparent 1px 10px)}
+.d-sec::after{content:"";position:absolute;top:0;left:26px;right:26px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(201,164,92,.55),transparent)}
+.d-sec h3{font-family:var(--serif);font-size:20px;margin:0 0 16px;display:flex;align-items:center;gap:11px;color:var(--ink)}
+.d-sec h3::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(201,164,92,.32),transparent);min-width:30px}
+.d-num{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;flex:none;
+  background:linear-gradient(135deg,rgba(201,164,92,.26),rgba(201,164,92,.05));
+  border:1px solid rgba(201,164,92,.55);color:var(--gold2);font-family:var(--sans);font-size:13px;font-weight:700;
+  box-shadow:0 0 0 4px rgba(201,164,92,.06)}
+.d-sec h4{font-family:var(--sans);font-size:11.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gold2);margin:0 0 9px}
+/* each panel its own subtle character (palette stays gold/black): */
+.dv-spec{--acc:rgba(201,164,92,.08)}
+.dv-engine{--acc:rgba(111,179,216,.06)}
+.dv-condition{--acc:rgba(61,157,107,.06)}
+.dv-interior{--acc:rgba(201,164,92,.07)}
+.dv-media{--acc:rgba(201,164,92,.09)}
+.dv-market{--acc:rgba(201,164,92,.12)}
+.dv-customer{--acc:rgba(201,164,92,.05)}
+.dv-market{border-color:rgba(201,164,92,.38)}
+@media(max-width:860px){
+  .d-sec{padding:18px 15px;border-radius:15px;margin-bottom:18px}
+  .d-sec h3{font-size:17.5px}
+  .d-num{width:27px;height:27px;font-size:12px}
+}
+
+/* ---------------- verification strip ---------------- */
+.d-meta{gap:12px;margin-bottom:24px}
+.d-meta>div{position:relative;background:linear-gradient(160deg,#14181e,#0e1116);border:1px solid var(--lux-line);
+  border-radius:14px;padding:14px 16px;box-shadow:var(--lux-shadow)}
+.d-meta>div::after{content:"";position:absolute;top:12px;bottom:12px;left:0;width:2px;border-radius:2px;
+  background:linear-gradient(180deg,var(--gold),rgba(201,164,92,.05))}
+.d-meta span{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px}
+.d-meta b{font-size:13.5px;font-weight:600;color:var(--ink)}
+
+/* ---------------- market value panel ---------------- */
+.d-price>div{border-radius:14px;padding:16px 18px}
+.d-ask{background:linear-gradient(135deg,rgba(201,164,92,.16),rgba(201,164,92,.05)) !important;
+  border-color:rgba(201,164,92,.55) !important;box-shadow:0 10px 30px -18px rgba(201,164,92,.4)}
+.d-ask b{font-size:23px}
+.d-est{background:linear-gradient(160deg,#12161c,#0d1015)}
+.d-rec{border-radius:14px}
+
+/* ---------------- media & disclosure panels ---------------- */
+.d-media>div{background:linear-gradient(160deg,#14181e,#0e1116);border:1px solid var(--lux-line);border-radius:14px;
+  box-shadow:var(--lux-shadow);position:relative;overflow:hidden}
+.d-media>div::after{content:"";position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(201,164,92,.5),transparent)}
+.d-media b{font-size:27px}
+.d-warn,.d-disclose{border-radius:12px}
+.d-cta .btn{box-shadow:0 10px 26px -16px rgba(201,164,92,.35)}
+.d-verified{border-left-width:2px}
