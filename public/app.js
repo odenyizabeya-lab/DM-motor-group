@@ -15,17 +15,55 @@ const title = (t) => { document.title = t; };
 
 /* ---------------- API ---------------- */
 const TOKEN_KEY = 'dm_token';
-async function api(path, { method = 'GET', body, raw } = {}) {
+const API_TIMEOUT_MS = 9000;
+const fetchWithTimeout = (path, opts, ms = API_TIMEOUT_MS) => {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  const p = fetch(path, { ...opts, signal: ctrl.signal }).then((r) => { clearTimeout(t); return r; }, (e) => { clearTimeout(t); throw e; });
+  return p;
+};
+const reportClientError = (path, info) => {
+  /* fire-and-forget — must never break the app or the user's flow */
+  try {
+    const body = JSON.stringify({ kind: 'client_error', path: String(path || '').slice(0, 120), ...info });
+    if (navigator.sendBeacon) navigator.sendBeacon('/api/telemetry', new Blob([body], { type: 'application/json' }));
+    else fetch('/api/telemetry', { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true }).catch(() => {});
+  } catch { /* never throws */ }
+};
+async function api(path, { method = 'GET', body, raw, retry = null } = {}) {
   const headers = { 'X-Requested-With': 'DMFetch' };
   const token = localStorage.getItem(TOKEN_KEY);
   if (token) headers.Authorization = 'Bearer ' + token;
   let payload;
   if (raw) { headers['Content-Type'] = raw.type; payload = raw.data; }
   else if (body !== undefined) { headers['Content-Type'] = 'application/json'; payload = JSON.stringify(body); }
-  const res = await fetch(path, body !== undefined || raw ? { method, headers, body: payload } : { method, headers });
+  const opts = body !== undefined || raw ? { method, headers, body: payload } : { method, headers };
+  /* GET requests retry once after a short backoff — transient network hiccups
+   * are absorbed silently. Mutations are never auto-retried. */
+  const shouldRetry = retry !== null ? retry : method === 'GET';
+  let res;
+  try {
+    res = await fetchWithTimeout(path, opts);
+  } catch (e) {
+    if (shouldRetry) {
+      await new Promise((r) => setTimeout(r, 450));
+      try { res = await fetchWithTimeout(path, opts); }
+      catch (e2) {
+        reportClientError(path, { error: String(e2 && e2.name || e2).slice(0, 60), online: navigator.onLine });
+        const offline = !navigator.onLine;
+        throw new Error(offline ? 'You appear to be offline. Check your connection — the page will recover automatically.' : 'The connection took too long to respond. Please try again.');
+      }
+    } else {
+      reportClientError(path, { error: String(e && e.name || e).slice(0, 60), online: navigator.onLine });
+      const offline = !navigator.onLine;
+      throw new Error(offline ? 'You appear to be offline. Check your connection — the page will recover automatically.' : 'The connection took too long to respond. Please try again.');
+    }
+  }
   let data = {};
   try { data = await res.json(); } catch {}
+  if (res.status >= 500) reportClientError(path, { status: res.status, online: navigator.onLine, error: String(data.error || 'http_5xx').slice(0, 60) });
   if (res.status === 401 && !path.startsWith('/api/auth')) { state.user = null; toast('Please sign in to continue.', true); route('/account'); throw new Error('401'); }
+  if (res.status === 429) { toast('A lot of requests at once — please wait a moment and try again.', true); throw new Error(data.error || 'Too many requests'); }
   if (!res.ok && data.error) throw new Error(data.error);
   return data;
 }
@@ -611,7 +649,21 @@ async function route(path, initial = false) {
     match.title && title(match.title);
     app.innerHTML = `<div class="page-head"><div><span class="crumb">Loading…</span></div></div><div class="skeleton" style="height:340px;border-radius:14px"></div>`;
     try { await match.view(m, url.searchParams); }
-    catch (e) { console.error(e); app.innerHTML = `<div class="empty"><b>${esc(e.message || 'Something went wrong')}</b><a class="btn btn-gold" href="/vehicles">Back to showroom</a></div>`; }
+    catch (e) {
+      console.error(e);
+      reportClientError(path, { error: String(e && (e.message || e)).slice(0, 80), online: navigator.onLine });
+      app.innerHTML = `<div class="wrap" style="padding:60px 0"><div class="err-card">
+        <div class="err-glyph" aria-hidden="true">${ICON_CONN}</div>
+        <h2>We hit a snag loading this page</h2>
+        <p>${esc(e.message || 'Something went wrong')}</p>
+        <div class="err-actions">
+          <button class="btn btn-gold" id="errRetry">Try again</button>
+          <a class="btn btn-ghost" href="/vehicles">Back to the showroom</a>
+        </div>
+      </div></div>`;
+      const retry = $('#errRetry');
+      if (retry) retry.onclick = () => route(path);
+    }
   } else {
     title('Page not found — DM Motor Group');
     app.innerHTML = `<div class="empty" style="margin-top:40px"><b>Page not found</b>Check the address, or return to the showroom.<a class="btn btn-gold" href="/">Homepage</a></div>`;
@@ -639,6 +691,8 @@ const secHead = (t, small, href, label = 'View all') =>
  * and subtle automotive-inspired patterns. No photographs anywhere — the
  * video-only showroom policy is preserved. */
 const stroke = 'fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"';
+/* offline glyph for the connection error card */
+const ICON_CONN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 10.5a15 15 0 0 1 15 0M8 14a9.5 9.5 0 0 1 8 0M11.5 17.5h.01"/><path d="M3.5 4.5l17 15" stroke-opacity=".85"/></svg>`;
 const DB_ICONS = {
   spec: `<svg viewBox="0 0 24 24" ${stroke}><path d="M4.5 17a7.5 7.5 0 1 1 15 0"/><path d="M12 13.5 15.5 10"/><circle cx="12" cy="14" r="1.2"/></svg>`,
   file: `<svg viewBox="0 0 24 24" ${stroke}><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M10 13h6M10 16.5h6"/></svg>`,
@@ -2159,14 +2213,24 @@ async function syncMe() {
   catch { state.user = null; }
   hdrCount();
 }
+/* ---------------- connectivity resilience ---------------- */
+const updateNetPill = () => { const p = $('#netPill'); if (p) p.hidden = navigator.onLine; };
+window.addEventListener('online', () => { updateNetPill(); toast('Back online.'); route(location.pathname + location.search).catch(() => {}); });
+window.addEventListener('offline', () => { updateNetPill(); reportClientError('network', { error: 'went_offline' }); });
+window.addEventListener('unhandledrejection', (e) => { try { reportClientError('unhandled', { error: String((e && e.reason && (e.reason.message || e.reason)) || 'rejection').slice(0, 100), online: navigator.onLine }); } catch {} });
+window.addEventListener('error', (e) => { try { if (e && e.message) reportClientError('js', { error: String(e.message).slice(0, 100), online: navigator.onLine }); } catch {} });
+
 window.addEventListener('pageshow', () => {});
 
 (async function boot() {
-  try { await syncMe(); } catch {}
-  try { await getMeta(); } catch {}
-  try { const h = await api('/api/home'); state.settings = h.settings || {}; applySettings(h); } catch {}
+  /* Fire support requests in parallel — never let a slow /api/home or /api/meta
+   * block the first render of the page. */
+  syncMe().catch(() => {});
+  getMeta().catch(() => {});
+  api('/api/home').then((h) => { state.settings = (h && h.settings) || {}; applySettings(h); }).catch(() => {});
   await route(location.pathname + location.search, true);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=40').catch(() => {});
+  updateNetPill();
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=42').catch(() => {});
 })();
 /* Android app installation (Chrome "Add to Home screen" flow) */
 window.__pwaPrompt = null;

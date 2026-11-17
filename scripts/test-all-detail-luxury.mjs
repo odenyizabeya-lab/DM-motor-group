@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 
 const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const PORT = 9383;
-const BASE = 'http://127.0.0.1:8931';
+const BASE = process.env.BASE || 'http://127.0.0.1:8931';
 
 const chrome = spawn(CHROME, ['--headless=new', '--disable-gpu', '--no-sandbox', '--hide-scrollbars',
   '--autoplay-policy=no-user-gesture-required', '--window-size=1280,900',

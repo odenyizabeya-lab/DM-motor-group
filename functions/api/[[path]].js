@@ -119,8 +119,6 @@ function updatedFields(b, currentVehicle) {
 
 /* =============================================================== PUBLIC API */
 
-route('GET', '/api/health', () => L.json({ ok: true, service: 'DM Motor Group API', engine: 'cloudflare+supabase' }));
-
 route('GET', '/api/meta', async ({ env }) => {
   const [brands, models, locs, price] = await Promise.all([
     L.rest.rpc(env, 'distinct_brands'),
@@ -196,6 +194,46 @@ route('GET', '/api/home', async ({ env }) => {
  * the customer is asked for more details instead of receiving a guess.
  * Keys are loaded server-side from the private ai_secrets table / worker env
  * and are never exposed to the frontend. */
+/* GET /api/health — live infrastructure check: API, database, public storage.
+ * Public, rate-limited, no private data; used by the admin System Health page
+ * and by uptime monitors. Never caches (fresh measurement every call). */
+route('GET', '/api/health', async ({ env, ip }) => {
+  if (!L.rateLimit(`health:${ip || 'x'}`, 60, 10 * 60e3)) throw L.err(429, 'Too many health checks.');
+  const t0 = Date.now();
+  let db = { ok: false, ms: -1 };
+  try { await L.rest.get(env, 'settings', { select: 'key', limit: '1' }); db = { ok: true, ms: Date.now() - t0 }; } catch { db = { ok: false, ms: Date.now() - t0 }; }
+  const t1 = Date.now();
+  let storage = { ok: false, ms: -1 };
+  try {
+    const vids = await L.rest.get(env, 'media', { type: 'eq.video', select: 'url', order: 'id.desc', limit: '1' });
+    const u = vids && vids[0] && vids[0].url;
+    if (u) {
+      const r = await fetch(u, { method: 'HEAD' });
+      storage = { ok: r.status === 200 || r.status === 206, ms: Date.now() - t1 };
+    } else storage = { ok: true, ms: 0 };
+  } catch { storage = { ok: false, ms: Date.now() - t1 }; }
+  return L.json({ ok: db.ok, service: 'DM Motor Group API', engine: 'cloudflare+supabase', time: new Date().toISOString(), db, storage });
+});
+
+/* POST /api/telemetry — tiny client-side error beacon. Rate-limited, capped,
+ * best-effort: never fails the page that reports it. Entries appear in the
+ * activity log as client_client_error / client_network etc. */
+route('POST', '/api/telemetry', async ({ env, request, ip }) => {
+  if (!L.rateLimit(`telemetry:${ip || 'x'}`, 40, 10 * 60e3)) return L.json({ ok: true, limited: true });
+  if (+(request.headers.get('content-length') || 0) > 2048) return L.json({ ok: true, ignored: true });
+  const b = await L.readJson(request, 2048).catch(() => null);
+  if (!b) return L.json({ ok: true, ignored: true });
+  const kind = String(b.kind || 'client_error').replace(/[^a-z_]/gi, '').slice(0, 30) || 'client_error';
+  const detail = JSON.stringify({
+    path: String(b.path || '').slice(0, 120),
+    status: b.status ? +b.status : undefined,
+    error: String(b.error || '').slice(0, 90),
+    online: 'online' in b ? !!b.online : undefined,
+  }).slice(0, 300);
+  await L.logActivity(env, 'client', `client_${kind}`.slice(0, 40), detail).catch(() => {});
+  return L.json({ ok: true });
+});
+
 /* ============ YouTube Marketing Automation (admin API) ============ */
 const YT_JSON_ERR = (e) => (e && e.message) ? String(e.message).slice(0, 300) : 'YouTube automation error';
 

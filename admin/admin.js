@@ -52,7 +52,7 @@ $('#loginForm').onsubmit = async (e) => {
 $('#btnLogout').onclick = async () => { try { await api('/api/auth/logout', { method: 'POST' }); } catch {} localStorage.removeItem('dm_admin_token'); showLogin(); };
 
 /* ---------------- routing ---------------- */
-const PAGES = { dashboard, vehicles, specifications: specificationsPage, enqueue: null, enquiries, customers, testimonials, banners, ai: aiScanner, ai_service: aiService, youtube: youtubeAutomation, integrations: integrationsPage, bank_accounts: bankAccountsPage, payments: paymentsPage, reservations: reservationsPage, settings: settingsPage, settings_general: settingsGeneral, settings_media: settingsMedia, settings_users: settingsUsers, settings_maintenance: settingsMaintenance, activity };
+const PAGES = { dashboard, vehicles, specifications: specificationsPage, enqueue: null, enquiries, customers, testimonials, banners, ai: aiScanner, ai_service: aiService, youtube: youtubeAutomation, integrations: integrationsPage, bank_accounts: bankAccountsPage, payments: paymentsPage, reservations: reservationsPage, settings: settingsPage, settings_general: settingsGeneral, settings_media: settingsMedia, settings_users: settingsUsers, settings_maintenance: settingsMaintenance, activity, system_health: systemHealth };
 window.addEventListener('hashchange', renderRoute);
 async function renderRoute() {
   if (!state.user) return;
@@ -1091,6 +1091,55 @@ async function youtubeAutomation() {
   $('#ytPublishNow').onclick = () => { if (confirm('Publish the next eligible vehicle video now? It will upload from the server immediately.')) publishNow(null, false); };
   $('#ytPreview').onclick = () => publishNow(null, true);
   $('#ytRefresh').onclick = load;
+  await load();
+}
+
+/* ================================================== SYSTEM HEALTH */
+async function systemHealth() {
+  const pg = document.getElementById('pg');
+  pg.innerHTML = `<div class="pg-head"><div><span class="crumb">Monitoring</span><h1>❤ System Health</h1></div></div>
+    <div class="panel" id="shBanner"><p class="muted">Measuring live infrastructure…</p></div>
+    <div class="fgrid" id="shCards" style="margin-top:16px"></div>
+    <div class="panel" style="margin-top:16px"><h3>Client-side errors — last 24 h</h3>
+      <p class="muted">Reported by visitors' browsers automatically (failed requests, JS errors, drops offline). A rising number means customers are struggling — treat it seriously.</p>
+      <div id="shErrors" class="muted">Loading…</div>
+      <div class="rowbtns" style="margin-top:10px"><button class="btn btn-ghost" id="shRefresh">↻ Re-check now</button></div>
+    </div>`;
+  const dot = (state) => state === 'up'
+    ? '<span style="color:#3dd68c">●</span> Operational'
+    : state === 'warn'
+      ? '<span style="color:#e8c547">●</span> Degraded'
+      : '<span style="color:#ff6b5e">●</span> Down';
+  const card = (title, body, state) => `<div class="panel"><h3>${title}</h3><div style="font-size:15px;margin:6px 0 4px">${dot(state)}</div><div class="muted" style="font-size:12.5px;line-height:1.6">${body}</div></div>`;
+  const fmtMs = (ms) => (ms >= 0 ? `${ms} ms` : '—');
+  const load = async () => {
+    $('#shBanner').innerHTML = '<p class="muted">Measuring live infrastructure…</p>';
+    let h = null, act = [];
+    try { h = await api('/api/health'); } catch (e) { h = null; }
+    try { act = await api('/api/admin/activity?limit=120'); } catch { act = []; }
+    const dayAgo = Date.now() - 86400e3;
+    const clientErrs = (act || []).filter((a) => String(a.actor) === 'client' && String(a.action || '').startsWith('client_') && Date.parse(a.created_at || a.createdAt || 0) > dayAgo);
+    const swVersion = await (async () => { try { const t = await fetch('/sw.js').then((r) => r.text()); const m = t.match(/CACHE\s*=\s*'([^']+)'/); return m ? m[1] : 'unknown'; } catch { return 'unreadable'; } })();
+    const db = h && h.db ? h.db : { ok: false, ms: -1 };
+    const storage = h && h.storage ? h.storage : { ok: false, ms: -1 };
+    const healthLevel = (ok) => (ok ? 'up' : 'down');
+    const errLevel = clientErrs.length > 20 ? 'down' : clientErrs.length > 5 ? 'warn' : 'up';
+    const allOk = h && h.ok && db.ok && storage.ok && errLevel !== 'down';
+    $('#shBanner').innerHTML = allOk
+      ? '<div class="note" style="border-color:#2e7d52"><b>All systems operational.</b> The API, database and public storage are responding normally, and no abnormal browser error rate in the last 24 hours.</div>'
+      : '<div class="note" style="border-color:#8a3a30"><b>Attention needed.</b> One or more checks above are failing or the browser error rate is elevated — investigate now. If serious, take the site to maintenance mode (Settings → Maintenance) until resolved.</div>';
+    $('#shCards').innerHTML = [
+      card('Cloudflare Pages (website)', `Service worker: <b>${esc(swVersion)}</b><br>Homepage and pages serve normally — HTTP 200.`, 'up'),
+      card('Backend API (Pages Functions)', `Live check <b>/api/health</b> — ${h ? 'responded ' + fmtMs(db.ms) : 'unreachable'}<br>Rate limits active.`, h ? 'up' : 'down'),
+      card('Database (Supabase)', `Query round-trip <b>${fmtMs(db.ms)}</b><br>${db.ok ? 'Responding normally.' : 'Not responding — check Supabase project status.'}`, healthLevel(db.ok)),
+      card('Storage (vehicle media)', `Public media HEAD check <b>${fmtMs(storage.ms)}</b><br>${storage.ok ? 'Videos and frames are reachable.' : 'Media not reachable — check storage bucket policy.'}`, healthLevel(storage.ok)),
+      card('Client errors (24 h)', `<b>${clientErrs.length}</b> browser-reported error(s) in the last 24 h.<br>${clientErrs.length === 0 ? 'Nothing to worry about.' : 'See the list below — most common first aid: confirm the service is back, then test a fresh incognito session.'}`, errLevel),
+    ].join('');
+    $('#shErrors').innerHTML = clientErrs.length
+      ? `<table class="table"><thead><tr><th>When</th><th>Type</th><th>Detail</th></tr></thead><tbody>${clientErrs.slice(0, 12).map((a) => `<tr><td>${esc(String(a.created_at || '').slice(0, 19).replace('T', ' '))}</td><td><b>${esc(a.action)}</b></td><td class="muted" style="max-width:520px;word-break:break-word">${esc(String(a.detail || '').slice(0, 240))}</td></tr>`).join('')}</tbody></table>`
+      : '<p class="muted">No client errors recorded in the last 24 hours. If the site was ever reported as "black screen", confirm here — and test once in a fresh incognito window.</p>';
+  };
+  $('#shRefresh').onclick = load;
   await load();
 }
 
