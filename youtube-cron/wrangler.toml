@@ -1,0 +1,8 @@
+name = "dm-youtube-cron"
+main = "cron.js"
+compatibility_date = "2026-11-01"
+keep_vars = true
+
+[triggers]
+# every 30 minutes — the site decides whether the scheduled time has arrived
+crons = ["*/30 * * * *"]

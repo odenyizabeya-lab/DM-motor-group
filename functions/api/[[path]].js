@@ -8,6 +8,7 @@ import aiCustomer from '../../shared/ai-customer.js';
 import emailService from '../../shared/email-service.js';
 import { ORDER_STAGES, RESERVATION_STAGES, RESERVATION_TERMS, stageByKey, stageIndex, reservationStageByKey, buildPdf, invoiceNumber } from '../../shared/order-stages.js';
 import aiService from '../../shared/ai-service.js';
+import youtubeAutomation from '../../shared/youtube.js';
 import { normalizeSettings, toDbSettingsPatch, publicSettings } from '../../shared/settings.js';
 
 const readJson = L.readJson;
@@ -195,6 +196,178 @@ route('GET', '/api/home', async ({ env }) => {
  * the customer is asked for more details instead of receiving a guess.
  * Keys are loaded server-side from the private ai_secrets table / worker env
  * and are never exposed to the frontend. */
+/* ============ YouTube Marketing Automation (admin API) ============ */
+const YT_JSON_ERR = (e) => (e && e.message) ? String(e.message).slice(0, 300) : 'YouTube automation error';
+
+/* GET /api/admin/youtube/status — connection + schedule + next candidate */
+route('GET', '/api/admin/youtube/status', async ({ env, request }) => {
+  await L.staff(env, request);
+  const [conn, s] = await Promise.all([
+    youtubeAutomation.getConnectionStatus(env),
+    youtubeAutomation.getPublicSettings(env),
+  ]);
+  let queue = [];
+  try {
+    const elig = await youtubeAutomation.eligibleVehicles(env, (s && s.frequencyDays) || 30, 8);
+    queue = elig.map((v) => ({ id: v.id, slug: v.slug, brand: v.brand, model: v.model, year: v.year, price: v.price, currency: v.currency, featured: !!v.is_featured }));
+  } catch { queue = []; }
+  return L.json({ ok: true, connection: conn, settings: s, queue });
+});
+
+/* GET /api/admin/youtube/connect — Google OAuth consent URL (staff only) */
+route('GET', '/api/admin/youtube/connect', async ({ env, request }) => {
+  await L.staff(env, request);
+  const secrets = await youtubeAutomation.getSecrets(env);
+  const clientId = secrets.google_client_id || env.GOOGLE_CLIENT_ID || '';
+  if (!clientId) {
+    throw L.err(503, 'Google OAuth is not configured yet. Add google_client_id and google_client_secret in Admin → Integrations (or GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET as Pages secrets).');
+  }
+  const state = crypto.randomUUID();
+  await youtubeAutomation.setSecret(env, 'youtube_oauth_state', state);
+  return L.json({ ok: true, url: youtubeAutomation.buildAuthUrl(env, clientId, state) });
+});
+
+/* GET /api/youtube/callback — Google OAuth redirect target (public, state-guarded) */
+route('GET', '/api/youtube/callback', async ({ env, request, url }) => {
+  const q = url.searchParams;
+  const errParam = q.get('error');
+  const code = q.get('code') || '';
+  const state = q.get('state') || '';
+  const redirect = (hash) => new Response(null, { status: 302, headers: { location: '/admin#/youtube?' + hash } });
+  try {
+    if (errParam) return redirect('error=' + encodeURIComponent(String(errParam)));
+    if (!code || !state) return redirect('error=missing-code');
+    const secrets = await youtubeAutomation.getSecrets(env);
+    if (!secrets.youtube_oauth_state || secrets.youtube_oauth_state !== state) {
+      return redirect('error=invalid-state');
+    }
+    await youtubeAutomation.setSecret(env, 'youtube_oauth_state', ''); /* one-time */
+    const out = await youtubeAutomation.handleOAuthCallback(env, code);
+    return redirect('connected=1&channel=' + encodeURIComponent(out.channelTitle || ''));
+  } catch (e) {
+    return redirect('error=' + encodeURIComponent(YT_JSON_ERR(e)).slice(0, 240));
+  }
+});
+
+/* POST /api/admin/youtube/disconnect — clear channel credentials (keeps Google client keys) */
+route('POST', '/api/admin/youtube/disconnect', async ({ env, request }) => {
+  const u = await L.staff(env, request);
+  for (const k of ['youtube_refresh_token', 'youtube_channel_id', 'youtube_channel_title']) {
+    await youtubeAutomation.deleteSecret(env, k).catch(() => {});
+  }
+  if (u) L.logActivity(env, u.email, 'youtube_disconnected', 'channel disconnected').catch(() => {});
+  return L.json({ ok: true });
+});
+
+/* PUT /api/admin/youtube/settings — save schedule + preferences */
+route('PUT', '/api/admin/youtube/settings', async ({ env, request }) => {
+  const u = await L.staff(env, request);
+  const b = await L.readJson(request, 256 * 1024);
+  const out = await youtubeAutomation.saveSettings(env, {
+    enabled: b.enabled, paused: b.paused,
+    publish_hour: b.publish_hour, publish_minute: b.publish_minute,
+    timezone: b.timezone, videos_per_day: b.videos_per_day, frequency_days: b.frequency_days,
+    selection_mode: b.selection_mode, auto_selection: b.auto_selection, auto_thumbnail: b.auto_thumbnail,
+    privacy_status: b.privacy_status, category_id: b.category_id, tags: b.tags,
+  });
+  if (u) L.logActivity(env, u.email, 'youtube_settings', 'schedule updated').catch(() => {});
+  return L.json({ ok: true, settings: out });
+});
+
+/* GET /api/admin/youtube/history — last 50 publications */
+route('GET', '/api/admin/youtube/history', async ({ env, request }) => {
+  await L.staff(env, request);
+  const rows = await L.rest.get(env, 'youtube_publications', { select: '*', order: 'created_at.desc', limit: '50' }).catch(() => []);
+  const ids = [...new Set((rows || []).map((r) => r.vehicle_id))];
+  const vehicles = ids.length
+    ? await L.rest.get(env, 'vehicles', { id: `in.(${ids.join(',')})`, select: 'id,brand,model,year,slug' }).catch(() => [])
+    : [];
+  const vmap = new Map((vehicles || []).map((v) => [v.id, v]));
+  return L.json((rows || []).map((p) => ({
+    id: p.id, vehicleId: p.vehicle_id,
+    vehicle: (vmap.get(p.vehicle_id) || {}),
+    slug: p.slug, videoTitle: p.video_title,
+    status: p.status, privacyStatus: p.privacy_status,
+    youtubeUrl: p.youtube_url, youtubeVideoId: p.youtube_video_id,
+    error: p.error_message, attempts: p.attempts,
+    publishedAt: p.published_at, createdAt: p.created_at,
+  })));
+});
+
+/* GET /api/admin/youtube/queue — upcoming candidates (least recently promoted first) */
+route('GET', '/api/admin/youtube/queue', async ({ env, request }) => {
+  await L.staff(env, request);
+  const s = await youtubeAutomation.getPublicSettings(env);
+  const elig = await youtubeAutomation.eligibleVehicles(env, (s && s.frequencyDays) || 30, 20);
+  return L.json(elig.map((v) => ({
+    id: v.id, slug: v.slug, brand: v.brand, model: v.model, year: v.year,
+    price: v.price, currency: v.currency, featured: !!v.is_featured,
+    videos: v.videos.length, firstVideoCaption: (v.videos[0] && v.videos[0].caption) || '',
+  })));
+});
+
+/* POST /api/admin/youtube/publish-now — publish one vehicle right now, or dry-run preview */
+route('POST', '/api/admin/youtube/publish-now', async ({ env, request }) => {
+  const u = await L.staff(env, request);
+  const b = await L.readJson(request, 64 * 1024);
+  const dryRun = !!b.dryRun;
+  const s = await youtubeAutomation.getPublicSettings(env);
+  let vehicleId = +b.vehicleId || 0;
+  if (!vehicleId) {
+    const elig = await youtubeAutomation.eligibleVehicles(env, (s && s.frequencyDays) || 30, 1);
+    if (!elig.length) return L.json({ ok: true, skipped: true, reason: 'No eligible vehicles right now (all were published recently, or none have a video).' });
+    vehicleId = elig[0].id;
+  }
+  const vrows = await L.rest.get(env, 'vehicles', { id: `eq.${vehicleId}`, select: '*' });
+  const v = vrows && vrows[0];
+  if (!v) throw L.err(404, 'Vehicle not found.');
+  const vids = await L.rest.get(env, 'media', { vehicle_id: `eq.${v.id}`, type: 'eq.video', select: 'id,url,caption', order: 'position.asc,id.asc' });
+  v.videos = vids || [];
+  const videos = v.videos;
+  if (!videos.length) throw L.err(400, 'This vehicle has no video to publish.');
+  if (dryRun) {
+    const meta = youtubeAutomation.buildMetadata(v, env.SITE_ORIGIN || 'https://dmmotorgroup.com', s);
+    return L.json({ ok: true, dryRun: true, vehicleId, title: meta.title, description: meta.description, tags: meta.tags, listing: meta.listing });
+  }
+  const elig = await youtubeAutomation.eligibleVehicles(env, (s && s.frequencyDays) || 30, 200);
+  const target = elig.find((x) => x.id === vehicleId);
+  if (!target) {
+    const anyPub = await L.rest.get(env, 'youtube_publications', { vehicle_id: `eq.${vehicleId}`, select: 'status,created_at', order: 'created_at.desc', limit: '1' }).catch(() => []);
+    const st = anyPub && anyPub[0] && anyPub[0].status;
+    throw L.err(409, st === 'queued' || st === 'uploading'
+      ? 'This vehicle already has a publication in flight. Please wait for it to finish.'
+      : 'This vehicle is not eligible right now (published recently, or not published/available). Use the queue to pick another vehicle.');
+  }
+  const out = await youtubeAutomation.publishOne(env, target, { force: true });
+  if (u) L.logActivity(env, u.email, 'youtube_publish_now', `#${vehicleId} → ${out.published ? out.videoId : (out.error || 'not published')}`).catch(() => {});
+  return L.json(out);
+});
+
+/* POST /api/admin/youtube/retry — retry one failed publication */
+route('POST', '/api/admin/youtube/retry', async ({ env, request }) => {
+  const u = await L.staff(env, request);
+  const b = await L.readJson(request, 16 * 1024);
+  const id = +b.id || 0;
+  if (!id) throw L.err(400, 'A publication id is required.');
+  const out = await youtubeAutomation.retryPublication(env, id);
+  if (u) L.logActivity(env, u.email, 'youtube_retry', `#${id} → ${out.published ? out.videoId : (out.error || 'failed again')}`).catch(() => {});
+  return L.json(out);
+});
+
+/* POST /api/internal/youtube/tick — cron entry point (internal key only) */
+route('POST', '/api/internal/youtube/tick', async ({ env, request, url }) => {
+  const supplied = request.headers.get('x-internal-key') || '';
+  let cfg;
+  try { cfg = await aiCustomer.loadConfig(env); } catch { throw L.err(503, 'AI database is not ready.'); }
+  const expected = cfg.internalKey || env.AI_INTERNAL_KEY || env.INTERNAL_KEY || '';
+  if (!expected || supplied.length !== expected.length) throw L.err(403, 'Forbidden.');
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) diff |= supplied.charCodeAt(i) ^ expected.charCodeAt(i);
+  if (diff !== 0) throw L.err(403, 'Forbidden.');
+  const force = url.searchParams.get('force') === '1';
+  return L.json(await youtubeAutomation.tick(env, { force }));
+});
+
 route('POST', '/api/search/visual', async ({ env, request, ip, ctx }) => {
   if (+(request.headers.get('content-length') || 0) > 40 * 1024 * 1024) {
     throw L.err(413, 'The upload is too large. Please use a smaller photograph or a shorter video.');

@@ -1,0 +1,30 @@
+import { spawn } from 'node:child_process';
+import { mkdtempSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+const PORT = 9459;
+const BASE = 'http://127.0.0.1:8798';
+const creds = JSON.parse(readFileSync('.tmp-audit-admin.json', 'utf8'));
+const chrome = spawn(CHROME, ['--headless=new', '--disable-gpu', '--no-sandbox',
+  `--remote-debugging-port=${PORT}`, `--user-data-dir=${mkdtempSync(join(tmpdir(), 'ap-'))}\\p`, 'about:blank'], { stdio: 'ignore' });
+process.on('exit', () => { try { chrome.kill(); } catch {} });
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+let target = null;
+for (let i = 0; i < 40 && !target; i++) { await wait(250); try { target = (await fetch(`http://127.0.0.1:${PORT}/json`).then((r) => r.json())).find((t) => t.type === 'page'); } catch {} }
+const ws = new WebSocket(target.webSocketDebuggerUrl);
+await new Promise((res, rej) => { ws.onopen = res; ws.onerror = rej; });
+let id = 0; const pending = new Map();
+ws.onmessage = (ev) => { const m = JSON.parse(ev.data); if (m.id && pending.has(m.id)) { pending.get(m.id)(m.result); pending.delete(m.id); } };
+const send = (method, params = {}) => new Promise((res) => { const i = ++id; pending.set(i, res); ws.send(JSON.stringify({ id: i, method, params })); });
+const evl = async (expr) => { const r = await send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true }); if (r.exceptionDetails) return 'EVALERR ' + (r.exceptionDetails.exception?.description || 'e').slice(0, 150); return r.result && r.result.value; };
+await send('Page.enable'); await send('Runtime.enable');
+await send('Page.navigate', { url: BASE + '/admin/' });
+await wait(1500);
+await evl(`(() => { const f = document.querySelector('#loginForm'); f.querySelector('[name=email]').value = ${JSON.stringify(creds.email)}; f.querySelector('[name=password]').value = ${JSON.stringify(creds.password)}; f.requestSubmit(); return true; })()`);
+await wait(3500);
+console.log('probe1 raw fetch in page:', JSON.stringify(await evl(`fetch('/api/admin/youtube/status', { headers: { Authorization: 'Bearer ' + localStorage.getItem('dm_admin_token') } }).then(async r => ({ s: r.status, t: (await r.text()).slice(0, 220) })).catch(e => String(e))`)));
+console.log('probe2 admin api() in page:', JSON.stringify(await evl(`api('/api/admin/youtube/status').then(r => 'ok').catch(e => 'err:' + e.message)`)));
+console.log('probe3 token in page:', JSON.stringify(await evl(`({ len: (localStorage.getItem('dm_admin_token') || '').length, starts: (localStorage.getItem('dm_admin_token') || '').slice(0, 8) })`)));
+console.log('probe4 sw controlled:', JSON.stringify(await evl(`({ sw: !!navigator.serviceWorker.controller, ver: navigator.serviceWorker.controller ? (await 0, 'n/a') : 'none' })`)));
+process.exit(0);

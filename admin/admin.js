@@ -52,7 +52,7 @@ $('#loginForm').onsubmit = async (e) => {
 $('#btnLogout').onclick = async () => { try { await api('/api/auth/logout', { method: 'POST' }); } catch {} localStorage.removeItem('dm_admin_token'); showLogin(); };
 
 /* ---------------- routing ---------------- */
-const PAGES = { dashboard, vehicles, specifications: specificationsPage, enqueue: null, enquiries, customers, testimonials, banners, ai: aiScanner, ai_service: aiService, integrations: integrationsPage, bank_accounts: bankAccountsPage, payments: paymentsPage, reservations: reservationsPage, settings: settingsPage, settings_general: settingsGeneral, settings_media: settingsMedia, settings_users: settingsUsers, settings_maintenance: settingsMaintenance, activity };
+const PAGES = { dashboard, vehicles, specifications: specificationsPage, enqueue: null, enquiries, customers, testimonials, banners, ai: aiScanner, ai_service: aiService, youtube: youtubeAutomation, integrations: integrationsPage, bank_accounts: bankAccountsPage, payments: paymentsPage, reservations: reservationsPage, settings: settingsPage, settings_general: settingsGeneral, settings_media: settingsMedia, settings_users: settingsUsers, settings_maintenance: settingsMaintenance, activity };
 window.addEventListener('hashchange', renderRoute);
 async function renderRoute() {
   if (!state.user) return;
@@ -930,6 +930,168 @@ async function uploadDecorFrames(vehicleId, file) {
     out.push({ mimeType: 'image/jpeg', dataBase64: await blobToDataUrl(f.blob) });
   }
   return api(`/api/admin/vehicles/${vehicleId}/frames`, { method: 'POST', body: { frames: out } });
+}
+
+/* ================================================== YOUTUBE AUTOMATION */
+async function youtubeAutomation() {
+  const pg = document.getElementById('pg');
+  pg.innerHTML = `<div class="pg-head"><div><span class="crumb">Marketing · Automation</span><h1>▶️ YouTube Automation</h1></div></div>
+    <div class="panel" id="ytConnPanel"><h3>Account connection</h3><div id="ytConnBody">Loading connection…</div></div>
+
+    <div class="panel" style="margin-top:16px"><h3>Publishing settings</h3>
+      <p class="muted">Videos are published by the scheduled Cloudflare Worker — even with your browser closed and phone off. Automation chooses the least-recently promoted eligible video and never republishes the same video within the frequency window.</p>
+      <div class="fgrid" id="ytForm">
+        <div><label>Automation</label><select id="ytEnabled"><option value="false">Disabled</option><option value="true">Enabled</option></select></div>
+        <div><label>Status</label><select id="ytPaused"><option value="false">Running</option><option value="true">Paused</option></select></div>
+        <div><label>Publishing time (HH:MM)</label><div style="display:flex;gap:8px"><input id="ytHour" type="number" min="0" max="23" style="width:70px"><input id="ytMinute" type="number" min="0" max="59" style="width:70px"></div></div>
+        <div><label>Time zone</label><input id="ytTz" type="text" placeholder="Asia/Dubai"></div>
+        <div><label>Videos per day</label><select id="ytPerDay"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+        <div><label>Frequency — days before re-promoting the same vehicle</label><input id="ytFreq" type="number" min="1" max="3650"></div>
+        <div><label>Vehicle selection</label><select id="ytSelection"><option value="auto">Automatic (least recently promoted)</option><option value="manual">Manual — I choose the vehicle</option></select></div>
+        <div><label>Privacy of new videos</label><select id="ytPrivacy"><option value="private">Private (test first)</option><option value="unlisted">Unlisted</option><option value="public">Public</option></select></div>
+        <div><label>Automatic thumbnail</label><select id="ytThumb"><option value="true">From the vehicle's own video frames</option><option value="false">Let YouTube choose</option></select></div>
+        <div class="full"><label>Extra tags (comma separated)</label><input id="ytTags" type="text" placeholder="Dubai cars, luxury cars for sale"></div>
+      </div>
+      <div class="rowbtns" style="margin-top:12px">
+        <button class="btn btn-gold" id="ytSave">Save settings</button>
+        <button class="btn btn-ghost" id="ytPause">Pause automation</button>
+        <button class="btn btn-ghost" id="ytResume">Resume automation</button>
+        <span class="muted" id="ytSaveState"></span>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:16px"><h3>Publishing controls</h3>
+      <div class="rowbtns">
+        <button class="btn btn-gold" id="ytPublishNow">▶ Publish now</button>
+        <button class="btn btn-ghost" id="ytPreview">👁 Preview upcoming video</button>
+        <button class="btn btn-ghost" id="ytRefresh">↻ Refresh</button>
+      </div>
+      <div id="ytPreviewBox" style="margin-top:12px"></div>
+      <h4 style="margin-top:18px">Publishing queue — next candidates</h4>
+      <div id="ytQueue" class="muted">Loading queue…</div>
+    </div>
+
+    <div class="panel" style="margin-top:16px"><h3>Publishing history</h3>
+      <div id="ytHistory" class="muted">Loading history…</div>
+    </div>`;
+
+  /* read feedback from the OAuth redirect (#/youtube?connected=1|error=...) */
+  const hashQ = (location.hash.split('?')[1] || '');
+  const hp = new URLSearchParams(hashQ);
+  if (hp.get('connected')) toast('✅ YouTube channel connected: ' + (hp.get('channel') || ''));
+  else if (hp.get('error')) toast('YouTube connection failed: ' + hp.get('error'), true);
+
+  const escAttr = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const fmtDate = (d) => { if (!d) return '—'; try { return new Date(d).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }); } catch { return d; } };
+
+  const load = async () => {
+    let st = null;
+    try { st = await api('/api/admin/youtube/status'); } catch (e) { $('#ytConnBody').innerHTML = `<p class="muted">${esc(e.message)}</p>`; return; }
+    const conn = st.connection || {}, s = st.settings || {};
+    /* connection panel */
+    $('#ytConnBody').innerHTML = `<div class="fgrid">
+        <div><label>Connection status</label><div>${conn.connected ? '<span class="badge-verified">Connected</span>' : '<span class="badge-verified" style="border-color:#7a3b3b">Not connected</span>'}</div></div>
+        <div><label>Channel name</label><div>${esc(conn.channelTitle || '—')}</div></div>
+        <div><label>Channel id</label><div class="muted" style="font-size:12px">${esc(conn.channelId || '—')}</div></div>
+        <div><label>Last automation run</label><div>${fmtDate(s.lastRunAt)}${s.lastError ? `<br><span style="color:#e0705e">Last error: ${esc(s.lastError)}</span>` : ''}</div></div>
+      </div>
+      <div class="rowbtns" style="margin-top:12px">
+        ${conn.connected
+          ? '<button class="btn btn-ghost" id="ytDisconnect">Disconnect YouTube</button>'
+          : '<button class="btn btn-gold" id="ytConnect">Connect YouTube Channel</button>'}
+      </div>`;
+    $('#ytConnect') && ($('#ytConnect').onclick = async () => {
+      try { const r = await api('/api/admin/youtube/connect'); location.href = r.url; }
+      catch (e) { toast(e.message, true); }
+    });
+    $('#ytDisconnect') && ($('#ytDisconnect').onclick = async () => {
+      if (!confirm('Disconnect the YouTube channel? Automated publishing will stop. The Google client keys are kept.')) return;
+      try { await api('/api/admin/youtube/disconnect', { method: 'POST', body: {} }); toast('YouTube disconnected.'); load(); }
+      catch (e) { toast(e.message, true); }
+    });
+    /* schedule form */
+    $('#ytEnabled').value = s.enabled ? 'true' : 'false';
+    $('#ytPaused').value = s.paused ? 'true' : 'false';
+    $('#ytHour').value = String(s.publishHour ?? 10);
+    $('#ytMinute').value = String(s.publishMinute ?? 0);
+    $('#ytTz').value = s.timezone || 'Asia/Dubai';
+    $('#ytPerDay').value = String(s.videosPerDay ?? 1);
+    $('#ytFreq').value = String(s.frequencyDays ?? 30);
+    $('#ytSelection').value = s.selectionMode || 'auto';
+    $('#ytPrivacy').value = s.privacyStatus || 'private';
+    $('#ytThumb').value = s.autoThumbnail === false ? 'false' : 'true';
+    $('#ytTags').value = (s.tags || []).join(', ');
+    /* queue */
+    const q = st.queue || [];
+    $('#ytQueue').innerHTML = q.length
+      ? `<table class="table"><thead><tr><th>Vehicle</th><th>Year</th><th>Price</th><th></th></tr></thead><tbody>${q.map((v) => `<tr><td>${v.featured ? '★ ' : ''}${esc(v.brand)} ${esc(v.model)}</td><td>${esc(v.year)}</td><td>${v.price > 0 ? esc(v.currency) + ' ' + Number(v.price).toLocaleString() : 'Price on request'}</td><td class="num"><button class="btn btn-ghost sm" data-pub="${v.id}">Publish</button></td></tr>`).join('')}</tbody></table>`
+      : '<p class="muted">No eligible vehicles right now — every published vehicle with a video was promoted within the frequency window, or none has a video yet.</p>';
+    $$('#ytQueue [data-pub]').forEach((b) => b.onclick = () => publishNow(+b.dataset.pub, false));
+    /* history */
+    let hist = [];
+    try { hist = await api('/api/admin/youtube/history'); } catch { hist = []; }
+    $('#ytHistory').innerHTML = hist.length
+      ? `<table class="table"><thead><tr><th>Vehicle</th><th>Video title</th><th>Published</th><th>Status</th><th></th></tr></thead><tbody>${hist.map((h) => `<tr>
+          <td>${esc((h.vehicle && h.vehicle.brand) || '')} ${esc((h.vehicle && h.vehicle.model) || '')} ${esc((h.vehicle && h.vehicle.year) || '')}</td>
+          <td style="max-width:280px">${esc(h.videoTitle || '').slice(0, 120)}</td>
+          <td>${fmtDate(h.publishedAt || h.createdAt)}</td>
+          <td>${h.status === 'published' ? `<span class="badge-verified">Published</span>` : h.status === 'failed' ? `<span style="color:#e0705e">Failed</span>` : `<span class="muted">${esc(h.status || 'queued')}</span>`}${h.error ? `<br><span class="muted" style="font-size:11px">${esc(h.error)}</span>` : ''}</td>
+          <td class="num">${h.status === 'published' && h.youtubeUrl ? `<a class="btn btn-ghost sm" href="${escAttr(h.youtubeUrl)}" target="_blank" rel="noopener">Open</a>` : h.status === 'failed' ? `<button class="btn btn-ghost sm" data-retry="${h.id}">Retry</button>` : ''}</td>
+        </tr>`).join('')}</tbody></table>`
+      : '<p class="muted">Nothing published yet. Preview the upcoming video first, then click Publish now — or enable automation.</p>';
+    $$('#ytHistory [data-retry]').forEach((b) => b.onclick = async () => {
+      b.disabled = true; b.textContent = 'Retrying…';
+      try { const r = await api('/api/admin/youtube/retry', { method: 'POST', body: { id: +b.dataset.retry } });
+        toast(r.published ? 'Published: ' + (r.url || r.videoId) : 'Retry failed: ' + (r.error || 'unknown error'), !r.published);
+        load();
+      } catch (e) { toast(e.message, true); b.disabled = false; b.textContent = 'Retry'; }
+    });
+  };
+
+  const save = async () => {
+    const btn = $('#ytSave'); btn.disabled = true;
+    try {
+      await api('/api/admin/youtube/settings', { method: 'PUT', body: {
+        enabled: $('#ytEnabled').value === 'true', paused: $('#ytPaused').value === 'true',
+        publish_hour: +$('#ytHour').value || 0, publish_minute: +$('#ytMinute').value || 0,
+        timezone: $('#ytTz').value.trim() || 'Asia/Dubai', videos_per_day: +$('#ytPerDay').value || 1,
+        frequency_days: +$('#ytFreq').value || 30, selection_mode: $('#ytSelection').value,
+        auto_selection: true, auto_thumbnail: $('#ytThumb').value === 'true',
+        privacy_status: $('#ytPrivacy').value, category_id: '2',
+        tags: $('#ytTags').value.split(',').map((t) => t.trim()).filter(Boolean),
+      } });
+      $('#ytSaveState').textContent = 'Saved ' + new Date().toLocaleTimeString('en-GB');
+      toast('Settings saved.');
+    } catch (e) { toast(e.message, true); }
+    btn.disabled = false;
+  };
+  const publishNow = async (vehicleId, dryRun) => {
+    const btn = vehicleId ? null : $('#ytPublishNow');
+    if (btn) btn.disabled = true;
+    try {
+      const r = await api('/api/admin/youtube/publish-now', { method: 'POST', body: vehicleId ? { vehicleId, dryRun } : { dryRun } });
+      if (dryRun || r.dryRun) {
+        $('#ytPreviewBox').innerHTML = `<div class="note"><b>Upcoming video — exactly what will be published</b><div style="margin-top:8px"><b>Title:</b> ${esc(r.title)}</div><div style="margin-top:8px"><b>Description:</b><pre style="white-space:pre-wrap;font-family:var(--sans);font-size:12px;line-height:1.6">${esc(r.description)}</pre></div><div><b>Tags:</b> ${r.tags.map(esc).join(', ')}</div></div>`;
+      } else if (r.published) {
+        toast('Published: ' + (r.url || r.videoId));
+        $('#ytPreviewBox').innerHTML = `<div class="note"><b>Published.</b> <a href="${escAttr(r.url || ('https://youtu.be/' + r.videoId))}" target="_blank" rel="noopener">${esc(r.url || '')}</a></div>`;
+        load();
+      } else if (r.skipped) {
+        $('#ytPreviewBox').innerHTML = `<p class="muted">${esc(r.reason || 'Nothing to publish right now.')}</p>`;
+      } else {
+        toast('Publishing failed: ' + (r.error || 'unknown error'), true);
+        load();
+      }
+    } catch (e) { toast(e.message, true); }
+    if (btn) btn.disabled = false;
+  };
+  $('#ytSave').onclick = save;
+  $('#ytPause').onclick = async () => { $('#ytPaused').value = 'true'; await save(); toast('Automation paused.'); };
+  $('#ytResume').onclick = async () => { $('#ytPaused').value = 'false'; await save(); toast('Automation resumed.'); };
+  $('#ytPublishNow').onclick = () => { if (confirm('Publish the next eligible vehicle video now? It will upload from the server immediately.')) publishNow(null, false); };
+  $('#ytPreview').onclick = () => publishNow(null, true);
+  $('#ytRefresh').onclick = load;
+  await load();
 }
 
 /* ================================================== AI CAR SCANNER */
