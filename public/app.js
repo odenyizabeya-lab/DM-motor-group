@@ -671,6 +671,172 @@ function cacheVehiclesFromVideos(videos) {
   videos.forEach((v) => { document.__vidCache[v.id] = { id: v.id, url: v.url, thumbUrl: v.thumbUrl, caption: v.caption, title: v.title, slug: v.slug }; });
 }
 
+/* ============================================================ VIDEO FRAME DECOR
+ * Extracts a few clear, well-lit frames from a vehicle's OWN main video and
+ * uses them as decorative backgrounds for the VIEW DETAILS section banners
+ * and information cards. The frames come only from that vehicle's own video
+ * (isolation by construction — the URL decorated is the URL already playing
+ * on that page), are cached per vehicle id in the browser Cache Storage so
+ * the same video is never re-processed on repeat visits, and the original
+ * video files are never modified. If anything fails (no video, decode or
+ * CORS problem), nothing happens and the existing black-and-gold CSS
+ * banners remain exactly as they were. */
+let __frameUrls = [];
+function vfRevoke() { __frameUrls.forEach((u) => { try { URL.revokeObjectURL(u); } catch {} }); __frameUrls = []; }
+
+function vfSeek(vid, t) {
+  return new Promise((res, rej) => {
+    if (Math.abs(vid.currentTime - t) < 0.05) return res();
+    const to = setTimeout(() => { vid.removeEventListener('seeked', done); rej(new Error('seek timeout')); }, 9000);
+    const done = () => { clearTimeout(to); vid.removeEventListener('seeked', done); res(); };
+    vid.addEventListener('seeked', done);
+    vid.currentTime = t;
+  });
+}
+
+/* quick quality probe of a captured frame (48x27 luma sample):
+ * rejects near-black / blown-out / near-blank shots so only clear,
+ * presentable frames reach the banners */
+function vfScore(srcCanvas) {
+  const s = document.createElement('canvas'); s.width = 48; s.height = 27;
+  const sc = s.getContext('2d'); sc.drawImage(srcCanvas, 0, 0, 48, 27);
+  const d = sc.getImageData(0, 0, 48, 27).data;
+  let sum = 0, sum2 = 0; const n = d.length / 4;
+  for (let i = 0; i < d.length; i += 4) {
+    const l = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+    sum += l; sum2 += l * l;
+  }
+  const mean = sum / n, variance = sum2 / n - mean * mean;
+  return { mean, variance };
+}
+
+async function vfExtract(url) {
+  const vid = document.createElement('video');
+  vid.crossOrigin = 'anonymous'; vid.muted = true; vid.preload = 'metadata';
+  if ('playsInline' in vid) vid.playsInline = true;
+  vid.src = url;
+  try {
+    await new Promise((res, rej) => {
+      const to = setTimeout(() => rej(new Error('video load timeout')), 25000);
+      vid.onloadedmetadata = () => { clearTimeout(to); res(); };
+      vid.onerror = () => { clearTimeout(to); rej(new Error('video could not be loaded')); };
+    });
+    const dur = vid.duration;
+    if (!dur || !isFinite(dur) || dur < 2) throw new Error('video too short to sample');
+    const N = dur > 24 ? 9 : 6;
+    /* spread points across the clip, avoiding fades at the very start/end */
+    const pts = Array.from({ length: N }, (_, i) => dur * (0.08 + (0.84 * i) / Math.max(1, N - 1)));
+    const scale = Math.min(1, 1280 / Math.max(vid.videoWidth || 1280, 1));
+    const c = document.createElement('canvas');
+    c.width = Math.max(2, Math.round((vid.videoWidth || 1280) * scale));
+    c.height = Math.max(2, Math.round((vid.videoHeight || 720) * scale));
+    const ctx = c.getContext('2d');
+    const got = [];
+    for (const t of pts) {
+      try {
+        await vfSeek(vid, Math.min(Math.max(t, 0.1), Math.max(dur - 0.15, 0.1)));
+        await new Promise((r) => setTimeout(r, 140));
+        ctx.drawImage(vid, 0, 0, c.width, c.height);
+        const m = vfScore(c);
+        if (m.mean < 18 || m.mean > 236 || m.variance < 260) continue;
+        const blob = await new Promise((r) => c.toBlob(r, 'image/jpeg', 0.72));
+        if (blob) got.push({ blob, score: m.variance });
+        if (got.length >= 6) break;
+      } catch { /* try the next timestamp */ }
+    }
+    if (got.length < 3) throw new Error('not enough clear frames');
+    got.sort((a, b) => b.score - a.score);
+    return got.slice(0, 6).map((g) => g.blob);
+  } finally {
+    /* keep the element parked instead of force-aborting it — a forced abort
+     * of in-flight range requests surfaces as a console error on the page.
+     * Detached, it is garbage-collected quietly once the page is done. */
+    try { vid.pause(); } catch {}
+  }
+}
+
+/* cached frames per vehicle id + video fingerprint (a re-uploaded video
+ * gets a new fingerprint and re-extracts automatically). Stored in
+ * IndexedDB — the service worker purges foreign Cache Storage entries on
+ * deploy, so IndexedDB is the safe, untouched home for this. */
+const VF_IDB = 'dm-frames';
+function vfDb() {
+  return new Promise((res, rej) => {
+    if (!window.indexedDB) return rej(new Error('IndexedDB unavailable'));
+    const rq = indexedDB.open(VF_IDB, 1);
+    rq.onupgradeneeded = () => { rq.result.createObjectStore('frames', { keyPath: 'k' }); };
+    rq.onsuccess = () => res(rq.result);
+    rq.onerror = () => rej(rq.error);
+  });
+}
+async function vfCacheGet(key) {
+  try {
+    const db = await vfDb();
+    return await new Promise((res) => {
+      const rq = db.transaction('frames', 'readonly').objectStore('frames').get(key);
+      rq.onsuccess = () => res(rq.result ? rq.result.blobs : null);
+      rq.onerror = () => res(null);
+    });
+  } catch { return null; }
+}
+async function vfCachePut(key, blobs) {
+  try {
+    const db = await vfDb();
+    await new Promise((res) => {
+      const rq = db.transaction('frames', 'readwrite').objectStore('frames').put({ k: key, blobs });
+      rq.onsuccess = res; rq.onerror = res;
+    });
+  } catch { /* cache is best-effort */ }
+}
+async function vfCacheKeys() {
+  try {
+    const db = await vfDb();
+    return await new Promise((res) => {
+      const rq = db.transaction('frames', 'readonly').objectStore('frames').getAllKeys();
+      rq.onsuccess = () => res(rq.result || []);
+      rq.onerror = () => res([]);
+    });
+  } catch { return []; }
+}
+
+async function vfGetFrames(vehicleId, url) {
+  const fp = String(url).split('').reduce((a, ch) => ((a * 31 + ch.charCodeAt(0)) & 0xffffff), 7);
+  const base = `/__dmframes/${vehicleId}/${fp}`;
+  const cached = await vfCacheGet(base);
+  if (Array.isArray(cached) && cached.length >= 3) { window.__vfLast = { vehicleId, fromCache: true, frames: cached.length }; return cached; }
+  const blobs = await vfExtract(url);
+  if (blobs.length) await vfCachePut(base, blobs);
+  window.__vfLast = { vehicleId, fromCache: false, frames: blobs.length };
+  return blobs;
+}
+
+async function decorateVehicleWithFrames(vehicleId, url) {
+  vfRevoke();
+  try {
+    const blobs = await vfGetFrames(vehicleId, url);
+    if (!blobs || blobs.length < 3) return;
+    const urls = blobs.map((b) => { const u = URL.createObjectURL(b); __frameUrls.push(u); return u; });
+    $$('#app .dbanner').forEach((b, i) => {
+      if (b.querySelector('.db-frame')) return;
+      const d = document.createElement('div');
+      d.className = 'db-frame'; d.setAttribute('aria-hidden', 'true');
+      d.style.backgroundImage = `url("${urls[i % urls.length]}")`;
+      b.classList.add('db-hasframe');
+      b.prepend(d);
+    });
+    /* information cards: a faint frame behind the prose panels (never behind
+     * the specification tables — text legibility comes first) */
+    $$('#app .d-sec.dv-condition, #app .d-sec.dv-interior, #app .d-sec.dv-market, #app .d-sec.dv-customer').forEach((p, i) => {
+      if (p.querySelector('.ds-bg')) return;
+      const d = document.createElement('div');
+      d.className = 'ds-bg'; d.setAttribute('aria-hidden', 'true');
+      d.style.backgroundImage = `url("${urls[(i + 2) % urls.length]}")`;
+      p.classList.add('hasframe');
+      p.prepend(d);
+    });
+  } catch { /* fallback: the existing black-and-gold banners stay untouched */ }
+}
+
 /* ============================================================ HOME */
 async function viewHome() {
   const data = await api('/api/home');
@@ -1620,6 +1786,9 @@ async function viewVehicle(m) {
       $$('#videoList .vchip').forEach((b, j) => b.classList.toggle('on', j === i));
     };
     if (videos.length) mountVideo(0);
+    /* decorative frames from THIS vehicle's own video — runs in the background
+     * after render; on any failure the CSS banners simply stay as they are */
+    if (videos.length && videos[0] && videos[0].url) decorateVehicleWithFrames(v.id, videos[0].url);
     const vlist = $('#videoList');
     if (vlist) vlist.onclick = (e) => { const b = e.target.closest('.vchip'); if (b) mountVideo(+b.dataset.vi); };
     bindCards(app);
@@ -1985,7 +2154,7 @@ window.addEventListener('pageshow', () => {});
   try { await getMeta(); } catch {}
   try { const h = await api('/api/home'); state.settings = h.settings || {}; applySettings(h); } catch {}
   await route(location.pathname + location.search, true);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=34').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=38').catch(() => {});
 })();
 /* Android app installation (Chrome "Add to Home screen" flow) */
 window.__pwaPrompt = null;

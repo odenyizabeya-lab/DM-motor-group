@@ -823,3 +823,37 @@ ol.track li.now b{color:var(--gold2)}
 #footer{border-top:1px solid transparent;position:relative}
 #footer::before{content:"";position:absolute;top:-1px;left:0;right:0;height:1px;
   background:linear-gradient(90deg,transparent,rgba(201,164,92,.45) 25%,rgba(201,164,92,.45) 75%,transparent)}
+
+/* ======================================================================
+   VEHICLE DETAIL — VIDEO FRAME DECOR
+   Frames captured from the vehicle's own video decorate the section
+   banners and prose information cards. Deep overlays keep text readable;
+   without frames nothing changes (pure black-and-gold fallback).
+   ====================================================================== */
+
+/* banner frame layer: first child, so the gold texture (::before) dimmed
+ * and the gold top rule (::after) and all text stay above it */
+.dbanner .db-frame{position:absolute;inset:0;background-size:cover;background-position:center 38%;display:none}
+.dbanner.db-hasframe .db-frame{display:block}
+.dbanner.db-hasframe .db-frame::after{content:"";position:absolute;inset:0;
+  background:
+    linear-gradient(90deg,rgba(5,6,8,.93) 0%,rgba(5,6,8,.80) 36%,rgba(7,8,10,.48) 74%,rgba(7,8,10,.34) 100%),
+    linear-gradient(0deg,rgba(5,6,8,.78) 0%,rgba(5,6,8,.18) 46%,rgba(5,6,8,.42) 100%)}
+.dbanner.db-hasframe::before{opacity:.26}
+.dbanner.db-hasframe{border-color:rgba(201,164,92,.55)}
+.dbanner.db-hasframe .db-glyph{color:rgba(201,164,92,.30)}
+.dbanner.db-hasframe h2{text-shadow:0 2px 22px rgba(0,0,0,.75)}
+
+/* information cards: faint frame behind prose panels only.
+ * isolation:isolate + z-index:-1 keeps the frame above the panel gradient
+ * but below every piece of text and control. */
+.d-sec.hasframe{isolation:isolate}
+.d-sec .ds-bg{position:absolute;inset:0;z-index:-1;display:none;opacity:.15;
+  background-size:cover;background-position:center 40%;filter:saturate(.85)}
+.d-sec.hasframe .ds-bg{display:block}
+.d-sec.hasframe::after{background:linear-gradient(90deg,transparent,rgba(201,164,92,.7),transparent)}
+
+@media(prefers-reduced-motion:no-preference){
+  .dbanner .db-frame{transition:opacity .6s ease;animation:dbFrameIn .7s ease both}
+  @keyframes dbFrameIn{from{opacity:0}to{opacity:1}}
+}
