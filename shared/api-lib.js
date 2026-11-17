@@ -284,10 +284,10 @@ async function logActivity(env, actor, action, detail = '') {
  * alternative (default model: gpt-4o-mini) so the scanner never hard-depends on
  * one vendor. The scan route can request a provider, and falls back to the
  * server-wide default (env.AI_PROVIDER) when none is supplied. */
-async function geminiGenerate(env, { images = [], video = null, prompt }) {
-  const key = env.GEMINI_API_KEY;
-  if (!key) throw err(503, 'AI scanner is not configured on the server (missing GEMINI_API_KEY).');
-  const model = env.GEMINI_MODEL || 'gemini-2.0-flash';
+async function geminiGenerate(env, { images = [], video = null, prompt, apiKey, model: modelOverride } = {}) {
+  const key = apiKey || env.GEMINI_API_KEY;
+  if (!key) throw err(503, 'AI search is not configured on the server (missing Gemini API key).');
+  const model = modelOverride || env.GEMINI_MODEL || 'gemini-2.0-flash';
   const parts = [{ text: prompt }];
   for (const im of images || []) {
     const d = String(im && im.dataBase64 || '');
@@ -313,10 +313,10 @@ async function geminiGenerate(env, { images = [], video = null, prompt }) {
   try { return JSON.parse(txt); } catch { return { raw: txt }; }
 }
 
-async function openaiGenerate(env, { images = [], video = null, prompt }) {
-  const key = env.OPENAI_API_KEY;
-  if (!key) throw err(503, 'AI scanner is not configured on the server (missing OPENAI_API_KEY).');
-  const model = env.OPENAI_MODEL || 'gpt-4o-mini';
+async function openaiGenerate(env, { images = [], video = null, prompt, apiKey, model: modelOverride } = {}) {
+  const key = apiKey || env.OPENAI_API_KEY;
+  if (!key) throw err(503, 'AI search is not configured on the server (missing OpenAI API key).');
+  const model = modelOverride || env.OPENAI_MODEL || 'gpt-4o-mini';
   const content = [{ type: 'text', text: prompt }];
   for (const im of images || []) {
     const d = String(im && im.dataBase64 || '');
@@ -363,12 +363,12 @@ function aiProviderId(env, requested) {
 }
 
 /* Provider-agnostic scan call with light retry for transient upstream failures. */
-async function aiGenerate(env, { provider, images = [], video = null, prompt } = {}) {
+async function aiGenerate(env, { provider, images = [], video = null, prompt, apiKey, model } = {}) {
   const pid = aiProviderId(env, provider);
   const impl = pid === 'openai' ? openaiGenerate : geminiGenerate;
   let attempt = 0;
   const run = async () => {
-    try { return await impl(env, { images, video, prompt }); }
+    try { return await impl(env, { images, video, prompt, apiKey, model }); }
     catch (e) {
       const retry = attempt < 2 && (e.status === 429 || e.status === 500 || e.status === 502 || e.status === 503);
       if (!retry) throw e;

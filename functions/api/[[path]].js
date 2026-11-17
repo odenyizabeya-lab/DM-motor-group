@@ -186,6 +186,115 @@ route('GET', '/api/home', async ({ env }) => {
   });
 });
 
+/* POST /api/search/visual — public AI visual vehicle search.
+ * A customer uploads photographs (or frames extracted from their own video)
+ * of a vehicle they are looking for. The configured AI provider identifies
+ * the vehicle from what is actually visible and matches it against the REAL
+ * published inventory. Nothing is invented: only inventory ids from the list
+ * given to the model can be returned, and when nothing matches confidently
+ * the customer is asked for more details instead of receiving a guess.
+ * Keys are loaded server-side from the private ai_secrets table / worker env
+ * and are never exposed to the frontend. */
+route('POST', '/api/search/visual', async ({ env, request, ip, ctx }) => {
+  if (+(request.headers.get('content-length') || 0) > 40 * 1024 * 1024) {
+    throw L.err(413, 'The upload is too large. Please use a smaller photograph or a shorter video.');
+  }
+  if (!L.rateLimit(`vissearch:${ip || 'x'}`, 12, 10 * 60e3)) {
+    throw L.err(429, 'Several visual searches have been run from your connection recently. Please wait a few minutes.');
+  }
+  const b = await L.readJson(request, 40 * 1024 * 1024);
+  const images = (Array.isArray(b.images) ? b.images : []).slice(0, 5);
+  const IMAGE_MIME = { 'image/jpeg': 1, 'image/png': 1, 'image/webp': 1 };
+  const b64Length = (v) => String(v || '').replace(/^data:[^;]+;base64,/, '').length;
+  if (!images.length) throw L.err(400, 'Please upload a photograph or a video of the vehicle.');
+  for (const im of images) {
+    const mt = String((im && im.mimeType) || '').split(';')[0].trim().toLowerCase();
+    if (!IMAGE_MIME[mt]) throw L.err(400, 'Search uploads must be JPEG, PNG or WebP images.');
+    if (b64Length(im.dataBase64) > Math.ceil(6 * 1024 * 1024 * 4 / 3) + 4) {
+      throw L.err(413, 'Each image must be 6 MB or smaller.');
+    }
+  }
+
+  /* provider key: private ai_secrets first, worker env as fallback */
+  const secrets = await L.rest.get(env, 'ai_secrets', { select: 'key,value' }).catch(() => []);
+  const secret = (k) => { const row = (secrets || []).find((s) => s.key === k); return row && row.value ? String(row.value) : ''; };
+  const geminiKey = secret('gemini_api_key') || env.GEMINI_API_KEY || '';
+  const openaiKey = secret('openai_api_key') || env.OPENAI_API_KEY || '';
+  if (!geminiKey && !openaiKey) {
+    throw Object.assign(L.err(503, 'Visual search is being prepared. Text search is fully available, or contact the dealership and we will find the vehicle for you.'),
+      { code: 'NO_KEY', expose: true });
+  }
+  const provider = geminiKey ? 'gemini' : 'openai';
+
+  /* the REAL published inventory is the only thing the model may match to */
+  const inventory = await L.rest.get(env, 'vehicles', {
+    select: 'id,slug,brand,model,year,body_type,fuel,price,currency,mileage,condition',
+    status: 'eq.published', order: 'updated_at.desc', limit: '100',
+  }).catch(() => []);
+  if (!inventory || !inventory.length) {
+    return L.json({ ok: true, identified: null, confidence: 'none', matches: [], guidance: 'The showroom inventory is being updated. Please try again shortly or contact the dealership.' });
+  }
+  const invList = inventory.map((v, i) =>
+    `${i + 1}. id=${v.id} | ${v.brand} ${v.model} ${v.year} | body: ${v.body_type || '?'} | fuel: ${v.fuel || '?'} | mileage: ${v.mileage || '?'} km | condition: ${v.condition || '?'} | ref: ${v.slug}`).join('\n');
+
+  const fromVideo = !!b.fromVideo;
+  const prompt = [
+    'You are the vehicle identification specialist of an international car dealership.',
+    fromVideo
+      ? 'The customer uploaded a VIDEO of a vehicle they are looking for; the attached images are frames extracted from that video.'
+      : 'The customer uploaded a PHOTOGRAPH of a vehicle they are looking for.',
+    'Task: identify the vehicle from what is actually visible (badge, grille, lights, body shape, wheels, interior, any visible text), then match it against the dealership inventory listed below.',
+    '',
+    'INVENTORY (the only vehicles you may match to):',
+    invList,
+    '',
+    'Return ONLY valid JSON with exactly this shape:',
+    '{"visible":{"brand":"","model":"","year":null,"bodyType":"","notableDetails":""},"confidence":"high|medium|low|none","matches":[{"id":0,"reason":"why this inventory vehicle matches"}],"cannotIdentify":false,"guidanceForCustomer":""}',
+    '',
+    'Rules:',
+    '- Base everything strictly on what is visible in the media. Never invent a brand, model or year.',
+    '- matches may ONLY contain ids from the inventory list above (usually 1-3 best matches, may be empty).',
+    '- If the vehicle is identifiable but no inventory vehicle is a reasonable match, return matches: [] and cannotIdentify: false, and in guidanceForCustomer say politely that this exact vehicle is not in the current collection and offer to source it.',
+    '- If you cannot identify the vehicle confidently (dark/blurred/uninformative media), set cannotIdentify: true, confidence: "none", and write guidanceForCustomer telling the customer what extra details would help (e.g. a clearer photo of the grille or badge, the model name, the year).',
+    '- guidanceForCustomer is a short, warm, professional sentence for the customer.',
+  ].join('\n');
+
+  let ai;
+  try {
+    ai = await L.aiGenerate(env, { provider, apiKey: provider === 'gemini' ? geminiKey : openaiKey, images, prompt });
+  } catch (e) {
+    throw Object.assign(L.err(503, `Visual search is temporarily unavailable: ${String(e.message || e).slice(0, 240)}`), { expose: true });
+  }
+
+  /* only inventory ids survive validation — the model cannot invent stock */
+  const allowed = new Map(inventory.map((v) => [v.id, v]));
+  const rawMatches = Array.isArray(ai && ai.matches) ? ai.matches : [];
+  const matches = rawMatches
+    .map((m) => ({ id: +m.id, reason: String(m.reason || '').slice(0, 220) }))
+    .filter((m) => allowed.has(m.id))
+    .slice(0, 4);
+  const md = await L.mediaFor(env, matches.map((m) => m.id));
+  const shaped = matches.map((m) => {
+    const v = allowed.get(m.id);
+    const out = L.vehicleOut(v, md.get(v.id) || []);
+    out.matchReason = m.reason;
+    return out;
+  });
+
+  if (ctx) ctx.waitUntil(L.logActivity(env, 'public', 'visual_search', `${provider} · ${fromVideo ? 'video' : 'photo'} · ${String((ai && ai.visible && (ai.visible.brand + ' ' + ai.visible.model)) || '').trim().slice(0, 60) || 'unidentified'} · ${matches.length} match(es)`));
+
+  return L.json({
+    ok: true,
+    provider,
+    identified: (ai && ai.visible) || null,
+    confidence: String((ai && ai.confidence) || 'none'),
+    cannotIdentify: !!(ai && ai.cannotIdentify),
+    guidance: String((ai && ai.guidanceForCustomer) || ''),
+    matches: shaped,
+    fromVideo,
+  });
+});
+
 route('GET', '/api/vehicles', async ({ env, request, q }) => {
   const u = await L.authUser(env, request);
   const staffList = !!(u && ['admin', 'manager', 'viewer'].includes(u.role) && q('scope') === 'admin');

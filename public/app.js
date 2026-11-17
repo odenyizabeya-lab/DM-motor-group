@@ -682,49 +682,41 @@ async function viewHome() {
   const offers = (data.featured || []).filter((v) => v.status === 'published');
 
   app.innerHTML = `
-  <section class="hero" id="hero">
-    ${(data.banners.length ? data.banners : [{ title: 'DM Motor Group', subtitle: 'Premium international dealership', image: '/assets/hero.svg', link: '/vehicles' }]).map((b, i) => `
-      <div class="hero-slide ${i === 0 ? 'on' : ''}"><img src="${esc(b.image)}" alt="${esc(b.title)}" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'}></div>`).join('')}
+  <section class="hero hero-lux" id="hero">
+    <div class="hero-texture" aria-hidden="true"></div>
+    ${data.banners.length ? `<div class="hero-backdrop" aria-hidden="true"><img src="${esc(data.banners[0].image)}" alt="" fetchpriority="high"></div>` : ''}
     <div class="hero-copy"><div class="wrap">
-      <div class="hero-kicker">${esc(state.settings.tagline ? 'International dealership · Verified stock' : 'Premium dealership')}</div>
-      <h1>${esc(data.banners[0]?.title || 'The DM Motor Group Showroom')}</h1>
-      <p>${esc(data.banners[0]?.subtitle || 'Hand-selected vehicles · full histories · worldwide delivery')}</p>
+      <div class="hero-kicker"><span class="hk-rule" aria-hidden="true"></span>International Automobile Dealership<span class="hk-rule" aria-hidden="true"></span></div>
+      <h1 class="hero-title">DM Motor Group</h1>
+      <p class="hero-tag">Exceptional Automobiles. Distinctive Standards.</p>
+      <p class="hero-desc">Discover a carefully presented collection of exceptional automobiles, with detailed vehicle presentations, transparent information and personalised purchasing assistance.</p>
       <div class="hero-cta">
-        <a class="btn btn-gold" href="/vehicles">Browse the showroom</a>
-        <a class="btn btn-ghost" href="/videos">▶ Watch vehicle presentations</a>
-        <a class="btn btn-ghost" href="/contact">Contact us</a>
+        <a class="btn btn-gold" href="/vehicles">Explore the collection</a>
+        <a class="btn btn-ghost" href="/videos">Watch the presentations</a>
       </div>
     </div></div>
-    <div class="hero-dots">${(data.banners.length || 1) > 1 ? (data.banners).map((_, i) => `<button data-i="${i}" class="${i === 0 ? 'on' : ''}"></button>`).join('') : ''}</div>
   </section>
   <div class="wrap">
-    <div class="qsbar" id="qsbar"></div>
-    <div class="trust">
-      <div><b>${data.stats.published}</b><span>vehicles currently in stock</span></div>
-      <div><b>${data.stats.brands}</b><span>manufacturer brands on site</span></div>
-      <div><b>${data.stats.photos}</b><span>genuine listing photographs</span></div>
-      <div><b>${data.stats.videos}</b><span>full-length video presentations</span></div>
-    </div>
+    <div class="searchpanel" id="searchPanel"></div>
   </div>
 
-  ${data.videos.length ? '' : ''}
   <div class="wrap"><section class="section" id="secVideos">
-    ${secHead('Video presentations', 'full-length · original quality', '/videos')}
+    ${secHead('Vehicle presentations', 'full-length · original quality', '/videos')}
     <div class="media-grid-vids rail" id="railVideos" style="display:flex;overflow-x:auto;display:flex">${data.videos.map(videoCard).join('')}</div>
   </section></div>
 
   <div class="wrap"><section class="section" id="secFeatured">
-    ${secHead('Featured vehicles', data.stats.published + ' in stock', '/vehicles?category=featured')}
+    ${secHead('The collection', 'selected by the dealership', '/vehicles?category=featured')}
     <div class="grid" id="gridFeatured">${data.featured.map((v) => vCard(v)).join('') || `<div class="empty"><b>No featured vehicles yet</b>The dealership pins its hand-picked stock here.</div>`}</div>
   </section></div>
 
   <div class="wrap"><section class="section" id="secOffers">
-    ${secHead('Special offers & drive-away pricing', 'updated by the dealership', '/vehicles?sort=price_asc')}
+    ${secHead('Current offers', 'presented by the dealership', '/vehicles?sort=price_asc')}
     <div class="rail" id="railOffers">${offers.slice(0, 6).map((v) => vCard(v, { offer: true })).join('')}</div>
   </section></div>
 
   <div class="wrap"><section class="section" id="secLatest">
-    ${secHead('Latest arrivals — recently uploaded', '', '/vehicles?sort=newest')}
+    ${secHead('Newly arrived', 'recently added to the collection', '/vehicles?sort=newest')}
     <div class="grid">${data.latest.map((v) => vCard(v)).join('')}</div>
   </section></div>
 
@@ -743,9 +735,9 @@ async function viewHome() {
     ${secHead('About DM Motor Group', 'who we are')}
     <div class="about-grid">
       <div>
-        <p class="detail-desc" style="font-size:16px">DM Motor Group is an independently owned international motor company built on one principle: <b style="color:var(--gold2)">what you see is the vehicle you get.</b> Every listing carries genuine photography and full-length video presentations, complete specification and history information, and clear pricing. We supply inspection documentation where it exists and label every claim as dealership-supplied so you can judge for yourself.</p>
+        <p class="detail-desc" style="font-size:16px">DM Motor Group is an independently owned international motor company built on a simple principle: <b style="color:var(--gold2)">the vehicle is presented exactly as it is.</b> Every listing carries full-length video presentations, complete specification information and clear pricing. We supply inspection documentation where it exists and label every figure as dealership-supplied so you can judge for yourself.</p>
         <p class="detail-desc" style="margin-top:14px">Our showrooms serve private buyers, families and trade customers, with logistics partners for worldwide delivery and a purchasing desk that answers every enquiry within one business day.</p>
-        <div class="note" style="margin-top:18px"><b>Buying safely.</b> ${esc(state.settings.payment_info || 'Payments run through escrow with the purchase agreement.')} We never ask for card details or deposits through messaging apps, and availability is confirmed by our team — not by enquiry volume.</div>
+        <div class="note" style="margin-top:18px"><b>Buying with confidence.</b> ${esc(state.settings.payment_info || 'Payments are made by bank transfer against a written purchase agreement, and our accounts team confirms every transfer personally before an order is completed.')} We never ask for card details or deposits through messaging apps, and availability is confirmed by our team — not by enquiry volume.</div>
       </div>
       <div class="panel">
         <h3 style="margin-bottom:10px">Contact information</h3>
@@ -763,8 +755,7 @@ async function viewHome() {
     </div>
   </section></div>`;
 
-  heroCarousel('#hero');
-  buildQuickSearch($('#qsbar'));
+  buildSearchPanel($('#searchPanel'));
   cacheVehicles([...data.featured, ...data.latest, ...offers, ...rails.flatMap(catList)]);
   bindCards(app);
   bindSectionVideos(app, data.videos);
@@ -832,6 +823,237 @@ function buildQuickSearch(host) {
     route('/vehicles?' + p.toString());
   };
   return Promise.resolve();
+}
+
+/* ============================================================ HOMEPAGE SEARCH PANEL
+ * Three genuine ways to find a vehicle: by text, by photograph, or by video.
+ * Photo and video searches run through /api/search/visual — real AI
+ * identification matched against the live inventory, with an honest
+ * "tell us more" response when nothing can be identified confidently. */
+const SP_ICONS = {
+  text: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg>',
+  camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.4"/></svg>',
+  film: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9.5h4M3 14.5h4M17 9.5h4M17 14.5h4"/></svg>',
+  spark: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.8 6.2 6.2 1.8-6.2 1.8L12 18.5l-1.8-6.2L4 10.5l6.2-1.8zM19 16l.9 3.1L23 20l-3.1.9L19 24l-.9-3.1L15 20l3.1-.9z"/></svg>',
+};
+let __spInv = null;
+async function spInventory() {
+  if (__spInv) return __spInv;
+  try { const r = await api('/api/vehicles?per=100&sort=newest'); __spInv = (r.items || []).filter((v) => v.status === 'published' || v.status === 'reserved'); }
+  catch { __spInv = []; }
+  return __spInv;
+}
+const spHay = (v) => [v.brand, v.model, v.year, v.bodyType, v.fuel, v.condition, v.location, v.engine, v.transmission, v.description]
+  .filter(Boolean).join(' ').toLowerCase();
+function spMatch(list, q) {
+  const toks = q.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!toks.length) return [];
+  return list.filter((v) => { const h = spHay(v); return toks.every((t) => h.includes(t)); });
+}
+function buildSearchPanel(host) {
+  if (!host) return;
+  host.innerHTML = `
+    <div class="sp-head">
+      <span class="sp-kicker">Find your vehicle</span>
+      <h2>Search the collection</h2>
+      <p class="sp-sub">Three ways to find the right automobile — by name, by photograph, or by video.</p>
+    </div>
+    <div class="sp-tabs" role="tablist" aria-label="Search method">
+      <button class="sp-tab on" data-t="text" role="tab" aria-selected="true"><span class="sp-ico">${SP_ICONS.text}</span>Search by text</button>
+      <button class="sp-tab" data-t="photo" role="tab" aria-selected="false"><span class="sp-ico">${SP_ICONS.camera}</span>Search by photo</button>
+      <button class="sp-tab" data-t="video" role="tab" aria-selected="false"><span class="sp-ico">${SP_ICONS.film}</span>Search by video</button>
+    </div>
+    <div class="sp-body">
+      <div class="sp-pane on" data-p="text">
+        <div class="sp-textrow">
+          <input id="spQ" type="text" placeholder="Try &ldquo;Rolls-Royce Cullinan&rdquo;, &ldquo;Revuelto&rdquo;, &ldquo;2023 SUV&rdquo;&hellip;" aria-label="Search vehicles by text" autocomplete="off">
+          <button class="btn btn-gold" id="spGo">Search</button>
+        </div>
+        <div class="sp-hint">Manufacturer &middot; model &middot; year &middot; body type &middot; keywords</div>
+        <div class="sp-suggest" id="spSuggest" hidden></div>
+      </div>
+      <div class="sp-pane" data-p="photo">
+        <label class="sp-drop" id="spPhotoDrop">
+          <span class="sp-ico big">${SP_ICONS.camera}</span>
+          <b>Upload a vehicle photograph</b>
+          <span class="sp-drophint">JPG, PNG or WebP &mdash; a clear view of the badge, grille or headlights gives the best result.</span>
+          <input type="file" id="spPhoto" accept="image/jpeg,image/png,image/webp" hidden>
+          <span class="btn btn-ghost sm">Choose a photograph</span>
+        </label>
+      </div>
+      <div class="sp-pane" data-p="video">
+        <label class="sp-drop" id="spVideoDrop">
+          <span class="sp-ico big">${SP_ICONS.film}</span>
+          <b>Upload a vehicle video</b>
+          <span class="sp-drophint">MP4, WebM or MOV up to 60&nbsp;MB &mdash; we analyse the visible frames and match them to the collection.</span>
+          <input type="file" id="spVideo" accept="video/mp4,video/webm,video/quicktime" hidden>
+          <span class="btn btn-ghost sm">Choose a video</span>
+        </label>
+      </div>
+    </div>
+    <div class="sp-status" id="spStatus" hidden></div>
+    <div class="sp-results" id="spResults"></div>`;
+
+  const $pane = (t) => host.querySelector(`.sp-pane[data-p="${t}"]`);
+  host.querySelectorAll('.sp-tab').forEach((tab) => tab.onclick = () => {
+    host.querySelectorAll('.sp-tab').forEach((b) => { b.classList.toggle('on', b === tab); b.setAttribute('aria-selected', b === tab ? 'true' : 'false'); });
+    host.querySelectorAll('.sp-pane').forEach((p) => p.classList.toggle('on', p.dataset.p === tab.dataset.t));
+    if (tab.dataset.t !== 'text') { const s = $('#spSuggest'); if (s) s.hidden = true; }
+  });
+
+  /* ---- A. text search: live suggestions + full showroom search ---- */
+  const input = $('#spQ'), suggest = $('#spSuggest');
+  let suggestItems = [];
+  const renderSuggest = (list) => {
+    suggestItems = list;
+    if (!list.length) { suggest.hidden = true; return; }
+    suggest.hidden = false;
+    suggest.innerHTML = list.slice(0, 6).map((v, i) => `
+      <button class="sp-srow" data-i="${i}">
+        <span class="sp-sinfo"><b>${esc(v.brand)} ${esc(v.model)}</b><span>${esc(String(v.year))} · ${esc(v.bodyType || v.fuel || '')}</span></span>
+        <span class="sp-sprice">${Number(v.price) > 0 ? esc(v.currency) + ' ' + Number(v.price).toLocaleString() : 'Price on request'}</span>
+      </button>`).join('');
+    suggest.querySelectorAll('.sp-srow').forEach((b) => b.onclick = () => { const v = suggestItems[+b.dataset.i]; if (v) route('/vehicles/' + v.slug); });
+  };
+  let spT;
+  input.addEventListener('input', () => {
+    clearTimeout(spT);
+    const q = input.value.trim();
+    if (q.length < 2) { suggest.hidden = true; return; }
+    spT = setTimeout(async () => renderSuggest(spMatch(await spInventory(), q)), 180);
+  });
+  const goText = () => { const q = input.value.trim(); if (q) route('/vehicles?q=' + encodeURIComponent(q)); };
+  $('#spGo').onclick = goText;
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') goText(); });
+
+  /* ---- status + results ---- */
+  const status = $('#spStatus'), results = $('#spResults');
+  const setStatus = (html) => { status.hidden = !html; status.innerHTML = html || ''; results.innerHTML = ''; };
+  const fmtPrice = (v) => (Number(v.price) > 0 ? `${esc(v.currency)} ${Number(v.price).toLocaleString()}` : 'Price on request');
+
+  const renderResults = (d) => {
+    status.hidden = true;
+    const conf = { high: 'Strong match', medium: 'Good match', low: 'Possible match', none: '' }[d.confidence] || '';
+    let html = '';
+    if (d.identified && (d.identified.brand || d.identified.model)) {
+      html += `<div class="sp-identified"><span class="sp-ico">${SP_ICONS.spark}</span>
+        <div><b>Identified: ${esc([d.identified.brand, d.identified.model, d.identified.year].filter(Boolean).join(' '))}</b>
+        ${d.identified.notableDetails ? `<span>${esc(String(d.identified.notableDetails).slice(0, 160))}</span>` : ''}
+        ${conf ? `<i>${esc(conf)}</i>` : ''}</div></div>`;
+    }
+    if (d.matches && d.matches.length) {
+      html += `<div class="sp-grid">${d.matches.map((v) => `
+        <div class="sp-card">
+          <div class="sp-card-head"><b>${esc(v.brand)} ${esc(v.model)} <span>${esc(String(v.year))}</span></b>
+          <span class="sp-price">${fmtPrice(v)}</span></div>
+          <div class="sp-card-meta">${esc(v.bodyType || '—')} · ${esc(v.fuel || '—')} · ${v.mileage ? Number(v.mileage).toLocaleString() + ' km' : 'mileage on request'}</div>
+          ${v.matchReason ? `<p class="sp-why">${esc(v.matchReason)}</p>` : ''}
+          <div class="sp-card-foot"><a class="btn btn-gold sm" href="/vehicles/${esc(v.slug)}">View details</a></div>
+        </div>`).join('')}</div>`;
+      if (d.identified && (d.identified.brand || d.identified.model)) {
+        html += `<div class="sp-note">Every result comes from the dealership's current collection. Availability is confirmed by our team.</div>`;
+      }
+    } else if (d.cannotIdentify) {
+      html += `<div class="sp-nomatch"><b>We could not identify this vehicle confidently.</b>
+        <p>${esc(d.guidance || 'A clearer photograph of the grille, badge or interior — or the model name and year — would help us match it.')}</p>
+        <button class="btn btn-ghost sm" id="spAsk">${'Tell us what you are looking for'}</button></div>`;
+    } else {
+      html += `<div class="sp-nomatch"><b>This vehicle does not appear to be in the current collection.</b>
+        ${d.guidance ? `<p>${esc(d.guidance)}</p>` : ''}
+        <p>Our purchasing desk can source specific vehicles on request.</p>
+        <button class="btn btn-ghost sm" id="spAsk">${'Ask us to source this vehicle'}</button></div>`;
+    }
+    results.innerHTML = html;
+    const ask = $('#spAsk');
+    if (ask) ask.onclick = () => enquiryModal({ vehicleTitle: 'Vehicle search assistance', type: 'question' });
+  };
+
+  const unavailable = () => {
+    status.hidden = true;
+    results.innerHTML = `<div class="sp-nomatch"><b>Visual search is being prepared.</b>
+      <p>Text search is fully available below, or contact the dealership and our team will identify the vehicle for you.</p>
+      <a class="btn btn-ghost sm" href="/contact">Contact the dealership</a></div>`;
+  };
+
+  const runVisual = async (images, fromVideo) => {
+    setStatus(`<span class="sp-spin" aria-hidden="true"></span><b>${fromVideo ? 'Analysing your video\u2026' : 'Analysing your photograph\u2026'}</b><span>Matching against the current collection. This takes a few seconds.</span>`);
+    try {
+      const r = await fetch('/api/search/visual', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ images, fromVideo }) });
+      const j = await r.json().catch(() => ({}));
+      if (r.status === 503) return unavailable();
+      if (!r.ok) { setStatus(`<div class="sp-nomatch inline"><b>${esc(j.error || 'The search could not be completed.')}</b></div>`); return; }
+      renderResults(j);
+    } catch (e) {
+      setStatus('<div class="sp-nomatch inline"><b>We could not reach the search service just now. Please try again in a moment.</b></div>');
+    }
+  };
+
+  /* ---- B. photo search ---- */
+  $('#spPhoto').addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!/^image\/(jpeg|png|webp)$/i.test(file.type)) { setStatus('<div class="sp-nomatch inline"><b>Please choose a JPG, PNG or WebP photograph.</b></div>'); return; }
+    try {
+      const img = await spFileToImage(file);
+      await runVisual([img], false);
+    } catch (err) { setStatus(`<div class="sp-nomatch inline"><b>${esc(err.message || 'The photograph could not be read.')}</b></div>`); }
+  });
+
+  /* ---- C. video search: frames are extracted client-side and analysed ---- */
+  $('#spVideo').addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    if (file.size > 60 * 1024 * 1024) { setStatus('<div class="sp-nomatch inline"><b>Please choose a video under 60 MB — or upload a photograph instead.</b></div>'); return; }
+    try {
+      const frames = await spVideoToFrames(file);
+      await runVisual(frames, true);
+    } catch (err) { setStatus(`<div class="sp-nomatch inline"><b>${esc(err.message || 'The video could not be read. Please try MP4.')}</b></div>`); }
+  });
+}
+
+/* photograph → downscaled JPEG (max 1280px) ready for the visual search API */
+async function spFileToImage(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    await new Promise((res, rej) => { img.onload = res; img.onerror = () => rej(new Error('This image could not be read.')); img.src = url; });
+    const scale = Math.min(1, 1280 / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(img.naturalWidth * scale));
+    c.height = Math.max(1, Math.round(img.naturalHeight * scale));
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    const d = c.toDataURL('image/jpeg', 0.85);
+    return { mimeType: 'image/jpeg', dataBase64: d.slice(d.indexOf(',') + 1) };
+  } finally { URL.revokeObjectURL(url); }
+}
+
+/* video → representative frames sampled across the clip (real video analysis:
+ * the AI examines what is visible at several points in the customer's video) */
+async function spVideoToFrames(file) {
+  const url = URL.createObjectURL(file);
+  const v = document.createElement('video');
+  v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = url;
+  try {
+    await new Promise((res, rej) => { v.onloadedmetadata = res; v.onerror = () => rej(new Error('This video could not be read. Please try MP4.')); });
+    const dur = v.duration;
+    if (!dur || !isFinite(dur)) throw new Error('This video could not be read. Please try MP4.');
+    const points = dur < 4 ? [dur * 0.2, dur * 0.5, dur * 0.8] : [dur * 0.1, dur * 0.35, dur * 0.6, dur * 0.85];
+    const frames = [];
+    const c = document.createElement('canvas');
+    for (const t of points) {
+      await new Promise((res) => { v.onseeked = res; v.currentTime = Math.min(Math.max(t, 0.1), Math.max(dur - 0.1, 0.1)); });
+      await new Promise((r) => setTimeout(r, 130));
+      const scale = Math.min(1, 960 / Math.max(v.videoWidth, 1));
+      c.width = Math.max(1, Math.round(v.videoWidth * scale));
+      c.height = Math.max(1, Math.round(v.videoHeight * scale));
+      c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+      const d = c.toDataURL('image/jpeg', 0.8);
+      frames.push({ mimeType: 'image/jpeg', dataBase64: d.slice(d.indexOf(',') + 1) });
+    }
+    return frames;
+  } finally { URL.revokeObjectURL(url); }
 }
 
 /* ============================================================ SHOWROOM */
@@ -1763,7 +1985,7 @@ window.addEventListener('pageshow', () => {});
   try { await getMeta(); } catch {}
   try { const h = await api('/api/home'); state.settings = h.settings || {}; applySettings(h); } catch {}
   await route(location.pathname + location.search, true);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=33').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=34').catch(() => {});
 })();
 /* Android app installation (Chrome "Add to Home screen" flow) */
 window.__pwaPrompt = null;
