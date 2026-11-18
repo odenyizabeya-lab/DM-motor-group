@@ -3,8 +3,8 @@
  * Rule #1: never leave a request unanswered — the customer must never see a
  * black browser error page. Every navigation falls back to a branded offline
  * card; every asset falls back to the cached shell or a clean 503. */
-const CACHE = 'dm-v42';
-const ASSETS = ['/', '/styles.css?v=29', '/app.js?v=35', '/manifest.webmanifest', '/assets/icon.svg', '/apple-touch-icon.png'];
+const CACHE = 'dm-v45';
+const ASSETS = ['/', '/styles.css?v=32', '/app.js?v=38', '/manifest.webmanifest', '/assets/icon.svg', '/apple-touch-icon.png'];
 const OFFLINE_HTML = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>DM Motor Group — connection needed</title><style>body{margin:0;background:#050607;color:#e8e6df;font-family:Georgia,'Times New Roman',serif;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:24px}.card{max-width:460px;text-align:center;border:1px solid rgba(201,164,92,.45);border-radius:18px;padding:40px 34px;background:linear-gradient(165deg,#151920,#0e1116)}h1{font-size:26px;margin:0 0 10px;color:#e6c987;font-weight:normal}p{color:#b9b4a4;line-height:1.65;font-size:15px;font-family:Helvetica,Arial,sans-serif}a{display:inline-block;margin-top:18px;background:#c9a45c;color:#141414;text-decoration:none;font-family:Helvetica,Arial,sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;padding:14px 30px;border-radius:10px}</style></head><body><div class="card"><h1>DM Motor Group</h1><p>Your connection seems to have dropped. The showroom needs a moment — your browsing is safe, and everything will be here exactly as you left it.</p><p style="font-size:13px;color:#8f8b7d">Please check your internet connection. The page will refresh itself when you are back online.</p><a href="/">Retry now</a></div><script>window.addEventListener('online',function(){location.reload()});setInterval(function(){fetch('/api/meta',{cache:'no-store'}).then(function(r){if(r.ok)location.reload()}).catch(function(){})},4000);</script></body></html>`;
 
 self.addEventListener('install', (e) => {

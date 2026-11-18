@@ -52,9 +52,20 @@ $('#loginForm').onsubmit = async (e) => {
 $('#btnLogout').onclick = async () => { try { await api('/api/auth/logout', { method: 'POST' }); } catch {} localStorage.removeItem('dm_admin_token'); showLogin(); };
 
 /* ---------------- routing ---------------- */
-const PAGES = { dashboard, vehicles, specifications: specificationsPage, enqueue: null, enquiries, customers, testimonials, banners, ai: aiScanner, ai_service: aiService, youtube: youtubeAutomation, integrations: integrationsPage, bank_accounts: bankAccountsPage, payments: paymentsPage, reservations: reservationsPage, settings: settingsPage, settings_general: settingsGeneral, settings_media: settingsMedia, settings_users: settingsUsers, settings_maintenance: settingsMaintenance, activity, system_health: systemHealth };
+const PAGES = { dashboard, vehicles, specifications: specificationsPage, enqueue: null, enquiries, customers, testimonials, banners, ai: aiScanner, ai_service: aiService, youtube: youtubeAutomation, integrations: integrationsPage, bank_accounts: bankAccountsPage, payments: paymentsPage, reservations: reservationsPage, settings: settingsPage, settings_general: settingsGeneral, settings_media: settingsMedia, settings_users: settingsUsers, settings_maintenance: settingsMaintenance, activity, system_health: systemHealth, messages: customerMessages };
 window.addEventListener('hashchange', renderRoute);
+/* serialize route renders — a slow route must never clobber a newer one that
+ * started later; the last requested page always wins. */
+let routeBusy = false, routeQueued = false;
 async function renderRoute() {
+  if (routeBusy) { routeQueued = true; return; }
+  do {
+    routeQueued = false;
+    routeBusy = true;
+    try { await doRenderRoute(); } finally { routeBusy = false; }
+  } while (routeQueued);
+}
+async function doRenderRoute() {
   if (!state.user) return;
   const h = location.hash.replace(/^#/, '') || '/dashboard';
   const h0 = h.split('?')[0];
@@ -1141,6 +1152,93 @@ async function systemHealth() {
   };
   $('#shRefresh').onclick = load;
   await load();
+}
+
+/* ================================================== CUSTOMER MESSAGING */
+async function customerMessages() {
+  const q = (location.hash.split('?')[1] || '');
+  const filter = new URLSearchParams(q).get('f') || '';
+  let rows = [];
+  try { rows = await api('/api/admin/chat/conversations?limit=60'); } catch (e) { pg.innerHTML = `<div class="panel"><p class="muted">${esc(e.message)}</p></div>`; return; }
+  const filtered = rows.filter((c) => {
+    if (filter === 'attention') return c.status === 'open' && (c.escalated || c.humanTakeover);
+    if (filter === 'important') return c.important;
+    if (filter === 'ai') return !c.humanTakeover && !c.aiPaused;
+    if (filter === 'closed') return c.status === 'closed';
+    return true;
+  });
+  const counts = {
+    all: rows.length,
+    attention: rows.filter((c) => c.status === 'open' && (c.escalated || c.humanTakeover)).length,
+    important: rows.filter((c) => c.important).length,
+    ai: rows.filter((c) => !c.humanTakeover && !c.aiPaused).length,
+    closed: rows.filter((c) => c.status === 'closed').length,
+  };
+  const fmtDate = (d) => { try { return new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); } catch { return d || ''; } };
+  const vehLabel = (c) => (c.vehicle ? `${c.vehicle.brand} ${c.vehicle.model} ${c.vehicle.year}` : 'General enquiry');
+  pg.innerHTML = `
+  <div class="pg-head"><div><span class="crumb">People</span><h1>Customer Messages</h1></div></div>
+  <div class="toolbar">${[['', 'All'], ['attention', 'Needs a human'], ['important', 'Important'], ['ai', 'With AI'], ['closed', 'Closed']].map(([k, label]) => `<button class="btn btn-ghost sm" data-f="${k}" ${filter === k ? 'style="border-color:var(--gold);color:var(--gold2)"' : ''}>${label} <span class="muted">${counts[k || 'all']}</span></button>`).join('')}</div>
+  <div>${filtered.map((c) => `
+    <div class="enq-card" data-id="${c.id}">
+      <div class="top">
+        <b>${esc(c.customerName || 'Website visitor')}${c.customerEmail ? ` — <span style="color:var(--gold2)">${esc(c.customerEmail)}</span>` : ''}</b>
+        <span>${c.messageCount} msg · ${esc(fmtDate(c.lastMessageAt || c.createdAt))}</span>
+      </div>
+      <div class="conv-flags">
+        ${c.important ? '<span class="flag gold">Important</span>' : ''}
+        ${c.escalated ? '<span class="flag red">Needs you</span>' : ''}
+        ${c.humanTakeover ? '<span class="flag green">Human agent</span>' : c.aiPaused ? '<span class="flag">AI paused</span>' : '<span class="flag gold">AI assistant</span>'}
+        ${c.status === 'closed' ? '<span class="flag">Closed</span>' : ''}
+      </div>
+      <div class="msg">${esc(vehLabel(c))}</div>
+      <div class="muted" style="margin-top:6px">${c.vehicle ? `<a href="/vehicles/${esc(c.vehicle.slug)}" target="_blank" style="color:var(--gold2)">View vehicle →</a>` : 'Not tied to a specific vehicle'}${c.escalationReason ? ' · ' + esc(c.escalationReason) : ''}</div>
+    </div>`).join('') || '<div class="empty">No conversations yet. Customers can start one from any vehicle page — "Message DM Motor Group about this vehicle".</div>'}</div>`;
+  $$('.toolbar [data-f]').forEach((b) => b.onclick = () => { location.hash = '#/messages' + (b.dataset.f ? '?f=' + b.dataset.f : ''); });
+  $$('.enq-card').forEach((card) => card.onclick = () => openConversation(card.dataset.id));
+
+  async function openConversation(id) {
+    let data = null;
+    try { data = await api('/api/admin/chat/conversations/' + encodeURIComponent(id)); } catch (e) { toast(e.message, true); return; }
+    const c = data.conversation;
+    const veh = data.vehicle;
+    const vehName = veh ? `${veh.brand} ${veh.model} ${veh.year}` : 'General enquiry';
+    const vehLink = veh ? `<a href="/vehicles/${esc(veh.slug)}" target="_blank" style="color:var(--gold2)">${esc(vehName)}</a>` : esc(vehName);
+    const price = veh && veh.price > 0 ? `${esc(veh.currency)} ${Number(veh.price).toLocaleString()}` : 'Price on request';
+    const bubbles = (data.messages || []).map((m) => `
+      <div class="msg ${m.direction === 'inbound' ? 'theirs' : 'mine'}">${(m.attachments || []).map((a) => a.kind === 'image' ? `<a href="${esc(a.url)}" target="_blank" rel="noopener"><img class="msg-attach" src="${esc(a.url)}" alt="attachment"></a>` : `<video class="msg-attach vid" controls preload="metadata" src="${esc(a.url)}"></video>`).join('')}${m.body ? esc(m.body) : ''}<span class="mt">${new Date(m.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span></div>`).join('');
+    modal(`<h2>Conversation with ${esc(c.customer_name || 'website visitor')}</h2>
+      <p class="muted">${esc(c.customer_email || 'no email captured')} · ${vehLink} · ${price} · started ${fmtDate(c.created_at)}</p>
+      <div class="conv-flags">${c.escalated ? '<span class="flag red">Customer needs a human</span>' : ''}${c.important ? '<span class="flag gold">Important</span>' : ''}${c.human_takeover ? '<span class="flag green">You are handling this</span>' : '<span class="flag gold">AI assistant active</span>'}${c.status === 'closed' ? '<span class="flag">Closed</span>' : ''}</div>
+      <div class="msg-thread" id="threadBox">${bubbles || '<div class="muted">No messages yet.</div>'}</div>
+      <label class="muted">Reply as the dealership</label>
+      <textarea id="adminReply" style="min-height:78px" placeholder="Type your reply — it is sent to the customer immediately and pauses the AI assistant."></textarea>
+      <div class="msg-adminbar">
+        <button class="btn btn-gold sm" id="replyBtn">Send reply</button>
+        <button class="btn btn-ghost sm" id="takeoverBtn">${c.human_takeover ? 'Release back to AI' : 'Take over (stop AI)'}</button>
+        <button class="btn btn-ghost sm" id="importantBtn">${c.important ? 'Remove important flag' : 'Mark important'}</button>
+        <button class="btn btn-ghost sm" id="closeBtn">${c.status === 'closed' ? 'Reopen' : 'Close conversation'}</button>
+      </div>`);
+    const thread = $('#threadBox'); if (thread) thread.scrollTop = thread.scrollHeight;
+    $('#replyBtn').onclick = async () => {
+      const text = $('#adminReply').value.trim();
+      if (!text) return toast('Write a reply first.', true);
+      try { await api(`/api/admin/chat/conversations/${id}/reply`, { method: 'POST', body: { text } }); toast('Reply sent to the customer.'); closeModal(); customerMessages(); }
+      catch (e) { toast(e.message, true); }
+    };
+    $('#takeoverBtn').onclick = async () => {
+      try { await api(`/api/admin/chat/conversations/${id}/takeover`, { method: 'POST', body: { on: !c.human_takeover } }); toast(c.human_takeover ? 'AI resumed for this conversation.' : 'You now hold this conversation — the AI is paused.'); closeModal(); customerMessages(); }
+      catch (e) { toast(e.message, true); }
+    };
+    $('#importantBtn').onclick = async () => {
+      try { await api(`/api/admin/chat/conversations/${id}/important`, { method: 'POST', body: { important: !c.important } }); toast(c.important ? 'Important flag removed.' : 'Marked important.'); closeModal(); customerMessages(); }
+      catch (e) { toast(e.message, true); }
+    };
+    $('#closeBtn').onclick = async () => {
+      try { await api(`/api/admin/chat/conversations/${id}/close`, { method: 'POST', body: { close: c.status !== 'closed' } }); toast(c.status === 'closed' ? 'Conversation reopened.' : 'Conversation closed.'); closeModal(); customerMessages(); }
+      catch (e) { toast(e.message, true); }
+    };
+  }
 }
 
 /* ================================================== AI CAR SCANNER */

@@ -640,7 +640,17 @@ const routes = [
 
 async function navigate() { window.scrollTo({ top: 0 }); await route(location.pathname + location.search, true); }
 
+let routeBusyPublic = false, routeQueuedPublic = false;
 async function route(path, initial = false) {
+  if (routeBusyPublic) { routeQueuedPublic = true; return; }
+  do {
+    routeQueuedPublic = false;
+    routeBusyPublic = true;
+    try { await doRoute(path, initial); } finally { routeBusyPublic = false; }
+    path = location.pathname + location.search;
+  } while (routeQueuedPublic);
+}
+async function doRoute(path, initial = false) {
   const url = new URL(path, location.origin);
   const match = routes.find((r) => r.re.test(url.pathname));
   markNav();
@@ -991,14 +1001,13 @@ async function viewHome() {
   cacheVehicles([...data.featured, ...data.latest, ...offers, ...rails.flatMap(catList)]);
   bindCards(app);
   bindSectionVideos(app, data.videos);
-  bindWA();
 }
 function applySettings(data) {
   const s = state.settings;
-  /* only expose WhatsApp when a complete number is configured — a country code
-   * alone produces a dead wa.me link, so hide the feature entirely instead. */
-  const waDigits = String(s.whatsapp || '').replace(/\D/g, '');
-  state.wa = waDigits.length >= 8 && waDigits.length <= 15 ? waDigits : '';
+  /* WhatsApp is deliberately retired as a contact channel — customers reach
+   * the dealership through the built-in messaging room and enquiries instead. */
+  state.wa = '';
+  $$('.wa-float, #waHref, #waHref2, #ft-wa, #btnWa').forEach((e) => e.remove());
   if (s.tagline) $('#ft-tagline').textContent = s.tagline;
   if (s.address_primary) $('#ft-address').textContent = s.address_primary;
   if (s.phone_main) { $('#ft-phone').textContent = s.phone_main; $('#ft-phone').href = 'tel:' + s.phone_main.replace(/\s/g, ''); $('#tb-phone').textContent = s.phone_main; $('#tb-phone').href = 'tel:' + s.phone_main.replace(/\s/g, ''); }
@@ -1006,23 +1015,7 @@ function applySettings(data) {
   if (s.email_sales) $('#ft-email').textContent = s.email_sales;
   $('#ft-year').textContent = new Date().getFullYear();
   $('#foot-social').innerHTML = [s.social_instagram && ['Instagram', s.social_instagram], s.social_facebook && ['Facebook', s.social_facebook], s.social_youtube && ['YouTube', s.social_youtube], s.social_linkedin && ['LinkedIn', s.social_linkedin]].filter(Boolean).map(([n, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${n}</a>`).join('');
-  $$('.wa-float').forEach((e) => e.remove());
-  if (state.wa) {
-    const wa = document.createElement('a'); wa.className = 'wa-float'; wa.target = '_blank'; wa.rel = 'noopener';
-    wa.href = `https://wa.me/${esc(state.wa)}?text=${encodeURIComponent('Hello DM Motor Group, I would like to enquire about a vehicle.')}`;
-    wa.innerHTML = '✆'; wa.title = 'WhatsApp the sales desk'; document.body.appendChild(wa);
-  }
-  bindWA();
   void data;
-}
-function bindWA() {
-  const txt = encodeURIComponent('Hello DM Motor Group — I am browsing your showroom and would like to enquire about a vehicle.');
-  $$('#waHref, #waHref2, #ft-wa, #btnWa').forEach((a) => {
-    if (!a) return;
-    if (!state.wa) { a.style.display = 'none'; a.removeAttribute('href'); return; }
-    a.style.display = '';
-    a.href = `https://wa.me/${esc(state.wa)}?text=${txt}`;
-  });
 }
 function heroCarousel(sel) {
   const hero = $(sel); if (!hero) return;
@@ -1764,7 +1757,7 @@ async function viewVehicle(m) {
         <div class="cta-stack">
           ${v.status !== 'sold' ? `
             <button class="btn btn-gold wide" id="btnEnqMain">Request information & price</button>
-            <a class="btn btn-wa wide" id="btnWa" target="_blank" rel="noopener">✆ WhatsApp about this vehicle</a>
+            <button class="btn btn-gold wide" id="btnChatVehicle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex:none"><path d="M4 5.5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 13h5"/></svg> Message DM Motor Group about this vehicle</button>
             <div class="cta-2">
               <button class="btn btn-ghost" data-enq="inspection">Book an inspection</button>
               <button class="btn btn-ghost" data-enq="testdrive">Request a viewing / test drive</button>
@@ -1864,8 +1857,7 @@ async function viewVehicle(m) {
     $('#btnEnqMain') && ($('#btnEnqMain').onclick = () => enquiryModal({ vehicleId: v.id, vehicleTitle: `${v.brand} ${v.model} ${v.year}`, type: 'question' }));
     $('#btnPayBank') && ($('#btnPayBank').onclick = () => bankTransferModal(v));
     $('#btnReserve') && ($('#btnReserve').onclick = () => reserveModal(v));
-    const waTxt = encodeURIComponent(`Hello DM Motor Group — I am interested in the ${v.brand} ${v.model} ${v.year} (${location.origin}/vehicles/${v.slug}). Please send me the details.`);
-    $('#btnWa') && ($('#btnWa').href = `https://wa.me/${esc(state.wa)}?text=${waTxt}`);
+    $('#btnChatVehicle') && ($('#btnChatVehicle').onclick = () => openVehicleChat(v));
     $('#btnFavD').onclick = async () => { await toggleFav(v); $('#btnFavD').textContent = state.favourites.has(v.id) ? '♥ Saved to favourites' : '♡ Save to favourites'; };
     $('#btnCmpD').onclick = (e) => { const add = cmpToggle({ slug: v.slug, title: `${v.brand} ${v.model} ${v.year}`, cover: v.cover }, e); $('#btnCmpD').textContent = cmpList().some((x) => x.slug === v.slug) ? '✓ In comparison' : '⇄ Compare this vehicle'; };
     $('#btnShare').onclick = async () => {
@@ -2230,7 +2222,7 @@ window.addEventListener('pageshow', () => {});
   api('/api/home').then((h) => { state.settings = (h && h.settings) || {}; applySettings(h); }).catch(() => {});
   await route(location.pathname + location.search, true);
   updateNetPill();
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=42').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=45').catch(() => {});
 })();
 /* Android app installation (Chrome "Add to Home screen" flow) */
 window.__pwaPrompt = null;
@@ -2247,3 +2239,344 @@ window.addEventListener('beforeinstallprompt', (e) => {
   document.body.appendChild(b);
   setTimeout(() => b.remove(), 15000);
 });
+
+/* ==================================================================
+   DM MOTOR GROUP — CUSTOMER COMMUNICATION (messaging room)
+   A real conversation with the dealership: persistent server storage,
+   AI-assisted replies with hard honesty rules, human takeover on demand.
+   ================================================================== */
+const CHAT_AVATAR = 'https://dmmotorgroup.com/assets/icon.svg';
+const chatState = { open: false, vehicleId: null, conversationId: null, token: null, lastMessageId: 0, pollTimer: null, sending: false };
+
+async function chatGuestToken() {
+  let t = localStorage.getItem('dm_chat_guest');
+  if (!t) { t = 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10); localStorage.setItem('dm_chat_guest', t); }
+  return t;
+}
+const chatHeaders = () => { const t = localStorage.getItem('dm_token'); return t ? { Authorization: 'Bearer ' + t } : {}; };
+
+function chatVehicleLabel(v) {
+  return v ? `${v.brand} ${v.model}${v.year ? ' ' + v.year : ''}`.trim() : 'General enquiry';
+}
+
+function chatEnsureRoom() {
+  let room = document.getElementById('chatRoom');
+  if (room) return room;
+  room = document.createElement('div');
+  room.id = 'chatRoom';
+  room.className = 'chat-room';
+  room.setAttribute('role', 'dialog');
+  room.setAttribute('aria-label', 'DM Motor Group customer care — conversation');
+  room.innerHTML = `<div class="chat-backdrop" data-close-chat></div>
+    <section class="chat-panel">
+      <header class="chat-head">
+        <div class="chat-id">
+          <span class="chat-avatar"><img src="${CHAT_AVATAR}" alt="DM Motor Group"></span>
+          <div class="chat-id-text">
+            <b>DM Motor Group</b>
+            <span id="chatPresence">Customer care — virtual assistant · replies instantly</span>
+          </div>
+        </div>
+        <div class="chat-head-actions">
+          <button class="chat-iconbtn" id="chatHumanBtn" title="Speak with our team" aria-label="Request a human representative">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+          </button>
+          <button class="chat-iconbtn" id="chatMinimise" title="Close conversation" aria-label="Close conversation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+        </div>
+      </header>
+      <div class="chat-vehicle" id="chatVehicle"><span class="chat-vehicle-k">Discussing</span><b id="chatVehicleName">—</b></div>
+      <div class="chat-human-note" id="chatHumanNote" hidden>Our dealership team has been notified — a representative will take over this conversation personally.</div>
+      <div class="chat-body" id="chatBody" aria-live="polite"></div>
+      <form class="chat-composer" id="chatComposer" autocomplete="off">
+        <button type="button" class="chat-iconbtn attach" id="chatAttachBtn" title="Attach a photo or video" aria-label="Attach a photo or video">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4.5l5 5L8 21a4.24 4.24 0 0 1-6-6L13.5 3.5a2.83 2.83 0 0 1 4 4L6.5 15.5" transform="rotate(-14 12 12)"/><path d="M4 20h5.5"/></svg>
+        </button>
+        <input type="file" id="chatFile" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime" hidden multiple>
+        <textarea id="chatText" rows="1" placeholder="Write your message…" aria-label="Write your message"></textarea>
+        <button type="submit" class="chat-send" id="chatSendBtn" aria-label="Send message">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 11.2L20.6 3.2c.9-.4 1.7.8 1.1 1.6l-6.7 15.6c-.6 1.3-2.4 1.1-2.7-.3l-1.5-5.6a.9.9 0 0 0-.6-.6l-5.6-1.4c-1.3-.4-1.6-2.3-.3-2.9z"/></svg>
+        </button>
+      </form>
+      <div class="chat-previews" id="chatPreviews" hidden></div>
+      <p class="chat-legal">DM Motor Group virtual assistant · Conversation stored for dealership service. Never share passwords or card details here.</p>
+    </section>`;
+  document.body.appendChild(room);
+  room.querySelector('[data-close-chat]').onclick = closeVehicleChat;
+  room.querySelector('#chatMinimise').onclick = closeVehicleChat;
+  room.querySelector('#chatHumanBtn').onclick = requestHumanChat;
+  room.querySelector('#chatAttachBtn').onclick = () => room.querySelector('#chatFile').click();
+  room.querySelector('#chatFile').addEventListener('change', onChatFilesChosen);
+  const ta = room.querySelector('#chatText');
+  ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 140) + 'px'; });
+  ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); room.querySelector('#chatComposer').requestSubmit(); } });
+  room.querySelector('#chatComposer').addEventListener('submit', onChatSend);
+  return room;
+}
+
+function closeVehicleChat() {
+  const room = document.getElementById('chatRoom');
+  if (!room) return;
+  room.classList.remove('open');
+  document.body.classList.remove('chat-open');
+  chatState.open = false;
+  if (chatState.pollTimer) { clearInterval(chatState.pollTimer); chatState.pollTimer = null; }
+}
+window.closeVehicleChat = closeVehicleChat;
+
+const CHAT_TICK_SENT = '<svg viewBox="0 0 16 11" width="15" height="11" fill="none"><path d="M1 6.2l3.6 3.6L11.4 1.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const CHAT_TICK_DELIVERED = '<svg viewBox="0 0 22 11" width="21" height="11" fill="none"><path d="M1 6.2l3.6 3.6L11.4 1.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 6.2l3.6 3.6L18.4 1.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const chatTime = (iso) => { try { return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); } catch { return ''; } };
+const chatDay = (iso) => { try { const d = new Date(iso); const today = new Date(); return d.toDateString() === today.toDateString() ? 'Today' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); } catch { return ''; } };
+
+function chatRenderMessage(m) {
+  const mine = m.direction === 'inbound';
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-row ' + (mine ? 'mine' : 'theirs');
+  bubble.dataset.mid = m.id;
+  const attachments = Array.isArray(m.attachments) ? m.attachments : [];
+  const attachHtml = attachments.map((a) => {
+    if (a.kind === 'image') return `<a class="chat-attach" href="${esc(a.url)}" target="_blank" rel="noopener"><img src="${esc(a.url)}" alt="${esc(a.name || 'attachment')}" loading="lazy"></a>`;
+    return `<video class="chat-attach vid" controls preload="metadata" src="${esc(a.url)}"></video>`;
+  }).join('');
+  const ticks = mine ? `<span class="chat-ticks on">${m.status === 'delivered' ? CHAT_TICK_DELIVERED : CHAT_TICK_SENT}</span>` : '';
+  bubble.innerHTML = `<div class="chat-bubble ${mine ? 'mine' : 'theirs'}">
+      ${attachHtml}
+      ${m.body ? `<p>${esc(m.body)}</p>` : ''}
+      <span class="chat-meta"><time>${esc(chatTime(m.createdAt))}</time>${ticks}</span>
+    </div>`;
+  return bubble;
+}
+
+function chatRenderAll(messages, afterId = 0) {
+  const body = document.getElementById('chatBody');
+  if (!body) return;
+  if (!afterId) body.innerHTML = '';
+  const fresh = afterId ? messages.filter((x) => x.id > afterId) : messages;
+  let lastDay = body._lastDay || '';
+  for (const m of fresh) {
+    const d = chatDay(m.createdAt);
+    if (d && d !== lastDay) { const sep = document.createElement('div'); sep.className = 'chat-day'; sep.textContent = d; body.appendChild(sep); lastDay = d; }
+    body.appendChild(chatRenderMessage(m));
+  }
+  body._lastDay = lastDay;
+  body.scrollTop = body.scrollHeight;
+}
+
+async function chatLoadHistory() {
+  const body = document.getElementById('chatBody');
+  if (!body) return;
+  body.innerHTML = '<div class="chat-skeleton"><span></span><span></span><span></span></div>';
+  try {
+    const r = await fetch('/api/chat/poll?conversationId=' + encodeURIComponent(chatState.conversationId) + (chatState.token ? '&token=' + encodeURIComponent(chatState.token) : '') + '&after=0', { headers: chatHeaders() });
+    if (!r.ok) throw new Error('Conversation unavailable');
+    const j = await r.json();
+    chatState.lastMessageId = j.messages && j.messages.length ? j.messages[j.messages.length - 1].id : 0;
+    body._lastDay = '';
+    chatRenderAll(j.messages || []);
+    chatApplyMeta(j);
+  } catch (e) {
+    body.innerHTML = '<div class="chat-error"><b>We could not load your conversation.</b><p>Please check your connection and try again.</p><button class="btn btn-ghost sm" id="chatRetry">Retry</button></div>';
+    const btn = body.querySelector('#chatRetry'); if (btn) btn.onclick = chatLoadHistory;
+  }
+}
+
+function chatApplyMeta(j) {
+  const room = document.getElementById('chatRoom');
+  if (!room || !j) return;
+  const presence = room.querySelector('#chatPresence');
+  const note = room.querySelector('#chatHumanNote');
+  if (j.humanTakeover || j.escalated) {
+    if (presence) presence.textContent = 'Connected with our dealership team';
+    if (note) note.hidden = false;
+  } else {
+    if (presence) presence.textContent = 'Customer care — virtual assistant · replies instantly';
+    if (note) note.hidden = true;
+  }
+}
+
+async function chatPollOnce() {
+  if (!chatState.open || !chatState.conversationId) return;
+  try {
+    const r = await fetch('/api/chat/poll?conversationId=' + encodeURIComponent(chatState.conversationId) + (chatState.token ? '&token=' + encodeURIComponent(chatState.token) : '') + '&after=' + chatState.lastMessageId, { headers: chatHeaders() });
+    if (!r.ok) return;
+    const j = await r.json();
+    if (j.messages && j.messages.length) {
+      chatState.lastMessageId = j.messages[j.messages.length - 1].id;
+      chatRenderAll(j.messages, chatState.lastMessageId - j.messages.length);
+    }
+    chatApplyMeta(j);
+  } catch { /* silent — next poll retries */ }
+}
+
+function onChatFilesChosen(e) {
+  const room = document.getElementById('chatRoom');
+  if (e.target.files && e.target.files.length) {
+    room._pendingFiles = [...(room._pendingFiles || []), ...e.target.files].slice(0, 4);
+    e.target.value = '';
+  }
+  const previews = room.querySelector('#chatPreviews');
+  previews.innerHTML = '';
+  const files = room._pendingFiles || [];
+  previews.hidden = files.length === 0;
+  files.forEach((f, i) => {
+    const div = document.createElement('div');
+    div.className = 'chat-preview';
+    if (f.type.startsWith('image/')) {
+      const img = document.createElement('img');
+      img.alt = 'attachment preview';
+      const url = URL.createObjectURL(f);
+      img.src = url;
+      img.onload = () => URL.revokeObjectURL(url);
+      div.appendChild(img);
+    } else {
+      const span = document.createElement('span');
+      span.className = 'chat-preview-file';
+      span.innerHTML = `<span class="chat-preview-ico">${f.type.startsWith('video/') ? 'VID' : 'FILE'}</span><small>${esc((f.name || 'file').slice(0, 30))}</small>`;
+      div.appendChild(span);
+    }
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'chat-preview-remove';
+    btn.setAttribute('aria-label', 'Remove attachment');
+    btn.innerHTML = '&times;';
+    btn.onclick = () => { files.splice(i, 1); onChatFilesChosen({ target: { files: [] } }); };
+    div.appendChild(btn);
+    previews.appendChild(div);
+  });
+}
+
+async function uploadChatFile(file, conversationId) {
+  const isVideo = (file.type || '').startsWith('video/');
+  const limit = isVideo ? 24 * 1024 * 1024 : 6 * 1024 * 1024;
+  if (file.size > limit) throw new Error(isVideo ? 'Videos must be 24 MB or smaller.' : 'Photos must be 6 MB or smaller.');
+  const dataUrl = await new Promise((res, rej) => { const rd = new FileReader(); rd.onload = () => res(String(rd.result)); rd.onerror = () => rej(new Error('Could not read the file.')); rd.readAsDataURL(file); });
+  const r = await fetch('/api/chat/attachment', {
+    method: 'POST', headers: { 'content-type': 'application/json', ...chatHeaders() },
+    body: JSON.stringify({ conversationId, token: chatState.token, mimeType: file.type, dataBase64: dataUrl, name: file.name }),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || 'Upload failed.');
+  return j.attachment;
+}
+
+async function onChatSend(e) {
+  e.preventDefault();
+  const room = document.getElementById('chatRoom');
+  const ta = room.querySelector('#chatText');
+  const sendBtn = room.querySelector('#chatSendBtn');
+  const text = ta.value.trim();
+  const files = (room._pendingFiles || []).slice();
+  if (!text && !files.length) return;
+  /* sending before the conversation is ready: stash it and auto-send once connected */
+  if (!chatState.conversationId) {
+    chatState._pendingSend = { text, files };
+    ta.value = ''; ta.style.height = 'auto';
+    return;
+  }
+  if (chatState.sending) return;
+  chatState.sending = true;
+  sendBtn.disabled = true;
+  ta.value = '';
+  ta.style.height = 'auto';
+  const pending = document.createElement('div');
+  pending.className = 'chat-row mine';
+  pending.innerHTML = `<div class="chat-bubble mine"><p>${esc(text || '…')}</p><span class="chat-meta"><time>now</time></span></div>`;
+  room.querySelector('#chatBody').appendChild(pending);
+  room.querySelector('#chatBody').scrollTop = room.querySelector('#chatBody').scrollHeight;
+  try {
+    const attachments = [];
+    for (const f of files) attachments.push(await uploadChatFile(f, chatState.conversationId));
+    const r = await fetch('/api/chat/message', {
+      method: 'POST', headers: { 'content-type': 'application/json', ...chatHeaders() },
+      body: JSON.stringify({ conversationId: chatState.conversationId, token: chatState.token, text, attachments }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'Message could not be sent.');
+    room._pendingFiles = [];
+    const previews = room.querySelector('#chatPreviews');
+    previews.hidden = true;
+    previews.innerHTML = '';
+    const poll = await fetch('/api/chat/poll?conversationId=' + encodeURIComponent(chatState.conversationId) + (chatState.token ? '&token=' + encodeURIComponent(chatState.token) : '') + '&after=0', { headers: chatHeaders() });
+    const pj = await poll.json().catch(() => null);
+    if (pj && pj.messages) {
+      chatState.lastMessageId = pj.messages.length ? pj.messages[pj.messages.length - 1].id : chatState.lastMessageId;
+      room.querySelector('#chatBody')._lastDay = '';
+      chatRenderAll(pj.messages);
+      chatApplyMeta(pj);
+    }
+  } catch (err) {
+    const failed = document.createElement('div');
+    failed.className = 'chat-row mine';
+    failed.innerHTML = `<div class="chat-bubble mine error"><p>${esc(err.message || 'Message could not be sent.')}</p><span class="chat-meta"><button type="button" class="chat-retry-msg">Tap to retry</button></span></div>`;
+    room.querySelector('#chatBody').appendChild(failed);
+    ta.value = text;
+    room._pendingFiles = files;
+    failed.querySelector('.chat-retry-msg').onclick = () => { failed.remove(); onChatSend({ preventDefault() {} }); };
+  } finally {
+    chatState.sending = false;
+    sendBtn.disabled = false;
+    ta.focus();
+  }
+}
+
+async function requestHumanChat() {
+  if (!chatState.conversationId) return;
+  const room = document.getElementById('chatRoom');
+  if (!confirm('Ask a dealership representative to take over this conversation?')) return;
+  const btn = room.querySelector('#chatHumanBtn');
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/chat/human-request', {
+      method: 'POST', headers: { 'content-type': 'application/json', ...chatHeaders() },
+      body: JSON.stringify({ conversationId: chatState.conversationId, token: chatState.token }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'Request failed.');
+    const presence = room.querySelector('#chatPresence'); if (presence) presence.textContent = 'Connected with our dealership team';
+    const note = room.querySelector('#chatHumanNote'); if (note) note.hidden = false;
+    toast('A dealership representative has been notified.');
+  } catch (e) { toast(e.message || 'Your request could not be sent.', true); }
+  btn.disabled = false;
+}
+
+async function openVehicleChat(v) {
+  const room = chatEnsureRoom();
+  room.classList.add('open');
+  document.body.classList.add('chat-open');
+  chatState.open = true;
+  chatState.vehicleId = v ? v.id : null;
+  const nameEl = room.querySelector('#chatVehicleName');
+  if (nameEl) nameEl.textContent = chatVehicleLabel(v);
+  try {
+    const token = await chatGuestToken();
+    const r = await fetch('/api/chat/conversation', {
+      method: 'POST', headers: { 'content-type': 'application/json', ...chatHeaders() },
+      body: JSON.stringify({ vehicleId: chatState.vehicleId, token }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'Could not open the conversation.');
+    chatState.conversationId = j.conversationId;
+    chatState.token = j.token;
+    chatApplyMeta(j);
+    room._pendingFiles = [];
+    const previews = room.querySelector('#chatPreviews');
+    if (previews) { previews.innerHTML = ''; previews.hidden = true; }
+    await chatLoadHistory();
+    if (chatState.pollTimer) clearInterval(chatState.pollTimer);
+    chatState.pollTimer = setInterval(chatPollOnce, 4000);
+    /* flush anything the customer typed before the conversation was ready */
+    if (chatState._pendingSend) {
+      const pending = chatState._pendingSend;
+      chatState._pendingSend = null;
+      const ta2 = room.querySelector('#chatText');
+      if (ta2) ta2.value = pending.text;
+      room._pendingFiles = pending.files || [];
+      onChatSend({ preventDefault() {} });
+    }
+  } catch (e) {
+    const body = room.querySelector('#chatBody');
+    body.innerHTML = `<div class="chat-error"><b>${esc(e.message || 'Could not open the conversation.')}</b><p>Your connection may be unstable — please try again.</p><button class="btn btn-ghost sm" id="chatRetry">Retry</button></div>`;
+    const retry = body.querySelector('#chatRetry'); if (retry) retry.onclick = () => openVehicleChat(v);
+  }
+  const ta = room.querySelector('#chatText'); if (ta) ta.focus();
+}

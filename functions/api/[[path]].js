@@ -234,6 +234,217 @@ route('POST', '/api/telemetry', async ({ env, request, ip }) => {
   return L.json({ ok: true });
 });
 
+/* ============ Web Messaging (Customer Communication) — public API ============ */
+import webChat from '../../shared/web-chat.js';
+
+const webAuth = async (env, request, q, b) => {
+  const user = await L.authUser(env, request).catch(() => null);
+  const guestToken = String((q && q('token')) || (b && b.token) || '').slice(0, 80);
+  return { user, guestToken };
+};
+
+/* POST /api/chat/conversation — open (or reuse) the conversation for a vehicle */
+route('POST', '/api/chat/conversation', async ({ env, request, ip }) => {
+  if (!L.rateLimit(`chatopen:${ip || 'x'}`, 30, 10 * 60e3)) throw L.err(429, 'A lot of requests — please wait a moment.');
+  const b = await L.readJson(request, 64 * 1024);
+  const user = await L.authUser(env, request).catch(() => null);
+  const vehicleId = +(b.vehicleId || 0) || null;
+  if (vehicleId) {
+    const vr = await L.rest.get(env, 'vehicles', { id: `eq.${vehicleId}`, select: 'id' }).catch(() => []);
+    if (!vr || !vr.length) throw L.err(404, 'Vehicle not found.');
+  }
+  const name = user && user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name || user.user_metadata.display_name) || '';
+  const { conversation, created } = await webChat.createOrGetConversation(env, { user, guestToken: String(b.token || ''), vehicleId, name });
+  return L.json({
+    ok: true,
+    created,
+    conversationId: conversation.id,
+    token: conversation.reply_token || null,
+    subject: conversation.subject || '',
+    vehicleId: conversation.vehicle_id || null,
+    humanTakeover: !!conversation.human_takeover,
+    escalated: !!conversation.escalated,
+    aiPaused: !!conversation.ai_paused,
+    status: conversation.status || 'open',
+  });
+});
+
+/* GET /api/chat/poll?conversationId=&token=&after= — messages + meta (customer-facing) */
+route('GET', '/api/chat/poll', async ({ env, request, q, ip }) => {
+  if (!L.rateLimit(`chatpoll:${ip || 'x'}`, 120, 10 * 60e3)) throw L.err(429, 'Too many requests.');
+  const { user, guestToken } = await webAuth(env, request, q, null);
+  const conversationId = String(q('conversationId') || '').trim();
+  const access = await webChat.accessConversation(env, { user, guestToken, conversationId });
+  if (!access) throw L.err(404, 'Conversation not found.');
+  const after = +(q('after') || 0) || 0;
+  const messages = await webChat.listMessages(env, access.id, { after });
+  await webChat.markDeliveredToCustomer(env, access.id);
+  return L.json({
+    ok: true,
+    conversationId: access.id,
+    status: access.status,
+    humanTakeover: !!access.human_takeover,
+    escalated: !!access.escalated,
+    aiPaused: !!access.ai_paused,
+    important: !!access.important,
+    messages,
+  });
+});
+
+/* POST /api/chat/message — customer sends a message (AI replies synchronously) */
+route('POST', '/api/chat/message', async ({ env, request, ip, ctx }) => {
+  if (!L.rateLimit(`chatmsg:${ip || 'x'}`, 30, 10 * 60e3)) throw L.err(429, 'You are sending messages very quickly — please wait a moment.');
+  const b = await L.readJson(request, 4 * 1024 * 1024);
+  const { user, guestToken } = await webAuth(env, request, null, b);
+  const conversationId = String(b.conversationId || '').trim();
+  if (!conversationId) throw L.err(400, 'A conversation id is required.');
+  const access = await webChat.accessConversation(env, { user, guestToken, conversationId });
+  if (!access) throw L.err(404, 'Conversation not found.');
+  const attachments = (Array.isArray(b.attachments) ? b.attachments : []).slice(0, 6);
+  const msg = await webChat.addCustomerMessage(env, access, { text: b.text, attachments });
+  const aiResult = await webChat.generateWebAiReply(env, { ...access, message_count: (access.message_count || 0) + 1 }).catch((e) => ({ error: String((e && e.message) || e).slice(0, 200) }));
+  if (ctx && aiResult && aiResult.escalated) ctx.waitUntil(Promise.resolve());
+  const fresh = await L.rest.get(env, 'ai_conversations', { id: `eq.${access.id}`, select: 'status,human_takeover,escalated,ai_paused,important,message_count' }).catch(() => []);
+  const conv = fresh && fresh[0];
+  return L.json({
+    ok: true,
+    messageId: msg.id,
+    conversationId: access.id,
+    status: conv ? conv.status : access.status,
+    humanTakeover: !!(conv ? conv.human_takeover : access.human_takeover),
+    escalated: !!(conv ? conv.escalated : access.escalated),
+    aiPaused: !!(conv ? conv.ai_paused : access.ai_paused),
+    important: !!(conv && conv.important),
+    ai: aiResult && !aiResult.error
+      ? (aiResult.skipped
+          ? { replied: false, skipped: true, reason: aiResult.reason || 'skipped' }
+          : { replied: !!(aiResult.messageId || aiResult.reply), escalated: !!aiResult.escalated, fallback: !!aiResult.fallback, reason: aiResult.reason || null })
+      : { replied: false, error: aiResult && aiResult.error },
+  });
+});
+
+/* POST /api/chat/attachment — customer uploads a validated image/video */
+route('POST', '/api/chat/attachment', async ({ env, request, ip }) => {
+  if (!L.rateLimit(`chatattach:${ip || 'x'}`, 24, 10 * 60e3)) throw L.err(429, 'Too many uploads — please wait a moment.');
+  if (+(request.headers.get('content-length') || 0) > 34 * 1024 * 1024) throw L.err(413, 'The file is too large.');
+  const b = await L.readJson(request, 34 * 1024 * 1024);
+  const { user, guestToken } = await webAuth(env, request, null, b);
+  const conversationId = String(b.conversationId || '').trim();
+  const access = await webChat.accessConversation(env, { user, guestToken, conversationId });
+  if (!access) throw L.err(404, 'Conversation not found.');
+  const saved = await webChat.saveAttachment(env, {
+    conversationId: access.id,
+    kind: null,
+    mimeType: String(b.mimeType || ''),
+    dataBase64: b.dataBase64,
+    name: b.name,
+  });
+  return L.json({ ok: true, attachment: saved });
+});
+
+/* POST /api/chat/human-request — customer asks for a human representative */
+route('POST', '/api/chat/human-request', async ({ env, request, ip }) => {
+  const b = await L.readJson(request, 16 * 1024);
+  const { user, guestToken } = await webAuth(env, request, null, b);
+  const conversationId = String(b.conversationId || '').trim();
+  const access = await webChat.accessConversation(env, { user, guestToken, conversationId });
+  if (!access) throw L.err(404, 'Conversation not found.');
+  await L.rest.update(env, 'ai_conversations', { id: access.id }, {
+    human_takeover: true, escalated: true, escalation_reason: 'customer requested human',
+    updated_at: new Date().toISOString(),
+  }, true);
+  await webChat.addDealershipMessage(env, access.id, {
+    text: 'You asked to speak with our team — a dealership representative will take over this conversation shortly.',
+    direction: 'internal', status: 'sent',
+  });
+  await L.logActivity(env, 'system', 'chat_human_requested', `customer requested human for conversation ${access.id}`).catch(() => {});
+  return L.json({ ok: true, humanTakeover: true });
+});
+
+/* ============ Web Messaging — staff/admin API ============ */
+
+/* GET /api/admin/chat/conversations?status=&limit= — all web conversations */
+route('GET', '/api/admin/chat/conversations', async ({ env, request, q }) => {
+  await L.staff(env, request);
+  const list = await webChat.adminListConversations(env, { status: String(q('status') || ''), limit: +(q('limit') || 50) });
+  return L.json(list);
+});
+
+/* GET /api/admin/chat/conversations/:id — full history incl. attachments */
+route('GET', '/api/admin/chat/conversations/:id', async ({ env, request, g }) => {
+  await L.staff(env, request);
+  const rows = await L.rest.get(env, 'ai_conversations', { id: `eq.${String(g.id).trim()}`, select: '*' }).catch(() => []);
+  const c = rows && rows[0];
+  if (!c) throw L.err(404, 'Conversation not found.');
+  const messages = await webChat.listMessages(env, c.id, { limit: 500 });
+  const vehicle = c.vehicle_id
+    ? (await L.rest.get(env, 'vehicles', { id: `eq.${c.vehicle_id}`, select: 'id,brand,model,year,slug,price,currency' }).catch(() => []))[0] || null
+    : null;
+  return L.json({ conversation: c, vehicle, messages });
+});
+
+/* POST /api/admin/chat/conversations/:id/reply — staff manual reply (takes over) */
+route('POST', '/api/admin/chat/conversations/:id/reply', async ({ env, request, g }) => {
+  const u = await L.staff(env, request);
+  const id = String(g.id || '').trim();
+  const rows = await L.rest.get(env, 'ai_conversations', { id: `eq.${id}`, select: '*' }).catch(() => []);
+  const c = rows && rows[0];
+  if (!c) throw L.err(404, 'Conversation not found.');
+  const b = await L.readJson(request, 4 * 1024 * 1024);
+  const text = String(b.text || '').trim();
+  if (!text) throw L.err(400, 'A message is required.');
+  const msg = await webChat.addDealershipMessage(env, id, { text, direction: 'outbound', status: 'sent' });
+  await L.rest.update(env, 'ai_conversations', { id }, {
+    human_takeover: true, ai_paused: true, updated_at: new Date().toISOString(),
+    last_direction: 'outbound', last_message_at: new Date().toISOString(),
+  }, true);
+  if (u) L.logActivity(env, u.email, 'chat_admin_reply', `manual reply in conversation ${id}`).catch(() => {});
+  return L.json({ ok: true, messageId: msg.id });
+});
+
+/* POST /api/admin/chat/conversations/:id/takeover — take over or release back to AI */
+route('POST', '/api/admin/chat/conversations/:id/takeover', async ({ env, request, g }) => {
+  const u = await L.staff(env, request);
+  const id = String(g.id || '').trim();
+  const rows = await L.rest.get(env, 'ai_conversations', { id: `eq.${id}`, select: 'id' }).catch(() => []);
+  if (!rows || !rows.length) throw L.err(404, 'Conversation not found.');
+  const b = await L.readJson(request, 16 * 1024);
+  const on = b.on !== false;
+  await L.rest.update(env, 'ai_conversations', { id }, {
+    human_takeover: on, ai_paused: on, updated_at: new Date().toISOString(),
+  }, true);
+  if (u) L.logActivity(env, u.email, 'chat_takeover', `conversation ${id} → ${on ? 'human' : 'AI'}`).catch(() => {});
+  return L.json({ ok: true, humanTakeover: on });
+});
+
+/* POST /api/admin/chat/conversations/:id/important — flag / unflag as important */
+route('POST', '/api/admin/chat/conversations/:id/important', async ({ env, request, g }) => {
+  const u = await L.staff(env, request);
+  const id = String(g.id || '').trim();
+  const b = await L.readJson(request, 16 * 1024).catch(() => ({}));
+  const important = b.important !== undefined ? !!b.important : true;
+  const patched = await L.rest.update(env, 'ai_conversations', { id: `eq.${id}` }, { important }, true).catch((e) => e);
+  if (patched instanceof Error && /important|schema cache/i.test(String(patched.message || '') + String(patched.status || ''))) {
+    throw L.err(503, 'The "important" flag needs one new database column. Run migration 00011_web_messaging.sql, then try again.');
+  }
+  if (patched instanceof Error) throw patched;
+  if (u) L.logActivity(env, u.email, 'chat_important', `conversation ${id} → important=${important}`).catch(() => {});
+  return L.json({ ok: true, important });
+});
+
+/* POST /api/admin/chat/conversations/:id/close — close / reopen a conversation */
+route('POST', '/api/admin/chat/conversations/:id/close', async ({ env, request, g }) => {
+  const u = await L.staff(env, request);
+  const id = String(g.id || '').trim();
+  const rows = await L.rest.get(env, 'ai_conversations', { id: `eq.${id}`, select: 'id' }).catch(() => []);
+  if (!rows || !rows.length) throw L.err(404, 'Conversation not found.');
+  const b = await L.readJson(request, 16 * 1024);
+  const close = b.close !== false;
+  await L.rest.update(env, 'ai_conversations', { id }, { status: close ? 'closed' : 'open', updated_at: new Date().toISOString() }, true);
+  if (u) L.logActivity(env, u.email, 'chat_close', `conversation ${id} → ${close ? 'closed' : 'reopened'}`).catch(() => {});
+  return L.json({ ok: true, status: close ? 'closed' : 'open' });
+});
+
 /* ============ YouTube Marketing Automation (admin API) ============ */
 const YT_JSON_ERR = (e) => (e && e.message) ? String(e.message).slice(0, 300) : 'YouTube automation error';
 
