@@ -37,7 +37,7 @@ await send('Page.enable'); await send('Runtime.enable'); await send('Log.enable'
 const slugs = (await fetch(BASE + '/api/vehicles?per=50').then((r) => r.json())).items.map((v) => v.slug);
 console.log('checking', slugs.length, 'vehicle pages (local preview of built dist)\n');
 
-const REQUIRED = `['#videoMain .player video','h1','.price','.avail','.keyfacts','.detail-desc','#btnWa','#btnEnqMain','[data-enq=inspection]','[data-enq=testdrive]','[data-enq=purchase]','[data-enq=delivery]','#btnFavD','#btnCmpD']`;
+const REQUIRED = `['#videoMain .player video','h1','.price','.avail','.keyfacts','.detail-desc','#btnChatVehicle','#btnEnqMain','[data-enq=inspection]','[data-enq=testdrive]','[data-enq=purchase]','[data-enq=delivery]','#btnFavD','#btnCmpD']`;
 
 let bad = [], playing = 0, withImages = 0;
 for (const slug of slugs) {
