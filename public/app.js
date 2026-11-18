@@ -2222,7 +2222,7 @@ window.addEventListener('pageshow', () => {});
   api('/api/home').then((h) => { state.settings = (h && h.settings) || {}; applySettings(h); }).catch(() => {});
   await route(location.pathname + location.search, true);
   updateNetPill();
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=45').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=46').catch(() => {});
 })();
 /* Android app installation (Chrome "Add to Home screen" flow) */
 window.__pwaPrompt = null;

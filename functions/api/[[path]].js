@@ -425,7 +425,7 @@ route('POST', '/api/admin/chat/conversations/:id/important', async ({ env, reque
   const important = b.important !== undefined ? !!b.important : true;
   const patched = await L.rest.update(env, 'ai_conversations', { id: `eq.${id}` }, { important }, true).catch((e) => e);
   if (patched instanceof Error && /important|schema cache/i.test(String(patched.message || '') + String(patched.status || ''))) {
-    throw L.err(503, 'The "important" flag needs one new database column. Run migration 00011_web_messaging.sql, then try again.');
+    throw Object.assign(L.err(503, 'The "important" flag needs one new database column. Run migration 00011_web_messaging.sql, then try again.'), { expose: true });
   }
   if (patched instanceof Error) throw patched;
   if (u) L.logActivity(env, u.email, 'chat_important', `conversation ${id} → important=${important}`).catch(() => {});
